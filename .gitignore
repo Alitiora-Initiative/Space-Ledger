@@ -20,6 +20,8 @@ Thumbs.db
 # Vercel
 .vercel/
 
+# Runtime state (auto-created by server — do not commit)
+data/state.json
 # Test artifacts
 .agents/
 
