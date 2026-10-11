@@ -1,328 +1,43 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Spatial Ledger Protocol — Block Swap</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Resales unavailable — Space Ledger</title>
   <link rel="stylesheet" href="../css/styles.css">
+  <script src="/js/site.js" defer></script>
 </head>
-<body><div class="stars-a"></div><div class="stars-b"></div>
+<body>
   <nav>
     <div class="container">
       <a href="/index.html" style="display:flex;align-items:center;gap:8px;text-decoration:none;">
-        <img src="/img/logo.jpg" alt="SLP" style="width:32px;height:32px;border-radius:7px;object-fit:cover;">
-        <span class="logo">Spatial Ledger Protocol</span>
+        <img src="/img/logo.jpg" alt="Space Ledger" style="width:32px;height:32px;border-radius:7px;object-fit:cover;">
+        <span class="logo">Space Ledger</span>
       </a>
       <ul>
         <li><a href="../index.html">Home</a></li>
-        <li><a href="purchase.html">Purchase</a></li>
+        <li><a href="purchase.html">Pricing</a></li>
         <li><a href="grid.html">Grid View</a></li>
         <li><a href="treasury.html">Treasury</a></li>
         <li><a href="network.html">Network</a></li>
         <li><a href="dashboard.html">Dashboard</a></li>
         <li><a href="profile.html">Profile</a></li>
-        <li><a href="swap.html" style="color:#00d4ff;">Swap</a></li>
-        <li><button class="wallet-button" id="navWalletBtn" onclick="window.openWalletModal()">Connect Wallet</button></li>
+        <li><button class="wallet-button" id="navWalletBtn" type="button" onclick="window.openWalletModal()">Connect Wallet</button></li>
       </ul>
     </div>
   </nav>
-
-  <div class="container">
-    <h1 style="text-align:center;margin-bottom:30px;">Block Swap — Swap Your Blocks for SOL</h1>
-
-    <!-- Balance display -->
-    <div id="balanceBanner" class="card" style="display:none;align-items:center;gap:16px;padding:14px 20px;border-color:rgba(0,212,255,.2);">
-      <div style="flex:1;">
-        <div style="font-size:0.75em;color:#888;margin-bottom:4px;">WALLET BALANCE</div>
-        <div style="display:flex;gap:20px;flex-wrap:wrap;">
-          <div>
-            <span style="color:#888;font-size:0.8em;">SOL:</span>
-            <span id="balanceSOL" style="font-weight:600;color:#e0e0e0;margin-left:4px;">0</span>
-          </div>
-          <div>
-            <span style="color:#888;font-size:0.8em;">USDC:</span>
-            <span id="balanceUSDC" style="font-weight:600;color:#e0e0e0;margin-left:4px;">0</span>
-          </div>
-          <div>
-            <span style="color:#888;font-size:0.8em;">USDT:</span>
-            <span id="balanceUSDT" style="font-weight:600;color:#e0e0e0;margin-left:4px;">0</span>
-          </div>
-        </div>
-      </div>
-      <button class="button" id="refreshBalanceBtn" style="padding:6px 12px;font-size:.75em;">Refresh</button>
-    </div>
-
-    <!-- Block ID Input Card -->
-    <div class="card">
-      <h2>Block to Swap</h2>
-      <div class="input-group">
-        <label for="swapBlockId">Block ID</label>
-        <input
-          type="number"
-          id="swapBlockId"
-          placeholder="Enter block ID (e.g. 1000000050)"
-          min="1000000000"
-          oninput="onBlockIdChange(this.value)"
-        >
-      </div>
-      <div class="input-group">
-        <label>Current Block Value (USD)</label>
-        <input type="text" id="blockValue" readonly placeholder="Enter a block ID above" style="background:rgba(0,0,0,0.3);color:#00d4ff;">
-      </div>
-    </div>
-
-    <!-- Output Card -->
-    <div class="card">
-      <h2>You Receive</h2>
-      <div class="input-group">
-        <label>SOL Amount</label>
-        <input type="text" id="solReceive" readonly placeholder="—" style="background:rgba(0,0,0,0.3);color:#00ff88;font-size:1.2em;">
-      </div>
-      <div id="pnlDisplay" style="margin-top:16px;padding:12px;background:rgba(0,0,0,0.2);border-radius:8px;display:none;">
-        <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
-          <span style="color:#888;">Purchase Price</span>
-          <span id="purchasePrice" style="font-weight:600;">-</span>
-        </div>
-        <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
-          <span style="color:#888;">Current Value</span>
-          <span id="currentValue" style="font-weight:600;">-</span>
-        </div>
-        <div style="display:flex;justify-content:space-between;">
-          <span style="font-weight:700;">Profit/Loss</span>
-          <span id="pnlAmount" style="font-weight:700;">-</span>
-        </div>
-      </div>
-      <p style="color:#888;font-size:0.85em;margin-top:8px;">
-        Note: actual SOL received may vary ±0.5% due to price movement.
-      </p>
-    </div>
-
-    <!-- Swap Button -->
-    <div class="card" style="text-align:center;">
-      <button class="button" id="swapBtn" onclick="swapBlock()" style="min-width:180px;font-size:1.1em;">
-        Swap Block for SOL
-      </button>
-      <div id="swapStatus" style="margin-top:18px;"></div>
-    </div>
-  </div>
-
-  <!-- Non-module script: UI logic, walletManager listeners -->
+  <main class="container">
+    <section class="hero">
+      <h1>Resales are not live</h1>
+      <p>Space Ledger has no deployed ownership contract, verified holdings index, or funded settlement service.</p>
+    </section>
+    <section class="card">
+      <h2>No assets or funds will move</h2>
+      <p class="feature-status">The previous swap screen only changed prototype bookkeeping and could not pay SOL. It has been removed. Resales will remain unavailable until ownership checks and on-chain settlement are implemented and verified.</p>
+      <p style="margin-top:18px;"><a class="button" href="dashboard.html">View account status</a></p>
+    </section>
+  </main>
   <script src="../js/wallet.js"></script>
-  <script src="../js/walletModal.js?v=202610111259"></script>
-  <script>
-    var _solPrice = null;
-    var _blockValueUsd = null;
-    var _blockData = null;
-
-    walletManager.on('connected', function(data) {
-      var btn = document.getElementById('navWalletBtn');
-      if (btn) btn.textContent = data.address.slice(0, 6) + '...' + data.address.slice(-4);
-      document.getElementById('balanceBanner').style.display = 'flex';
-      updateBalances();
-    });
-
-    walletManager.on('disconnected', function() {
-      var btn = document.getElementById('navWalletBtn');
-      if (btn) btn.textContent = 'Connect Wallet';
-      document.getElementById('balanceBanner').style.display = 'none';
-    });
-
-    // Update wallet balances
-    async function updateBalances() {
-      if (!walletManager.isConnected()) return;
-
-      try {
-        var balances = await walletManager.getAllBalances();
-        document.getElementById('balanceSOL').textContent  = balances.sol.toFixed(6);
-        document.getElementById('balanceUSDC').textContent = balances.usdc.toFixed(2);
-        document.getElementById('balanceUSDT').textContent = balances.usdt.toFixed(2);
-      } catch(e) {
-        console.error('Error updating balances:', e);
-      }
-    }
-
-    // Refresh balance button
-    document.getElementById('refreshBalanceBtn').addEventListener('click', updateBalances);
-
-    function setSwapStatus(msg, color) {
-      var el = document.getElementById('swapStatus');
-      el.style.color = color || '#888';
-      el.textContent = msg;
-    }
-
-    async function onBlockIdChange(val) {
-      var blockId = parseInt(val, 10);
-      document.getElementById('blockValue').value = '';
-      document.getElementById('solReceive').value = '';
-      document.getElementById('pnlDisplay').style.display = 'none';
-      _blockValueUsd = null;
-      _blockData = null;
-      _solPrice = null;
-
-      if (!blockId || isNaN(blockId) || blockId < 1) return;
-
-      try {
-        var res = await fetch('/api/price/' + blockId);
-        if (!res.ok) throw new Error('HTTP ' + res.status);
-        var data = await res.json();
-        _blockValueUsd = data.price;
-        document.getElementById('blockValue').value = '$' + _blockValueUsd.toFixed(6);
-        updateSolReceive();
-
-        // Fetch block data if wallet is connected
-        if (walletManager.isConnected()) {
-          var address = walletManager.currentAddress;
-          var blocksRes = await fetch('/api/blocks/' + encodeURIComponent(address));
-          if (blocksRes.ok) {
-            var blocks = await blocksRes.json();
-            var blockInfo = Array.isArray(blocks) && blocks.find(function(b) {
-              return (typeof b === 'number' ? b : b.blockId) === blockId;
-            });
-            if (blockInfo) {
-              _blockData = typeof blockInfo === 'number' ? { blockId: blockInfo } : blockInfo;
-              showPnl();
-            }
-          }
-        }
-      } catch (e) {
-        document.getElementById('blockValue').value = 'Error loading price';
-      }
-    }
-
-    function showPnl() {
-      if (!_blockData || !_blockValueUsd) return;
-
-      var purchasePrice = _blockData.purchasePrice || 0;
-      var currentValue = _blockValueUsd;
-      var pnl = currentValue - purchasePrice;
-
-      document.getElementById('purchasePrice').textContent = '$' + purchasePrice.toFixed(6);
-      document.getElementById('currentValue').textContent = '$' + currentValue.toFixed(6);
-
-      var pnlEl = document.getElementById('pnlAmount');
-      pnlEl.textContent = (pnl >= 0 ? '+' : '') + '$' + pnl.toFixed(6);
-      pnlEl.style.color = pnl >= 0 ? '#00ff88' : '#ff4757';
-
-      document.getElementById('pnlDisplay').style.display = 'block';
-    }
-
-    function updateSolReceive() {
-      if (_blockValueUsd === null || _solPrice === null) return;
-      var solAmount = _blockValueUsd / _solPrice;
-      document.getElementById('solReceive').value = solAmount.toFixed(6) + ' SOL';
-    }
-
-    async function swapBlock() {
-      var blockId = parseInt(document.getElementById('swapBlockId').value, 10);
-      var statusEl = document.getElementById('swapStatus');
-
-      if (!blockId || isNaN(blockId)) {
-        setSwapStatus('Please enter a valid block ID.', '#ff4757');
-        return;
-      }
-
-      if (!walletManager.isConnected()) {
-        window.openWalletModal();
-        return;
-      }
-
-      if (_blockValueUsd === null) {
-        setSwapStatus('Block value not loaded yet. Please wait.', '#ff4757');
-        return;
-      }
-
-      setSwapStatus('Checking ownership…', '#888');
-
-      var address = walletManager.currentAddress;
-
-      try {
-        var res = await fetch('/api/blocks/' + encodeURIComponent(address));
-        if (!res.ok) throw new Error('HTTP ' + res.status);
-        var blocks = await res.json();
-        var owned = Array.isArray(blocks) && blocks.some(function(b) {
-          return (typeof b === 'number' ? b : b.blockId) === blockId;
-        });
-        if (!owned) {
-          setSwapStatus('You do not own block #' + blockId.toLocaleString(), '#ff4757');
-          return;
-        }
-      } catch (e) {
-        setSwapStatus('Could not verify ownership: ' + e.message, '#ff4757');
-        return;
-      }
-
-      setSwapStatus('Processing swap…', '#f0a500');
-
-      try {
-        var solAmount = document.getElementById('solReceive').value;
-
-        var postRes = await fetch('/api/swap', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            walletAddress: address,
-            blockId: blockId,
-            expectedSol: solAmount
-          })
-        });
-
-        if (!postRes.ok) {
-          var errData = await postRes.json().catch(function() { return {}; });
-          throw new Error(errData.error || 'Swap API returned HTTP ' + postRes.status);
-        }
-
-        var swapData = await postRes.json();
-
-        // Show P&L in the status message
-        var pnlMsg = swapData.pnl >= 0
-          ? 'Profit: +$' + swapData.pnl.toFixed(6)
-          : 'Loss: -$' + Math.abs(swapData.pnl).toFixed(6);
-
-        setSwapStatus(
-          'Swap complete! ' + pnlMsg + '. SOL transfer will be processed shortly.',
-          swapData.pnl >= 0 ? '#00ff88' : '#ffaa00'
-        );
-
-        // Clear inputs
-        document.getElementById('swapBlockId').value = '';
-        document.getElementById('blockValue').value = '';
-        document.getElementById('solReceive').value = '';
-        document.getElementById('pnlDisplay').style.display = 'none';
-        _blockValueUsd = null;
-        _blockData = null;
-      } catch (e) {
-        setSwapStatus('Swap failed: ' + e.message, '#ff4757');
-      }
-    }
-  </script>
-
-  <!-- Module script: imports fetchJupiterPrices -->
-  <script type="module">
-    import { fetchJupiterPrices } from '../js/solanaPayment.js';
-
-    // Fetch SOL price and store globally so updateSolReceive can use it
-    async function initSolPrice() {
-      try {
-        var prices = await fetchJupiterPrices();
-        if (prices && prices.SOL && prices.SOL.price) {
-          window._solPrice = prices.SOL.price;
-          // Notify the non-module script via custom event
-          document.dispatchEvent(new CustomEvent('solPriceReady', { detail: prices.SOL.price }));
-        }
-      } catch (e) {
-        // silently ignore — price display will remain empty
-      }
-    }
-
-    initSolPrice();
-  </script>
-
-  <script>
-    // Listen for SOL price from module script
-    document.addEventListener('solPriceReady', function(e) {
-      _solPrice = e.detail;
-      updateSolReceive();
-    });
-  </script>
+  <script src="../js/walletModal.js"></script>
 </body>
 </html>

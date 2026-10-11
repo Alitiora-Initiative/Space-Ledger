@@ -33,12 +33,23 @@ const networkConfig = {
     chainId: 42161
   }
 };
+const READ_ONLY_METHODS = new Set([
+  'eth_blockNumber', 'eth_chainId', 'eth_getBalance', 'eth_getBlockByNumber',
+  'eth_getBlockByHash', 'eth_getTransactionByHash', 'eth_getTransactionReceipt',
+  'eth_gasPrice', 'eth_estimateGas', 'eth_call', 'net_version'
+]);
 
 async function routeRequest(networkId, method, params = []) {
-  const network = networkConfig[networkId];
+  const network = networkConfig[Number(networkId)];
   
   if (!network) {
     throw new Error(`Network ID ${networkId} not supported`);
+  }
+  if (typeof method !== 'string' || !READ_ONLY_METHODS.has(method)) {
+    throw new Error('Only allowlisted, read-only EVM RPC methods are supported.');
+  }
+  if (!Array.isArray(params) || params.length > 8) {
+    throw new Error('RPC params must be an array containing no more than 8 items.');
   }
   
   try {
@@ -47,6 +58,7 @@ async function routeRequest(networkId, method, params = []) {
       headers: {
         'Content-Type': 'application/json',
       },
+      signal: AbortSignal.timeout(10_000),
       body: JSON.stringify({
         jsonrpc: '2.0',
         id: 1,
@@ -55,6 +67,7 @@ async function routeRequest(networkId, method, params = []) {
       })
     });
     
+    if (!response.ok) throw new Error(`RPC endpoint returned HTTP ${response.status}`);
     const data = await response.json();
     
     if (data.error) {
@@ -82,21 +95,7 @@ function getNetworks() {
   }));
 }
 
-function addNetwork(networkId, name, rpcUrl, chainId) {
-  networkConfig[networkId] = {
-    name,
-    rpcUrl,
-    chainId
-  };
-}
-
-function removeNetwork(networkId) {
-  delete networkConfig[networkId];
-}
-
 module.exports = {
   routeRequest,
-  getNetworks,
-  addNetwork,
-  removeNetwork
+  getNetworks
 };

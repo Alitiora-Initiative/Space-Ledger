@@ -1,361 +1,58 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Spatial Ledger Protocol — Profile</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Wallet profile — Space Ledger</title>
   <link rel="stylesheet" href="../css/styles.css">
+  <script src="/js/site.js" defer></script>
 </head>
-<body><div class="stars-a"></div><div class="stars-b"></div>
-  <nav>
-    <div class="container">
-      <a href="/index.html" style="display:flex;align-items:center;gap:8px;text-decoration:none;">
-      <img src="/img/logo.jpg" alt="SLP" style="width:32px;height:32px;border-radius:7px;object-fit:cover;">
-      <span class="logo">Spatial Ledger Protocol</span>
-    </a>
-      <ul>
-        <li><a href="../index.html">Home</a></li>
-        <li><a href="purchase.html">Purchase</a></li>
-        <li><a href="grid.html">Grid View</a></li>
-        <li><a href="treasury.html">Treasury</a></li>
-        <li><a href="network.html">Network</a></li>
-        <li><a href="dashboard.html">Dashboard</a></li>
-        <li><a href="profile.html" style="color:#00d4ff;">Profile</a></li>
-        <li><a href="swap.html">Swap</a></li>
-        <li><button class="wallet-button" id="navWalletBtn" onclick="window.openWalletModal()">Connect Wallet</button></li>
-      </ul>
-    </div>
-  </nav>
-
-  <!-- Empty state -->
-  <div class="container" id="emptyState">
-    <div class="card" style="text-align:center;padding:60px 20px;">
-      <h2>Connect Your Wallet</h2>
-      <p style="color:#888;margin:20px 0;">Connect a wallet to view your profile and holdings.</p>
-      <button class="button" onclick="window.openWalletModal()">Connect Wallet</button>
-    </div>
-  </div>
-
-  <!-- Profile content -->
-  <div class="container" id="profileContent" style="display:none;">
-
-    <!-- Header card: identicon + address -->
-    <div class="card" style="display:flex;align-items:center;gap:20px;flex-wrap:wrap;">
-      <div class="identicon" id="identicon"></div>
-      <div>
-        <div style="font-size:1.3em;font-weight:600;" id="profileAddress">0x...</div>
-        <div style="color:#888;font-size:0.85em;" id="profileAddressFull"></div>
+<body>
+  <nav><div class="container">
+    <a href="/index.html" style="display:flex;align-items:center;gap:8px;text-decoration:none;"><img src="/img/logo.jpg" alt="Space Ledger" style="width:32px;height:32px;border-radius:7px;object-fit:cover;"><span class="logo">Space Ledger</span></a>
+    <ul>
+      <li><a href="../index.html">Home</a></li><li><a href="purchase.html">Pricing</a></li><li><a href="grid.html">Grid View</a></li><li><a href="treasury.html">Treasury</a></li><li><a href="network.html">Network</a></li><li><a href="dashboard.html">Dashboard</a></li><li><a class="active" aria-current="page" href="profile.html">Profile</a></li>
+      <li><button class="wallet-button" id="navWalletBtn" type="button" onclick="window.openWalletModal()">Connect Wallet</button></li>
+    </ul>
+  </div></nav>
+  <main class="container">
+    <header class="hero"><h1>Wallet profile</h1><p>A wallet address is an identifier. It does not prove Space Ledger ownership.</p></header>
+    <section class="card">
+      <h2>Connected account</h2>
+      <p class="feature-status" id="profileAddress">No wallet connected.</p>
+      <p id="profileFeedback" class="estimate-note" aria-live="polite"></p>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:18px;">
+        <button class="button" id="connectWallet" type="button" onclick="window.openWalletModal()">Connect wallet</button>
+        <button class="button" id="copyAddress" type="button" hidden>Copy address</button>
       </div>
-      <button class="button" onclick="copyAddress()" style="margin-left:auto;">Copy Address</button>
-      <span id="copyFeedback" style="font-size:0.8em;color:#00ff88;margin-left:8px;"></span>
-    </div>
-
-    <!-- PnL Panel -->
-    <div class="stats-grid">
-      <div class="stat-card">
-        <h3>Total Invested</h3>
-        <div class="value" id="totalInvested">$0.0000</div>
-      </div>
-      <div class="stat-card">
-        <h3>Current Value</h3>
-        <div class="value" id="currentValue">$0.0000</div>
-      </div>
-      <div class="stat-card">
-        <h3>Unrealized PnL</h3>
-        <div class="value" id="unrealizedPnl">$0.0000</div>
-      </div>
-      <div class="stat-card">
-        <h3>PnL %</h3>
-        <div class="value" id="pnlPercent">0.00%</div>
-      </div>
-    </div>
-
-    <!-- Holdings -->
-    <div class="card">
-      <h2>Holdings</h2>
-      <div id="holdingsList"></div>
-    </div>
-
-    <!-- Bar chart -->
-    <div class="card">
-      <h2>Portfolio Breakdown</h2>
-      <div class="pnl-bar-chart" id="barChart"></div>
-    </div>
-
-    <!-- Recent Activity -->
-    <div class="card">
-      <h2>Recent Activity</h2>
-      <div id="activityTable"></div>
-    </div>
-
-    <!-- Export -->
-    <div class="card">
-      <button class="button" onclick="exportData()">Export JSON</button>
-    </div>
-  </div>
-
-  <script src="../js/wallet.js"></script>`n  <script src="../js/walletModal.js?v=202610111259"></script>
+    </section>
+    <section class="card">
+      <h2>Verified holdings</h2>
+      <p class="feature-status">Unavailable. No on-chain ownership program or verified indexer is deployed, so this profile does not show local or estimated holdings.</p>
+    </section>
+  </main>
+  <script src="../js/wallet.js"></script>
+  <script src="../js/walletModal.js"></script>
   <script>
-    var SLOPE = 9.999e-10;
-    var profileAddress = null;
-    var allBlocks = [];
-
-    walletManager.on('connected', function(data) {
-      profileAddress = data.address;
-      document.getElementById('emptyState').style.display = 'none';
-      document.getElementById('profileContent').style.display = 'block';
-      updateNavWalletBtn(data.address);
-      loadProfile(data.address);
+    const profileAddress = document.getElementById('profileAddress');
+    const copyButton = document.getElementById('copyAddress');
+    const feedback = document.getElementById('profileFeedback');
+    function showWallet(data) {
+      profileAddress.textContent = `${data.wallet} · ${data.address}`;
+      copyButton.hidden = false;
+      document.getElementById('connectWallet').hidden = true;
+    }
+    walletManager.on('connected', showWallet);
+    walletManager.on('disconnected', () => {
+      profileAddress.textContent = 'No wallet connected.';
+      copyButton.hidden = true;
+      document.getElementById('connectWallet').hidden = false;
     });
-
-    walletManager.on('disconnected', function() {
-      document.getElementById('emptyState').style.display = 'block';
-      document.getElementById('profileContent').style.display = 'none';
+    copyButton.addEventListener('click', async () => {
+      try { await navigator.clipboard.writeText(walletManager.currentAddress); feedback.textContent = 'Address copied.'; }
+      catch { feedback.textContent = 'Could not copy the address in this browser.'; }
     });
-
-    function updateNavWalletBtn(addr) {
-      var btn = document.getElementById('navWalletBtn');
-      if (btn) btn.textContent = addr.slice(0, 6) + '...' + addr.slice(-4);
-    }
-
-    function copyAddress() {
-      if (profileAddress) {
-        navigator.clipboard.writeText(profileAddress)
-          .then(function() {
-            var fb = document.getElementById('copyFeedback');
-            if (fb) {
-              fb.textContent = 'Copied!';
-              setTimeout(function() { fb.textContent = ''; }, 2000);
-            }
-          })
-          .catch(function() {
-            var fb = document.getElementById('copyFeedback');
-            if (fb) {
-              fb.style.color = '#ff4757';
-              fb.textContent = 'Copy failed.';
-              setTimeout(function() { fb.textContent = ''; fb.style.color = '#00ff88'; }, 2000);
-            }
-          });
-      }
-    }
-
-    async function loadProfile(address) {
-      document.getElementById('profileAddress').textContent =
-        address.slice(0, 6) + '...' + address.slice(-4);
-      document.getElementById('profileAddressFull').textContent = address;
-
-      renderIdenticon(address);
-
-      var blocks = [];
-      try {
-        var stored = localStorage.getItem('spice_ledger_' + address);
-        if (stored) {
-          var parsed = JSON.parse(stored);
-          blocks = parsed.blocks || [];
-          // Migrate legacy plain-int format
-          if (blocks.length > 0 && typeof blocks[0] === 'number') {
-            blocks = blocks.map(function(n) {
-              return { blockId: n, purchasePrice: SLOPE * n + 0.001, timestamp: Date.now() };
-            });
-          }
-        }
-      } catch(e) { blocks = []; }
-
-      // Fallback to API
-      if (blocks.length === 0) {
-        try {
-          var resp = await fetch('/api/blocks/' + encodeURIComponent(address));
-          if (resp.ok) blocks = await resp.json();
-        } catch(e) { /* ignore */ }
-      }
-
-      allBlocks = blocks;
-
-      var currentPrices = await batchFetchPrices(blocks.map(function(b) { return b.blockId; }));
-
-      renderPnlPanel(blocks, currentPrices);
-      renderHoldings(blocks, currentPrices);
-      renderBarChart(blocks, currentPrices);
-
-      try {
-        var stored2 = localStorage.getItem('spice_ledger_' + address);
-        if (stored2) {
-          var data2 = JSON.parse(stored2);
-          renderActivity(data2.activity || []);
-        } else {
-          renderActivity([]);
-        }
-      } catch(e) { renderActivity([]); }
-    }
-
-    async function batchFetchPrices(blockIds) {
-      var results = {};
-      if (!blockIds || blockIds.length === 0) return results;
-      var inFlight = 0;
-      var index = 0;
-
-      await new Promise(function(resolve) {
-        function runNext() {
-          if (index >= blockIds.length && inFlight === 0) { resolve(); return; }
-          while (inFlight < 10 && index < blockIds.length) {
-            (function() {
-              var id = blockIds[index++];
-              inFlight++;
-              fetch('/api/price/' + id)
-                .then(function(r) { return r.ok ? r.json() : Promise.reject(); })
-                .then(function(d) { results[id] = d.price; })
-                .catch(function() { results[id] = SLOPE * id + 0.001; })
-                .finally(function() { inFlight--; runNext(); });
-            })();
-          }
-        }
-        runNext();
-      });
-
-      return results;
-    }
-
-    function renderPnlPanel(blocks, prices) {
-      var totalInvested = blocks.reduce(function(s, b) { return s + (b.purchasePrice || 0); }, 0);
-      var currentValue  = blocks.reduce(function(s, b) {
-        return s + (prices[b.blockId] !== undefined ? prices[b.blockId] : (SLOPE * b.blockId + 0.001));
-      }, 0);
-      var unrealized = currentValue - totalInvested;
-      var pnlPct = totalInvested > 0 ? (unrealized / totalInvested) * 100 : 0;
-
-      document.getElementById('totalInvested').textContent = '$' + totalInvested.toFixed(4);
-      document.getElementById('currentValue').textContent  = '$' + currentValue.toFixed(4);
-
-      var pnlEl = document.getElementById('unrealizedPnl');
-      pnlEl.textContent = (unrealized >= 0 ? '\u25b2 $' : '\u25bc $') + Math.abs(unrealized).toFixed(4);
-      pnlEl.className = 'value ' + (unrealized >= 0 ? 'pnl-positive' : 'pnl-negative');
-
-      var pctEl = document.getElementById('pnlPercent');
-      pctEl.textContent = (pnlPct >= 0 ? '+' : '') + pnlPct.toFixed(2) + '%';
-      pctEl.className = 'value ' + (pnlPct >= 0 ? 'pnl-positive' : 'pnl-negative');
-    }
-
-    function renderHoldings(blocks, prices) {
-      var container = document.getElementById('holdingsList');
-      if (!blocks || blocks.length === 0) {
-        container.innerHTML = '<p style="color:#888;">No blocks owned yet.</p>';
-        return;
-      }
-
-      blocks.sort(function(a, b) { return a.blockId - b.blockId; });
-
-      var html = blocks.map(function(b) {
-        var currentPrice = prices[b.blockId] !== undefined ? prices[b.blockId] : (SLOPE * b.blockId + 0.001);
-        var pnlPct = b.purchasePrice > 0
-          ? ((currentPrice - b.purchasePrice) / b.purchasePrice * 100)
-          : 0;
-        return '<div class="token-card">' +
-          '<canvas class="token-icon" width="40" height="40" data-seed="' + b.blockId + '" style="image-rendering:pixelated;"></canvas>' +
-          '<div>' +
-            '<div class="token-name">SPACE Pixels</div>' +
-            '<div class="token-sub">Block #' + b.blockId.toLocaleString() + ' \u00b7 100 px</div>' +
-          '</div>' +
-          '<div class="token-spacer"></div>' +
-          '<div class="token-value">' +
-            '<div class="token-balance">100 px</div>' +
-            '<div class="token-usd">$' + currentPrice.toFixed(6) + '</div>' +
-            '<div class="token-pnl ' + (pnlPct >= 0 ? 'pnl-positive' : 'pnl-negative') + '">' +
-              (pnlPct >= 0 ? '+' : '') + pnlPct.toFixed(2) + '%' +
-            '</div>' +
-          '</div>' +
-        '</div>';
-      }).join('');
-
-      container.innerHTML = html;
-
-      container.querySelectorAll('canvas[data-seed]').forEach(function(canvas) {
-        drawPixelIcon(canvas, parseInt(canvas.dataset.seed));
-      });
-    }
-
-    function drawPixelIcon(canvas, seed) {
-      var ctx = canvas.getContext('2d');
-      var size = 4;
-      var cell = 10;
-      for (var r = 0; r < size; r++) {
-        for (var c = 0; c < size; c++) {
-          var hash = ((seed * 31 + r * 17 + c * 7) & 0xffffff);
-          var on = (hash % 3) > 0;
-          ctx.fillStyle = on
-            ? 'hsl(' + ((seed + r * 40) % 360) + ',80%,55%)'
-            : 'rgba(0,0,0,0.3)';
-          var col = c < 2 ? c : 3 - c;
-          ctx.fillRect(col * cell, r * cell, cell, cell);
-          ctx.fillRect((3 - col) * cell, r * cell, cell, cell);
-        }
-      }
-    }
-
-    function renderBarChart(blocks, prices) {
-      var container = document.getElementById('barChart');
-      if (!blocks || blocks.length === 0) { container.innerHTML = ''; return; }
-
-      var vals = blocks.map(function(b) {
-        return prices[b.blockId] !== undefined ? prices[b.blockId] : (SLOPE * b.blockId + 0.001);
-      });
-      var maxVal = Math.max.apply(null, vals.concat([0.001]));
-
-      var html = blocks.slice(0, 20).map(function(b, i) {
-        var val = vals[i] || 0;
-        var pct = Math.min((val / maxVal) * 100, 100);
-        return '<div class="pnl-bar-row">' +
-          '<div class="pnl-bar-label">#' + b.blockId.toLocaleString() + '</div>' +
-          '<div class="pnl-bar-track"><div class="pnl-bar-fill" style="width:' + pct.toFixed(1) + '%;"></div></div>' +
-          '<div style="font-size:0.8em;color:#888;width:80px;text-align:right;">$' + val.toFixed(5) + '</div>' +
-        '</div>';
-      }).join('');
-      container.innerHTML = html;
-    }
-
-    function renderActivity(activity) {
-      var container = document.getElementById('activityTable');
-      if (!activity || activity.length === 0) {
-        container.innerHTML = '<p style="color:#888;">No activity recorded.</p>';
-        return;
-      }
-      var html = '<table class="table"><thead><tr><th>Date</th><th>Action</th><th>Details</th></tr></thead><tbody>';
-      activity.slice(0, 20).forEach(function(item) {
-        html += '<tr><td>' + new Date(item.date).toLocaleString() + '</td><td>' + item.action + '</td><td>' + item.details + '</td></tr>';
-      });
-      html += '</tbody></table>';
-      container.innerHTML = html;
-    }
-
-    function renderIdenticon(address) {
-      var container = document.getElementById('identicon');
-      container.innerHTML = '';
-      for (var i = 0; i < 64; i++) {
-        var charCode = address.charCodeAt(i % address.length) || 0;
-        var on = charCode % 2 === 0;
-        var cell = document.createElement('div');
-        cell.className = 'identicon-cell';
-        cell.style.background = on
-          ? 'hsl(' + ((charCode * 5) % 360) + ',70%,55%)'
-          : 'rgba(255,255,255,0.04)';
-        container.appendChild(cell);
-      }
-    }
-
-    function exportData() {
-      if (!profileAddress) return;
-      var data = {
-        address: profileAddress,
-        blocks: allBlocks,
-        exportDate: new Date().toISOString()
-      };
-      var blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-      var url = URL.createObjectURL(blob);
-      var a = document.createElement('a');
-      a.href = url;
-      a.download = 'spice-ledger-profile-' + profileAddress + '.json';
-      a.click();
-      URL.revokeObjectURL(url);
-    }
+    if (walletManager.isConnected()) showWallet({ wallet: walletManager.currentWallet, address: walletManager.currentAddress });
   </script>
 </body>
 </html>

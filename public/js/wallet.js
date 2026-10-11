@@ -1,213 +1,109 @@
-// Wallet Connection Module
-// Supports MetaMask, Phantom, WalletConnect, and other EVM/Solana wallets
-
+// Read-only wallet identity connection. This module never requests a signature
+// and never submits a transaction.
 class WalletManager {
   constructor() {
     this.currentWallet = null;
     this.currentAddress = null;
     this.connected = false;
     this.listeners = [];
-    this.solBalance = 0;
+    this.provider = null;
+    this._providerEvents = null;
   }
 
-  // Subscribe to wallet events
-  on(event, callback) {
-    this.listeners.push({ event, callback });
-  }
-
+  on(event, callback) { this.listeners.push({ event, callback }); }
   emit(event, data) {
-    this.listeners.forEach(({ event: e, callback }) => {
-      if (e === event) callback(data);
+    this.listeners.forEach(({ event: registered, callback }) => {
+      if (registered === event) callback(data);
     });
   }
 
-  // Connect to MetaMask (Ethereum/Base/etc.)
-  async connectMetaMask() {
-    if (typeof window.ethereum === 'undefined') {
-      throw new Error('MetaMask not installed. Please install MetaMask extension.');
-    }
+  getMetaMaskProvider() {
+    const root = window.ethereum;
+    const providers = root?.providers || (root ? [root] : []);
+    return providers.find(provider => provider.isMetaMask && !provider.isBraveWallet) || null;
+  }
 
-    try {
-      const accounts = await window.ethereum.request({
-        method: 'eth_requestAccounts'
-      });
-
-      if (accounts.length > 0) {
-        this.currentWallet = 'metamask';
+  attach(provider, wallet, address) {
+    this.detachListeners();
+    this.provider = provider;
+    this.currentWallet = wallet;
+    this.currentAddress = address;
+    this.connected = true;
+    this._providerEvents = {
+      accountsChanged: accounts => {
+        if (!accounts || !accounts.length) return this.disconnect(false);
         this.currentAddress = accounts[0];
-        this.connected = true;
-        this.emit('connected', { wallet: 'metamask', address: this.currentAddress });
-        return { success: true, wallet: 'MetaMask', address: this.currentAddress };
+        this.emit('connected', { wallet: this.currentWallet, address: this.currentAddress });
+      },
+      disconnect: () => this.disconnect(false),
+      accountChanged: publicKey => {
+        if (!publicKey) return this.disconnect(false);
+        const nextAddress = publicKey.toString();
+        this.currentAddress = nextAddress;
+        this.emit('connected', { wallet: this.currentWallet, address: nextAddress });
       }
+    };
+    provider.on?.('accountsChanged', this._providerEvents.accountsChanged);
+    provider.on?.('disconnect', this._providerEvents.disconnect);
+    provider.on?.('accountChanged', this._providerEvents.accountChanged);
+    this.emit('connected', { wallet, address });
+    return { success: true, wallet, address };
+  }
+
+  detachListeners() {
+    if (this.provider && this._providerEvents) {
+      this.provider.removeListener?.('accountsChanged', this._providerEvents.accountsChanged);
+      this.provider.removeListener?.('disconnect', this._providerEvents.disconnect);
+      this.provider.removeListener?.('accountChanged', this._providerEvents.accountChanged);
+    }
+    this._providerEvents = null;
+  }
+
+  async connectMetaMask() {
+    const provider = this.getMetaMaskProvider();
+    if (!provider) throw new Error('MetaMask was not detected. Install the official MetaMask extension, then reload.');
+    try {
+      const accounts = await provider.request({ method: 'eth_requestAccounts' });
+      if (!Array.isArray(accounts) || !accounts[0]) throw new Error('MetaMask did not return an account.');
+      return this.attach(provider, 'metamask', accounts[0]);
     } catch (error) {
       throw new Error(`MetaMask connection failed: ${error.message}`);
     }
   }
 
-  // Connect to Phantom (Solana)
   async connectPhantom() {
-    if (typeof window.solana === 'undefined' || !window.solana.isPhantom) {
-      throw new Error('Phantom wallet not installed. Please install Phantom extension.');
-    }
-
+    const provider = window.phantom?.solana || (window.solana?.isPhantom ? window.solana : null);
+    if (!provider?.isPhantom) throw new Error('Phantom was not detected. Install the official Phantom extension, then reload.');
     try {
-      const response = await window.solana.connect();
-      const address = response.publicKey.toString();
-
-      this.currentWallet = 'phantom';
-      this.currentAddress = address;
-      this.connected = true;
-
-      // Fetch initial balance
-      await this.updateSolBalance();
-
-      this.emit('connected', { wallet: 'phantom', address: this.currentAddress });
-      return { success: true, wallet: 'Phantom', address: this.currentAddress };
+      const response = await provider.connect();
+      const address = response?.publicKey?.toString();
+      if (!address) throw new Error('Phantom did not return an account.');
+      return this.attach(provider, 'phantom', address);
     } catch (error) {
       throw new Error(`Phantom connection failed: ${error.message}`);
     }
   }
 
-  // Disconnect wallet
-  disconnect() {
+  disconnect(notifyProvider = true) {
+    const previousProvider = this.provider;
+    const previousWallet = this.currentWallet;
+    this.detachListeners();
+    this.provider = null;
     this.currentWallet = null;
     this.currentAddress = null;
     this.connected = false;
-    this.solBalance = 0;
+    if (notifyProvider && previousWallet === 'phantom') {
+      try { previousProvider?.disconnect?.(); } catch (_) { /* provider cleanup is best-effort */ }
+    }
     this.emit('disconnected');
     return { success: true };
   }
 
-  // Get current wallet info
   getWalletInfo() {
-    return {
-      connected: this.connected,
-      wallet: this.currentWallet,
-      address: this.currentAddress,
-      solBalance: this.solBalance
-    };
+    return { connected: this.connected, wallet: this.currentWallet, address: this.currentAddress };
   }
-
-  // Check if wallet is connected
-  isConnected() {
-    return this.connected;
-  }
-
-  // Get shortened address for display
-  shortenAddress(address) {
-    if (!address) return '';
-    return `${address.slice(0, 6)}...${address.slice(-4)}`;
-  }
-
-  // Update SOL balance (requires Solana web3 to be loaded)
-  async updateSolBalance() {
-    if (!this.connected || this.currentWallet !== 'phantom' || !this.currentAddress) {
-      this.solBalance = 0;
-      return 0;
-    }
-
-    try {
-      // Use the same loading mechanism as solanaPayment.js
-      const web3Module = await import('https://esm.sh/@solana/web3.js');
-      const Connection = web3Module.Connection || (web3Module.default && web3Module.default.Connection);
-      const PublicKey = web3Module.PublicKey || (web3Module.default && web3Module.default.PublicKey);
-
-      if (!Connection || !PublicKey) {
-        console.warn('Solana web3 exports not found');
-        return 0;
-      }
-
-      const connection = new Connection('https://api.devnet.solana.com', 'confirmed');
-      const publicKey = new PublicKey(this.currentAddress);
-      const balance = await connection.getBalance(publicKey);
-      this.solBalance = balance / 1e9; // Convert lamports to SOL
-
-      // Emit balance update event
-      this.emit('balanceUpdated', { solBalance: this.solBalance });
-
-      return this.solBalance;
-    } catch (error) {
-      console.error('Error fetching SOL balance:', error);
-      this.solBalance = 0;
-      return 0;
-    }
-  }
-
-  // Get all token balances (SOL, USDC, USDT)
-  async getAllBalances() {
-    if (!this.connected || this.currentWallet !== 'phantom' || !this.currentAddress) {
-      return { sol: 0, usdc: 0, usdt: 0 };
-    }
-
-    try {
-      const [web3Module, splTokenModule] = await Promise.all([
-        import('https://esm.sh/@solana/web3.js'),
-        import('https://esm.sh/@solana/spl-token')
-      ]);
-
-      const Connection = web3Module.Connection || (web3Module.default && web3Module.default.Connection);
-      const PublicKey = web3Module.PublicKey || (web3Module.default && web3Module.default.PublicKey);
-      const getATA = splTokenModule.getAssociatedTokenAddressSync
-        || (splTokenModule.default && splTokenModule.default.getAssociatedTokenAddressSync);
-
-      if (!Connection || !PublicKey || !getATA) {
-        console.warn('Solana web3 exports not found');
-        return { sol: 0, usdc: 0, usdt: 0 };
-      }
-
-      const connection = new Connection('https://api.devnet.solana.com', 'confirmed');
-      const publicKey = new PublicKey(this.currentAddress);
-
-      // Get SOL balance
-      const solBalanceLamports = await connection.getBalance(publicKey);
-      const solBalance = solBalanceLamports / 1e9;
-
-      // Get SPL token addresses
-      const usdcMintDevnet = '4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU';
-      const usdtMintMainnet = 'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB';
-
-      // Get token balances
-      let usdcBalance = 0;
-      let usdtBalance = 0;
-
-      try {
-        const usdcAta = getATA(new PublicKey(usdcMintDevnet), publicKey);
-        const usdcAccount = await connection.getTokenAccountBalance(usdcAta);
-        usdcBalance = parseFloat(usdcAccount.value.amount) / 1e6; // USDC has 6 decimals
-      } catch (e) {
-        // Token account might not exist
-        usdcBalance = 0;
-      }
-
-      try {
-        const usdtAta = getATA(new PublicKey(usdtMintMainnet), publicKey);
-        const usdtAccount = await connection.getTokenAccountBalance(usdtAta);
-        usdtBalance = parseFloat(usdtAccount.value.amount) / 1e6; // USDT has 6 decimals
-      } catch (e) {
-        // Token account might not exist
-        usdtBalance = 0;
-      }
-
-      const balances = { sol: solBalance, usdc: usdcBalance, usdt: usdtBalance };
-
-      // Emit balance update event
-      this.emit('balanceUpdated', balances);
-
-      return balances;
-    } catch (error) {
-      console.error('Error fetching token balances:', error);
-      return { sol: 0, usdc: 0, usdt: 0 };
-    }
-  }
-
-  // Get current SOL balance
-  getSolBalance() {
-    return this.solBalance;
-  }
+  isConnected() { return this.connected; }
+  shortenAddress(address) { return address ? `${address.slice(0, 6)}…${address.slice(-4)}` : ''; }
 }
 
-// Global wallet manager instance
-const walletManager = new WalletManager();
-
-// Make available globally
-window.walletManager = walletManager;
+window.walletManager = new WalletManager();

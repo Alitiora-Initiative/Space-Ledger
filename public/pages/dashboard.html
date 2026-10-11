@@ -1,455 +1,67 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Spatial Ledger Protocol — Dashboard</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Account status — Space Ledger</title>
   <link rel="stylesheet" href="../css/styles.css">
-  <style>
-    @keyframes livePulse {
-      0%,100% { opacity: 1; }
-      50%      { opacity: 0.3; }
-    }
-  </style>
+  <script src="/js/site.js" defer></script>
 </head>
-<body><div class="stars-a"></div><div class="stars-b"></div>
-  <nav>
-    <div class="container">
-      <a href="/index.html" style="display:flex;align-items:center;gap:8px;text-decoration:none;">
-      <img src="/img/logo.jpg" alt="SLP" style="width:32px;height:32px;border-radius:7px;object-fit:cover;">
-      <span class="logo">Spatial Ledger Protocol</span>
-    </a>
-      <ul>
-        <li><a href="../index.html">Home</a></li>
-        <li><a href="purchase.html">Purchase</a></li>
-        <li><a href="grid.html">Grid View</a></li>
-        <li><a href="treasury.html">Treasury</a></li>
-        <li><a href="network.html">Network</a></li>
-        <li><a href="dashboard.html" style="color: #00d4ff;">Dashboard</a></li>
-        <li><a href="profile.html">Profile</a></li>
-        <li><a href="swap.html">Swap</a></li>
-        <li><button class="wallet-button" id="navWalletBtn" onclick="window.openWalletModal()">Connect Wallet</button></li>
-      </ul>
-    </div>
-  </nav>
-
-  <div class="container">
-    <h1 style="text-align: center; margin-bottom: 30px;">Your Dashboard</h1>
-
-    <!-- Wallet Connection Section -->
-    <div class="card" id="walletSection">
-      <h2>Wallet Connection</h2>
-      <div id="walletNotConnected">
-        <p style="color: #888; margin-bottom: 20px;">Connect your wallet to view your owned blocks and make purchases.</p>
-        <div style="display: flex; gap: 15px; flex-wrap: wrap;">
-          <button class="button" onclick="window.openWalletModal()">Connect Wallet</button>
-        </div>
+<body>
+  <nav><div class="container">
+    <a href="/index.html" style="display:flex;align-items:center;gap:8px;text-decoration:none;"><img src="/img/logo.jpg" alt="Space Ledger" style="width:32px;height:32px;border-radius:7px;object-fit:cover;"><span class="logo">Space Ledger</span></a>
+    <ul>
+      <li><a href="../index.html">Home</a></li><li><a href="purchase.html">Pricing</a></li><li><a href="grid.html">Grid View</a></li><li><a href="treasury.html">Treasury</a></li><li><a href="network.html">Network</a></li><li><a class="active" aria-current="page" href="dashboard.html">Dashboard</a></li><li><a href="profile.html">Profile</a></li>
+      <li><button class="wallet-button" id="navWalletBtn" type="button" onclick="window.openWalletModal()">Connect Wallet</button></li>
+    </ul>
+  </div></nav>
+  <main class="container">
+    <header class="hero"><h1>Account</h1><p>Wallet connection status and verified app capabilities.</p></header>
+    <section class="card" id="walletCard">
+      <h2>Connect a wallet</h2>
+      <p id="walletAddress" class="feature-status">Not connected</p>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:18px;">
+        <button class="button" id="connectWallet" type="button" onclick="window.openWalletModal()">Connect wallet</button>
+        <button class="button" id="disconnectWallet" type="button" hidden>Disconnect</button>
+        <button class="button" id="copyWallet" type="button" hidden>Copy address</button>
       </div>
-      <div id="walletConnected" style="display: none;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-          <div>
-            <p style="color: #888;">Connected Wallet:</p>
-            <p style="font-size: 1.2em; font-weight: bold; color: #00d4ff;" id="walletType">-</p>
-            <p style="font-size: 1.1em;" id="walletAddress">-</p>
-          </div>
-          <button class="button" onclick="walletManager.disconnect()">Disconnect</button>
-        </div>
-        <div style="padding: 12px 16px; background: rgba(0,0,0,0.2); border-radius: 8px; border: 1px solid rgba(0,212,255,0.15);">
-          <div style="font-size: 0.75em; color: #888; margin-bottom: 8px;">WALLET BALANCE</div>
-          <div style="display: flex; gap: 20px; flex-wrap: wrap;">
-            <div>
-              <span style="color: #888; font-size: 0.8em;">SOL:</span>
-              <span id="balanceSOL" style="font-weight: 600; color: #e0e0e0; margin-left: 4px;">0</span>
-            </div>
-            <div>
-              <span style="color: #888; font-size: 0.8em;">USDC:</span>
-              <span id="balanceUSDC" style="font-weight: 600; color: #e0e0e0; margin-left: 4px;">0</span>
-            </div>
-            <div>
-              <span style="color: #888; font-size: 0.8em;">USDT:</span>
-              <span id="balanceUSDT" style="font-weight: 600; color: #e0e0e0; margin-left: 4px;">0</span>
-            </div>
-          </div>
-          <button class="button" id="refreshBalanceBtn" style="padding: 4px 10px; font-size: 0.75em; margin-top: 8px;">Refresh</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- User Stats -->
-    <div class="card" id="userStats" style="display: none;">
-      <h2>Your Statistics</h2>
-      <div class="stats-grid">
-        <div class="stat-card">
-          <h3>Blocks Owned</h3>
-          <div class="value" id="blocksOwned">0</div>
-          <div class="label">Total blocks</div>
-        </div>
-        <div class="stat-card">
-          <h3>Pixels Owned</h3>
-          <div class="value" id="pixelsOwned">0</div>
-          <div class="label">Total pixels</div>
-        </div>
-        <div class="stat-card">
-          <h3>Total Invested</h3>
-          <div class="value" id="totalInvestedStat">$0.00</div>
-          <div class="label">Based on purchase prices</div>
-        </div>
-        <div class="stat-card">
-          <h3>Current Value</h3>
-          <div class="value" id="currentValueStat">$0.00</div>
-          <div class="label">Based on current prices</div>
-        </div>
-        <div class="stat-card">
-          <h3>Total P&L</h3>
-          <div class="value" id="totalPnlStat">$0.00</div>
-          <div class="label">Profit/Loss</div>
-        </div>
-        <div class="stat-card">
-          <h3>First Purchase</h3>
-          <div class="value" id="firstPurchase">-</div>
-          <div class="label">Block ID</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Owned Blocks List -->
-    <div class="card" id="ownedBlocks" style="display: none;">
-      <h2>Your Owned Blocks</h2>
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-        <div class="input-group" style="margin-bottom: 0; flex: 1; margin-right: 12px;">
-          <label>Search / Filter</label>
-          <input type="text" id="blockSearch" placeholder="Search by block ID..." onkeyup="filterBlocks()">
-        </div>
-        <div style="display: flex; align-items: center; gap: 8px; font-size: 0.85em; color: #00ff88;">
-          <div style="width: 8px; height: 8px; border-radius: 50%; background: #00ff88; box-shadow: 0 0 6px #00ff88; animation: livePulse 1.5s ease-in-out infinite;"></div>
-          <span>Live P&L</span>
-        </div>
-      </div>
-      <div id="blocksList" style="max-height: 400px; overflow-y: auto;"></div>
-      <div style="margin-top: 16px; padding: 12px; background: rgba(0,0,0,0.2); border-radius: 8px;">
-        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-          <span style="color: #888;">Total Invested</span>
-          <span id="totalInvested" style="font-weight: 600;">$0.00</span>
-        </div>
-        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-          <span style="color: #888;">Current Value</span>
-          <span id="currentValue" style="font-weight: 600;">$0.00</span>
-        </div>
-        <div style="display: flex; justify-content: space-between;">
-          <span style="font-weight: 700;">Total P&L</span>
-          <span id="totalPnl" style="font-weight: 700;">$0.00</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Recent Activity -->
-    <div class="card" id="recentActivity" style="display: none;">
-      <h2>Recent Activity</h2>
-      <div id="activityList"></div>
-    </div>
-
-    <!-- Quick Actions -->
-    <div class="card" id="quickActions" style="display: none;">
-      <h2>Quick Actions</h2>
-      <div style="display: flex; gap: 15px; flex-wrap: wrap;">
-        <a href="purchase.html" class="button">Purchase More Blocks</a>
-        <a href="grid.html" class="button">View Grid</a>
-        <button class="button" onclick="exportOwnership()">Export Ownership Data</button>
-      </div>
-    </div>
-
-    <!-- System Status -->
-    <div class="card">
-      <h2>System Status</h2>
-      <div class="stats-grid">
-        <div class="stat-card">
-          <h3>Total Blocks Sold</h3>
-          <div class="value" id="totalBlocksSold">Loading...</div>
-        </div>
-        <div class="stat-card">
-          <h3>Available Blocks</h3>
-          <div class="value" id="availableBlocks">Loading...</div>
-        </div>
-        <div class="stat-card">
-          <h3>Total Fees Collected</h3>
-          <div class="value" id="totalFeesCollected">Loading...</div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <script src="../js/wallet.js"></script>`n  <script src="../js/walletModal.js?v=202610111259"></script>
+      <p id="walletFeedback" class="estimate-note" aria-live="polite"></p>
+    </section>
+    <section class="card">
+      <h2>Holdings and activity</h2>
+      <p class="feature-status">No ownership contract or verified indexer is deployed. This dashboard will not invent block balances, portfolio values, profit/loss, or activity history.</p>
+    </section>
+    <section class="card">
+      <h2>Available now</h2>
+      <p>Connect Phantom or MetaMask to identify your wallet. Explore the proposed pricing formula or browse a pixel grid preview. Wallet connection alone does not create ownership.</p>
+      <p style="margin-top:18px;"><a class="button" href="purchase.html">Open price estimator</a> <a class="button" href="grid.html">Browse the grid</a></p>
+    </section>
+  </main>
+  <script src="../js/wallet.js"></script>
+  <script src="../js/walletModal.js"></script>
   <script>
-    let ownedBlocks = [];
-
-    // Initialize wallet manager
-    walletManager.on('connected', (data) => {
-      updateWalletUI(data);
-      loadUserData(data.address);
+    const address = document.getElementById('walletAddress');
+    const feedback = document.getElementById('walletFeedback');
+    const disconnect = document.getElementById('disconnectWallet');
+    const copy = document.getElementById('copyWallet');
+    walletManager.on('connected', ({ wallet, address: value }) => {
+      address.textContent = `${wallet} · ${value}`;
+      disconnect.hidden = false;
+      copy.hidden = false;
+      document.getElementById('connectWallet').hidden = true;
     });
-
     walletManager.on('disconnected', () => {
-      updateWalletUI(null);
+      address.textContent = 'Not connected';
+      disconnect.hidden = true;
+      copy.hidden = true;
+      document.getElementById('connectWallet').hidden = false;
     });
-
-    function updateWalletUI(data) {
-      const notConnected = document.getElementById('walletNotConnected');
-      const connected = document.getElementById('walletConnected');
-      const userStats = document.getElementById('userStats');
-      const ownedBlocks = document.getElementById('ownedBlocks');
-      const recentActivity = document.getElementById('recentActivity');
-      const quickActions = document.getElementById('quickActions');
-
-      if (data) {
-        notConnected.style.display = 'none';
-        connected.style.display = 'block';
-        userStats.style.display = 'block';
-        ownedBlocks.style.display = 'block';
-        recentActivity.style.display = 'block';
-        quickActions.style.display = 'block';
-
-        document.getElementById('walletType').textContent = data.wallet.charAt(0).toUpperCase() + data.wallet.slice(1);
-        document.getElementById('walletAddress').textContent = walletManager.shortenAddress(data.address);
-
-        // Fetch initial balances
-        updateBalances();
-      } else {
-        notConnected.style.display = 'block';
-        connected.style.display = 'none';
-        userStats.style.display = 'none';
-        ownedBlocks.style.display = 'none';
-        recentActivity.style.display = 'none';
-        quickActions.style.display = 'none';
-      }
-    }
-
-    // Update wallet balances
-    async function updateBalances() {
-      if (!walletManager.isConnected()) return;
-
-      try {
-        var balances = await walletManager.getAllBalances();
-        document.getElementById('balanceSOL').textContent  = balances.sol.toFixed(6);
-        document.getElementById('balanceUSDC').textContent = balances.usdc.toFixed(2);
-        document.getElementById('balanceUSDT').textContent = balances.usdt.toFixed(2);
-      } catch(e) {
-        console.error('Error updating balances:', e);
-      }
-    }
-
-    // Refresh balance button
-    document.getElementById('refreshBalanceBtn').addEventListener('click', updateBalances);
-
-    async function loadUserData(address) {
-      // Fetch from backend API instead of localStorage
-      try {
-        var res = await fetch('/api/blocks/' + encodeURIComponent(address));
-        if (res.ok) {
-          var blocks = await res.json();
-          ownedBlocks = Array.isArray(blocks) ? blocks : [];
-          updateStats(ownedBlocks);
-          renderBlocksList(ownedBlocks);
-          renderActivity([]); // Activity tracking can be added later
-        } else {
-          ownedBlocks = [];
-          updateStats([]);
-          renderBlocksList([]);
-          renderActivity([]);
-        }
-      } catch(e) {
-        console.error('Error loading user data:', e);
-        ownedBlocks = [];
-        updateStats([]);
-        renderBlocksList([]);
-        renderActivity([]);
-      }
-    }
-
-    function updateStats(blocks) {
-      const totalBlocks = blocks.length;
-      const totalPixels = totalBlocks * 100;
-
-      document.getElementById('blocksOwned').textContent = totalBlocks.toLocaleString();
-      document.getElementById('pixelsOwned').textContent = totalPixels.toLocaleString();
-
-      if (blocks.length > 0) {
-        const firstBlock = Math.min(...blocks.map(function(b){ return typeof b === 'number' ? b : b.blockId; }));
-        document.getElementById('firstPurchase').textContent = firstBlock.toLocaleString();
-      } else {
-        document.getElementById('firstPurchase').textContent = '-';
-      }
-
-      // Calculate total invested, current value, and P&L
-      let totalInvested = 0;
-      let totalValue = 0;
-
-      blocks.forEach(function(item) {
-        var id = typeof item === 'number' ? item : item.blockId;
-        var purchasePrice = typeof item === 'number'
-          ? (0.001 + id * 9.999e-10)
-          : (item.purchasePrice || (0.001 + id * 9.999e-10));
-        var currentValue = 0.001 + (id * 9.999e-10);
-
-        totalInvested += purchasePrice;
-        totalValue += currentValue;
-      });
-
-      var totalPnl = totalValue - totalInvested;
-
-      // Update stat cards
-      document.getElementById('totalInvestedStat').textContent = '$' + totalInvested.toFixed(4);
-      document.getElementById('currentValueStat').textContent = '$' + totalValue.toFixed(4);
-
-      var pnlStatEl = document.getElementById('totalPnlStat');
-      pnlStatEl.textContent = (totalPnl >= 0 ? '+' : '') + '$' + totalPnl.toFixed(4);
-      pnlStatEl.style.color = totalPnl >= 0 ? '#00ff88' : '#ff4757';
-
-      // Update blocks list summary
-      var totalInvestedEl = document.getElementById('totalInvested');
-      var currentValueEl = document.getElementById('currentValue');
-      var pnlEl = document.getElementById('totalPnl');
-
-      if (totalInvestedEl) totalInvestedEl.textContent = '$' + totalInvested.toFixed(4);
-      if (currentValueEl) currentValueEl.textContent = '$' + totalValue.toFixed(4);
-      if (pnlEl) {
-        pnlEl.textContent = (totalPnl >= 0 ? '+' : '') + '$' + totalPnl.toFixed(4);
-        pnlEl.style.color = totalPnl >= 0 ? '#00ff88' : '#ff4757';
-      }
-    }
-
-    function renderBlocksList(blocks) {
-      const container = document.getElementById('blocksList');
-
-      if (blocks.length === 0) {
-        container.innerHTML = '<p style="color: #888;">No blocks owned yet. Start purchasing!</p>';
-        return;
-      }
-
-      let html = '<table class="table"><thead><tr><th>Block ID</th><th>Pixels</th><th>Purchase Price</th><th>Current Value</th><th>P&L</th></tr></thead><tbody>';
-
-      blocks.forEach(function(item) {
-        var blockId = typeof item === 'number' ? item : item.blockId;
-        var purchasePrice = typeof item === 'number'
-          ? (0.001 + blockId * 9.999e-10)
-          : (item.purchasePrice || (0.001 + blockId * 9.999e-10));
-        var currentValue = 0.001 + (blockId * 9.999e-10);
-        var pnl = currentValue - purchasePrice;
-        var pnlColor = pnl >= 0 ? '#00ff88' : '#ff4757';
-
-        html += '<tr><td>' + blockId.toLocaleString() + '</td><td>100</td><td>$' + purchasePrice.toFixed(6) + '</td><td>$' + currentValue.toFixed(6) + '</td><td style="color:' + pnlColor + ';">' + (pnl >= 0 ? '+' : '') + '$' + pnl.toFixed(6) + '</td></tr>';
-      });
-
-      html += '</tbody></table>';
-      container.innerHTML = html;
-    }
-
-    // Auto-refresh P&L every 30 seconds
-    setInterval(function() {
-      if (walletManager.isConnected() && ownedBlocks.length > 0) {
-        updateStats(ownedBlocks);
-        renderBlocksList(ownedBlocks);
-      }
-    }, 30000);
-
-    function filterBlocks() {
-      const searchTerm = document.getElementById('blockSearch').value.toLowerCase();
-      const filtered = ownedBlocks.filter(function(item) {
-        var id = typeof item === 'number' ? item : item.blockId;
-        return id.toString().includes(searchTerm);
-      });
-      renderBlocksList(filtered);
-    }
-
-    function renderActivity(activity) {
-      const container = document.getElementById('activityList');
-      
-      if (activity.length === 0) {
-        container.innerHTML = '<p style="color: #888;">No recent activity</p>';
-        return;
-      }
-
-      let html = '<table class="table"><thead><tr><th>Date</th><th>Action</th><th>Details</th></tr></thead><tbody>';
-      
-      activity.slice(0, 10).forEach(item => {
-        html += `
-          <tr>
-            <td>${new Date(item.date).toLocaleString()}</td>
-            <td>${item.action}</td>
-            <td>${item.details}</td>
-          </tr>
-        `;
-      });
-      
-      html += '</tbody></table>';
-      container.innerHTML = html;
-    }
-
-    function exportOwnership() {
-      if (!walletManager.isConnected()) {
-        document.getElementById('quickActions').insertAdjacentHTML('beforeend',
-          '<p id="exportErr" style="color:#ff4757;margin-top:10px;">Please connect your wallet first.</p>');
-        setTimeout(function() {
-          var el = document.getElementById('exportErr');
-          if (el) el.remove();
-        }, 3000);
-        return;
-      }
-
-      const data = {
-        wallet: walletManager.currentWallet,
-        address: walletManager.currentAddress,
-        blocks: ownedBlocks,
-        exportDate: new Date().toISOString()
-      };
-
-      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `spice-ledger-ownership-${walletManager.currentAddress}.json`;
-      a.click();
-      URL.revokeObjectURL(url);
-    }
-
-    // Check if wallet was previously connected
-    window.addEventListener('load', () => {
-      const savedWallet = localStorage.getItem('spice_ledger_last_wallet');
-      if (savedWallet) {
-        // Auto-reconnect via modal if a wallet was previously used
-        // User can reconnect via the Connect Wallet button
-      }
+    disconnect.addEventListener('click', () => walletManager.disconnect());
+    copy.addEventListener('click', async () => {
+      try { await navigator.clipboard.writeText(walletManager.currentAddress); feedback.textContent = 'Address copied.'; }
+      catch { feedback.textContent = 'Could not copy the address in this browser.'; }
     });
-
-    // Save wallet preference
-    walletManager.on('connected', (data) => {
-      localStorage.setItem('spice_ledger_last_wallet', data.wallet);
-      var btn = document.getElementById('navWalletBtn');
-      if (btn) btn.textContent = data.address.slice(0, 6) + '...' + data.address.slice(-4);
-    });
-
-    // Load system status
-    async function loadSystemStatus() {
-      try {
-        const [supplyResponse, treasuryResponse] = await Promise.all([
-          fetch('/api/supply'),
-          fetch('/api/treasury')
-        ]);
-
-        const supplyData = await supplyResponse.json();
-        const treasuryData = await treasuryResponse.json();
-
-        const totalSold = supplyData.currentSupply;
-        const available = supplyData.totalSupply - totalSold;
-
-        document.getElementById('totalBlocksSold').textContent = totalSold.toLocaleString();
-        document.getElementById('availableBlocks').textContent = available.toLocaleString();
-        document.getElementById('totalFeesCollected').textContent = '$' + treasuryData.collectedFees.toFixed(2);
-      } catch (error) {
-        console.error('Error loading system status:', error);
-      }
-    }
-
-    loadSystemStatus();
+    if (walletManager.isConnected()) walletManager.emit('connected', { wallet: walletManager.currentWallet, address: walletManager.currentAddress });
   </script>
 </body>
 </html>

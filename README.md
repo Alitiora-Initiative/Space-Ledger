@@ -1,19 +1,16 @@
 # Space Ledger
 
-> An experimental, blockchain-inspired pixel canvas with block pricing, wallet integrations, and a small Express API.
+Space Ledger is a visual prototype for a shared canvas of 1 trillion pixels, arranged as 10 billion blocks of 100 pixels. Its published linear price formula is available as a read-only estimate. Purchases, ownership, treasury vesting, and resales are deliberately disabled until a production ownership program and verified indexer are deployed.
 
-## About
+The concept draws inspiration from [The Million Dollar Homepage](https://www.webdesignmuseum.org/web-design-history/million-dollar-homepage-2005), launched by Alex Tew in **2005**. Space Ledger is an independent project and is not affiliated with the original.
 
-Space Ledger models a shared canvas of **1 trillion pixels**, divided into **10 billion blocks** of 100 pixels each. Visitors can explore the grid, view a linear pricing model, and try wallet, portfolio, treasury, and network screens.
+## Current features
 
-The project takes inspiration from [The Million Dollar Homepage](https://www.webdesignmuseum.org/web-design-history/million-dollar-homepage-2005), Alex Tew's pixel-advertising experiment launched in **2005**. Space Ledger reimagines the shared pixel grid as a blockchain-themed prototype; it is not affiliated with the original site. (The original launched in 2005, not 2009.)
-
-## What is included
-
-- Static pages for the canvas, block purchase demo, grid, dashboard, profile, swap, treasury, and network views.
-- An Express server that serves the pages and exposes pricing, supply, grid, treasury, portfolio, and wallet-related API routes.
-- A linear block-price model, Solana wallet/payment experiments, and an optional Supabase data adapter.
-- An experimental Solidity contract in `contracts/`. It is not connected to the Express API or the website's current ownership flow.
+- Responsive static pages with a high-DPI animated galaxy canvas and a persistent navigation bar.
+- Phantom and MetaMask wallet identity connections. The app does not request signatures or send wallet transactions.
+- A read-only estimator for the proposed bonding curve and a grid preview whose ownership state is explicitly unverified.
+- A fixed-list public EVM RPC explorer. It accepts allowlisted read-only methods and rejects transaction methods.
+- An Express server for static pages, estimate endpoints, and deployment-status responses.
 
 ## Run locally
 
@@ -27,9 +24,7 @@ npm start
 
 Open [http://localhost:3000](http://localhost:3000). On macOS or Linux, use `cp .env.example .env` instead of `copy`.
 
-For a local demo, leave `SUPABASE_URL` and `SUPABASE_SERVICE_KEY` blank. The example file contains placeholder values that must be replaced or cleared. To enable Supabase, configure both values in `.env` and run the SQL in [`supabase/schema.sql`](supabase/schema.sql) in the Supabase SQL editor. Keep `.env` and the service-role key private; `.env` is ignored by Git.
-
-`SOLANA_NETWORK` defaults to `devnet`. `FEE_WALLET_ADDRESS` is required for the browser's Solana payment experiment; without it, payment routing is disabled. Do not use a mainnet wallet or send real funds with this prototype.
+`FEE_WALLET_ADDRESS` is the public receiving address supplied by the project owner. It is configuration for future settlement work; the current app does not route payments to it. Never put private keys in the repository or browser.
 
 ## Checks
 
@@ -38,16 +33,16 @@ npm test
 npm run compile
 ```
 
-The test suite syntax-checks the JavaScript and inline page scripts, then starts the Express app and checks its read-only API and static pages. `npm run compile` compiles the Solidity contract with Hardhat.
+The tests cover static pages, read-only API responses, and JavaScript syntax. `npm run compile` compiles the draft Solidity contract. A successful compile does not mean that the contract has been deployed, audited, or connected to the website.
 
-## Prototype limitations
+## Not live yet
 
-- The browser can submit a Solana transfer to the configured fee wallet, but the backend does not verify the submitted transaction signature before recording a purchase.
-- The `/api/purchase` and `/api/swap` routes are prototype bookkeeping flows. A swap does not send funds back to the user.
-- Ownership is currently represented by server memory or Supabase records. The Solidity contract is not wired into these flows, so the website does not currently prove ownership on-chain.
-- Local server state is stored in `data/state.json` when a write route runs. Vercel's serverless filesystem is not durable; use a persistent database before relying on state in a deployment.
-- The displayed pricing and the Solidity contract's constants are separate prototype models. Neither should be treated as a financial quote or promise of return.
+- No ownership contract or program is deployed. The Solidity source is an unconnected draft and does not implement a Solana program.
+- Purchase and resale APIs return HTTP 503. The app does not accept a payment transaction signature or claim ownership after a wallet transfer.
+- Holdings, activity, supply sold, fees collected, and vesting progress are not reported as live data.
+- The configured wallet address does not by itself enable payment collection or settlement.
+- Pricing and treasury parameters describe a model, not a quote, asset, or promise of returns.
 
 ## License
 
-This project is licensed under the MIT License. See [`LICENSE`](LICENSE).
+MIT. See [LICENSE](LICENSE).

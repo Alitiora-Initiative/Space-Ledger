@@ -5,9 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Spatial Ledger Protocol — Network</title>
   <link rel="stylesheet" href="../css/styles.css">
+  <script src="/js/site.js" defer></script>
 </head>
-<body><div class="stars-a"></div><div class="stars-b"></div>
-  <nav>
+  <body><nav>
     <div class="container">
       <a href="/index.html" style="display:flex;align-items:center;gap:8px;text-decoration:none;">
       <img src="/img/logo.jpg" alt="SLP" style="width:32px;height:32px;border-radius:7px;object-fit:cover;">
@@ -15,31 +15,28 @@
     </a>
       <ul>
         <li><a href="../index.html">Home</a></li>
-        <li><a href="purchase.html">Purchase</a></li>
+        <li><a href="purchase.html">Pricing</a></li>
         <li><a href="grid.html">Grid View</a></li>
         <li><a href="treasury.html">Treasury</a></li>
         <li><a href="network.html">Network</a></li>
         <li><a href="dashboard.html">Dashboard</a></li>
         <li><a href="profile.html">Profile</a></li>
-        <li><a href="swap.html">Swap</a></li>
+
         <li><button class="wallet-button" id="navWalletBtn" onclick="window.openWalletModal()">Connect Wallet</button></li>
       </ul>
     </div>
   </nav>
 
   <div class="container">
-    <h1 style="text-align: center; margin-bottom: 30px;">Multi-Chain Network Configuration</h1>
+    <h1 style="text-align: center; margin-bottom: 30px;">Read-only Network Explorer</h1>
 
     <div class="card">
       <h2>About Multi-Chain Architecture</h2>
       <p style="color: #888; line-height: 1.6; margin-bottom: 15px;">
-        Spice Ledger uses a multi-chain RPC routing architecture. When an end user or application
-        needs blockchain metadata, the request is sent to a service layer that identifies the target
-        network and forwards the request to the appropriate RPC endpoint.
+        Query public Ethereum-compatible RPC networks using a fixed allowlist of read-only methods. These requests display public chain data and do not connect to your wallet.
       </p>
       <p style="color: #888; line-height: 1.6;">
-        This enables smoother cross-chain discovery and interaction, supporting Layer 3 applications,
-        app chains, modular rollups, and decentralized RPC nodes.
+        Transactions, contract writes, and custom RPC destinations are not accepted by this explorer.
       </p>
     </div>
 
@@ -63,7 +60,13 @@
       </div>
       <div class="input-group">
         <label>RPC Method</label>
-        <input type="text" id="rpcMethod" placeholder="e.g., eth_blockNumber, eth_getBalance" value="eth_blockNumber">
+        <select id="rpcMethod">
+          <option value="eth_blockNumber">eth_blockNumber</option>
+          <option value="eth_chainId">eth_chainId</option>
+          <option value="net_version">net_version</option>
+          <option value="eth_gasPrice">eth_gasPrice</option>
+          <option value="eth_getBalance">eth_getBalance</option>
+        </select>
       </div>
       <div class="input-group">
         <label>Parameters (JSON array)</label>
@@ -107,23 +110,6 @@
       </table>
     </div>
 
-    <div class="card">
-      <h2>Add Custom Network</h2>
-      <div class="input-group">
-        <label>Network ID</label>
-        <input type="number" id="customNetworkId" placeholder="Chain ID">
-      </div>
-      <div class="input-group">
-        <label>Network Name</label>
-        <input type="text" id="customNetworkName" placeholder="Network name">
-      </div>
-      <div class="input-group">
-        <label>RPC URL</label>
-        <input type="text" id="customRpcUrl" placeholder="https://...">
-      </div>
-      <button class="button" onclick="addCustomNetwork()">Add Network</button>
-      <div class="result" id="addNetworkResult"></div>
-    </div>
   </div>
 
   <script>
@@ -138,13 +124,17 @@
         networks.forEach(network => {
           const div = document.createElement('div');
           div.className = 'network-item';
-          div.innerHTML = `
-            <div>
-              <div class="network-name">${network.name}</div>
-              <div class="network-id">Chain ID: ${network.chainId}</div>
-            </div>
-            <div style="color: #888; font-size: 0.9em;">${network.rpcUrl}</div>
-          `;
+          const details = document.createElement('div');
+          const name = document.createElement('div');
+          name.className = 'network-name';
+          name.textContent = network.name;
+          const chain = document.createElement('div');
+          chain.className = 'network-id';
+          chain.textContent = 'Chain ID: ' + network.chainId;
+          details.append(name, chain);
+          const endpoint = document.createElement('code');
+          endpoint.textContent = network.rpcUrl;
+          div.append(details, endpoint);
           list.appendChild(div);
         });
       } catch (error) {
@@ -159,7 +149,7 @@
       const resultDiv = document.getElementById('rpcResult');
 
       if (!networkId || !method) {
-        resultDiv.innerHTML = '<span class="error">Please fill all required fields</span>';
+        resultDiv.textContent = 'Choose a network and read-only RPC method.';
         return;
       }
 
@@ -167,11 +157,15 @@
       try {
         params = JSON.parse(paramsStr || '[]');
       } catch (e) {
-        resultDiv.innerHTML = '<span class="error">Invalid JSON parameters</span>';
+        resultDiv.textContent = 'Invalid JSON parameters.';
+        return;
+      }
+      if (!Array.isArray(params)) {
+        resultDiv.textContent = 'Parameters must be a JSON array.';
         return;
       }
 
-      resultDiv.innerHTML = '<span class="loading">Routing request...</span>';
+      resultDiv.textContent = 'Reading public chain data…';
 
       try {
         const response = await fetch('/api/rpc', {
@@ -182,40 +176,11 @@
 
         const data = await response.json();
 
-        if (data.success) {
-          resultDiv.innerHTML = `
-            <span class="success">
-              Network: ${data.network}<br>
-              Method: ${data.method}<br>
-              Result: ${JSON.stringify(data.result, null, 2)}
-            </span>
-          `;
-        } else {
-          resultDiv.innerHTML = `<span class="error">${data.error}</span>`;
-        }
+        if (!response.ok || !data.success) throw new Error(data.error || 'RPC request failed.');
+        resultDiv.textContent = `Network: ${data.network}\nMethod: ${data.method}\nResult: ${JSON.stringify(data.result, null, 2)}`;
       } catch (error) {
-        resultDiv.innerHTML = `<span class="error">Error: ${error.message}</span>`;
+        resultDiv.textContent = 'Error: ' + error.message;
       }
-    }
-
-    async function addCustomNetwork() {
-      const networkId = parseInt(document.getElementById('customNetworkId').value);
-      const name = document.getElementById('customNetworkName').value;
-      const rpcUrl = document.getElementById('customRpcUrl').value;
-      const resultDiv = document.getElementById('addNetworkResult');
-
-      if (!networkId || !name || !rpcUrl) {
-        resultDiv.innerHTML = '<span class="error">Please fill all fields</span>';
-        return;
-      }
-
-      resultDiv.innerHTML = '<span class="loading">Adding network...</span>';
-
-      // Simulate adding network (in production, this would call an API)
-      setTimeout(() => {
-        resultDiv.innerHTML = '<span class="success">Network added successfully (Demo mode)</span>';
-        loadNetworks();
-      }, 1000);
     }
 
     // Initialize

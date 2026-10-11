@@ -83,8 +83,7 @@ test('Express app serves its pages and read-only API endpoints', async t => {
     ['/api/networks', 'application/json'],
     ['/api/grid?block=1', 'application/json'],
     ['/api/genesis', 'application/json'],
-    ['/api/stats', 'application/json'],
-    ['/api/block-owner/0', 'application/json']
+    ['/api/stats', 'application/json']
   ];
 
   const responses = new Map();
@@ -100,6 +99,28 @@ test('Express app serves its pages and read-only API endpoints', async t => {
   assert.equal(responses.get('/api/price/0').price, 0.001);
   assert.equal(responses.get('/api/price/range?start=0&count=2').length, 2);
   assert.equal(responses.get('/api/supply').totalSupply, 10_000_000_000);
+  assert.equal(responses.get('/api/supply').currentSupply, null);
+  assert.equal(responses.get('/api/supply').status, 'not_deployed');
   assert.equal(responses.get('/api/grid?block=1').grid.length, 10);
-  assert.equal(responses.get('/api/block-owner/0').owner, 'genesis');
+  assert.equal(responses.get('/api/genesis').verified, false);
+
+  const ownerResponse = await fetch(`${baseUrl}/api/block-owner/0`);
+  assert.equal(ownerResponse.status, 503);
+  assert.equal((await ownerResponse.json()).error.includes('cannot be verified'), true);
+
+  for (const route of ['/api/purchase', '/api/swap']) {
+    const response = await fetch(`${baseUrl}${route}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ walletAddress: 'wallet', blockId: 1, blockCount: 1, txSignature: 'fake' })
+    });
+    assert.equal(response.status, 503, `${route} must refuse unverified transactions`);
+  }
+
+  const writeRpcResponse = await fetch(`${baseUrl}/api/rpc`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ networkId: 1, method: 'eth_sendTransaction', params: [] })
+  });
+  assert.equal(writeRpcResponse.status, 400);
 });

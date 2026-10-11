@@ -14,242 +14,17 @@
   --glass-border: rgba(0,212,255,0.13);
 }
 
-/* ══════════════════════════════════════════════════════════════
-   LIQUID GALAXY BACKGROUND - 4K ENHANCED
-   Five layers for depth and parallax:
-   1. Deep void base — darkest space
-   2. Distant galaxies — subtle background glow
-   3. Nebula clouds — animated radial gradients
-   4. Star field layer 1 — distant stars (slow)
-   5. Star field layer 2 — closer stars (faster)
-   ══════════════════════════════════════════════════════════════ */
-
-@keyframes nebulaFlow {
-  0%   { transform: translate(0, 0)     scale(1)    rotate(0deg); opacity: 0.55; }
-  25%  { transform: translate(3%, 5%)   scale(1.08) rotate(1deg); opacity: 0.65; }
-  50%  { transform: translate(-4%, 2%)  scale(0.96) rotate(-1deg); opacity: 0.5;  }
-  75%  { transform: translate(2%, -4%)  scale(1.06) rotate(0.5deg); opacity: 0.6;  }
-  100% { transform: translate(0, 0)     scale(1)    rotate(0deg); opacity: 0.55; }
-}
-
-@keyframes nebulaFlow2 {
-  0%   { transform: translate(0, 0)     scale(1)    rotate(0deg); opacity: 0.4;  }
-  33%  { transform: translate(-5%, 3%)  scale(1.1)  rotate(-2deg); opacity: 0.52; }
-  66%  { transform: translate(4%, -5%)  scale(0.94) rotate(1deg); opacity: 0.38; }
-  100% { transform: translate(0, 0)     scale(1)    rotate(0deg); opacity: 0.4;  }
-}
-
-@keyframes nebulaFlow3 {
-  0%   { transform: translate(0, 0)     scale(1);    opacity: 0.35; }
-  50%  { transform: translate(6%, -8%)  scale(1.15); opacity: 0.45; }
-  100% { transform: translate(0, 0)     scale(1);    opacity: 0.35; }
-}
-
-@keyframes starDrift {
-  0%   { transform: translateY(0) translateX(0);    }
-  100% { transform: translateY(-50px) translateX(20px); }
-}
-
-@keyframes starDrift2 {
-  0%   { transform: translateY(0) translateX(0);   }
-  100% { transform: translateY(-80px) translateX(-30px); }
-}
-
-@keyframes starDrift3 {
-  0%   { transform: translateY(0) translateX(0);   }
-  100% { transform: translateY(-120px) translateX(10px); }
-}
-
-@keyframes liquidShimmer {
-  0%, 100% { opacity: 0.6; }
-  50%       { opacity: 1;   }
-}
-
-@keyframes galaxyRotate {
-  0%   { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-@keyframes pulseGlow {
-  0%, 100% { opacity: 0.3; }
-  50%       { opacity: 0.6; }
-}
-
 body {
   font-family: 'Space Grotesk', 'Segoe UI', sans-serif;
-  background: var(--bg);
+  background: #03030a;
   color: #e0e0e0;
   min-height: 100vh;
   position: relative;
   overflow-x: hidden;
+  isolation: isolate;
 }
 
-/* Layer 1 — deep space base with distant galaxies */
-body::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-  /* Deep void with galaxy hints */
-  background:
-    /* Vignette — edges darker */
-    radial-gradient(ellipse 130% 90% at 50% 50%,
-      rgba(8, 6, 25, 0) 0%,
-      rgba(2, 2, 8, 0.9) 100%),
-    /* Distant galaxy 1 — faint spiral */
-    radial-gradient(ellipse 40% 25% at 20% 30%,
-      rgba(60, 40, 140, 0.15) 0%,
-      transparent 60%),
-    /* Distant galaxy 2 — faint blue */
-    radial-gradient(ellipse 35% 30% at 80% 70%,
-      rgba(40, 80, 150, 0.12) 0%,
-      transparent 60%),
-    /* Nebula blob 1 — blue-cyan top-left */
-    radial-gradient(ellipse 70% 50% at 15% 25%,
-      rgba(0, 80, 180, 0.18) 0%,
-      transparent 70%),
-    /* Nebula blob 2 — purple right */
-    radial-gradient(ellipse 60% 55% at 85% 40%,
-      rgba(100, 20, 220, 0.16) 0%,
-      transparent 70%),
-    /* Nebula blob 3 — teal bottom */
-    radial-gradient(ellipse 80% 40% at 50% 90%,
-      rgba(0, 150, 160, 0.12) 0%,
-      transparent 70%),
-    /* Base void */
-    linear-gradient(160deg, #080818 0%, #020205 50%, #060612 100%);
-}
 
-/* Layer 2 — animated nebula clouds (layer 1) */
-body::after {
-  content: '';
-  position: fixed;
-  inset: -20%;
-  width: 140%;
-  height: 140%;
-  z-index: 0;
-  pointer-events: none;
-  background:
-    /* Drifting cyan cloud */
-    radial-gradient(ellipse 55% 35% at 20% 30%,
-      rgba(0, 180, 255, 0.07) 0%,
-      transparent 65%),
-    /* Drifting purple cloud */
-    radial-gradient(ellipse 50% 40% at 78% 60%,
-      rgba(120, 40, 255, 0.09) 0%,
-      transparent 65%),
-    /* Drifting green accent */
-    radial-gradient(ellipse 40% 30% at 55% 80%,
-      rgba(0, 200, 120, 0.05) 0%,
-      transparent 65%),
-    /* Central glow */
-    radial-gradient(ellipse 80% 60% at 50% 50%,
-      rgba(0, 60, 120, 0.06) 0%,
-      transparent 70%);
-  animation: nebulaFlow 28s ease-in-out infinite;
-}
-
-/* Layer 3 — additional nebula layer */
-.nebula-c {
-  position: fixed;
-  inset: -30%;
-  width: 160%;
-  height: 160%;
-  z-index: 0;
-  pointer-events: none;
-  background:
-    /* Pink/magenta accent */
-    radial-gradient(ellipse 45% 25% at 30% 70%,
-      rgba(200, 50, 150, 0.08) 0%,
-      transparent 60%),
-    /* Blue accent */
-    radial-gradient(ellipse 50% 30% at 70% 20%,
-      rgba(50, 100, 200, 0.07) 0%,
-      transparent 60%);
-  animation: nebulaFlow2 35s ease-in-out infinite;
-}
-
-/* Layer 4 — star field layer 1 (distant, slow) */
-.stars-a {
-  background-image:
-    radial-gradient(1px 1px at  4%  7%,  rgba(255,255,255,0.75) 0%, transparent 100%),
-    radial-gradient(1px 1px at 11% 21%,  rgba(0,212,255,0.6)    0%, transparent 100%),
-    radial-gradient(1px 1px at 19%  3%,  rgba(255,255,255,0.55) 0%, transparent 100%),
-    radial-gradient(1px 1px at 27% 38%,  rgba(255,255,255,0.7)  0%, transparent 100%),
-    radial-gradient(1px 1px at 34% 14%,  rgba(123,47,255,0.65)  0%, transparent 100%),
-    radial-gradient(1px 1px at 41% 68%,  rgba(255,255,255,0.5)  0%, transparent 100%),
-    radial-gradient(1px 1px at 49% 53%,  rgba(0,212,255,0.55)   0%, transparent 100%),
-    radial-gradient(1px 1px at 57%  8%,  rgba(255,255,255,0.8)  0%, transparent 100%),
-    radial-gradient(1px 1px at 63% 83%,  rgba(0,255,136,0.45)   0%, transparent 100%),
-    radial-gradient(1px 1px at 71% 30%,  rgba(255,255,255,0.6)  0%, transparent 100%),
-    radial-gradient(1px 1px at 79% 61%,  rgba(0,212,255,0.65)   0%, transparent 100%),
-    radial-gradient(1px 1px at 87% 17%,  rgba(123,47,255,0.55)  0%, transparent 100%),
-    radial-gradient(1px 1px at 92% 45%,  rgba(255,255,255,0.5)  0%, transparent 100%),
-    radial-gradient(1px 1px at  2% 58%,  rgba(0,255,136,0.55)   0%, transparent 100%),
-    radial-gradient(1px 1px at 17% 78%,  rgba(255,255,255,0.65) 0%, transparent 100%),
-    radial-gradient(1px 1px at 46% 91%,  rgba(0,212,255,0.45)   0%, transparent 100%),
-    radial-gradient(1px 1px at 74% 73%,  rgba(255,255,255,0.55) 0%, transparent 100%),
-    radial-gradient(1px 1px at 88% 88%,  rgba(123,47,255,0.5)   0%, transparent 100%),
-    radial-gradient(2px 2px at 32% 49%,  rgba(0,212,255,0.4)    0%, transparent 100%),
-    radial-gradient(2px 2px at 61% 27%,  rgba(0,255,136,0.35)   0%, transparent 100%),
-    radial-gradient(1px 1px at 54% 37%,  rgba(255,255,255,0.5)  0%, transparent 100%),
-    radial-gradient(1px 1px at 23% 52%,  rgba(255,255,255,0.45) 0%, transparent 100%),
-    radial-gradient(1px 1px at 68% 95%,  rgba(0,212,255,0.4)    0%, transparent 100%),
-    radial-gradient(1px 1px at 96%  6%,  rgba(255,255,255,0.6)  0%, transparent 100%),
-    radial-gradient(1px 1px at  8% 91%,  rgba(123,47,255,0.45)  0%, transparent 100%);
-  background-size: 100% 100%;
-  animation: starDrift 80s linear infinite;
-}
-
-/* Layer 5 — star field layer 2 (medium distance) */
-.stars-b {
-  background-image:
-    radial-gradient(1px 1px at  6% 13%,  rgba(255,255,255,0.5)  0%, transparent 100%),
-    radial-gradient(1px 1px at 16% 44%,  rgba(0,212,255,0.45)   0%, transparent 100%),
-    radial-gradient(1px 1px at 25% 67%,  rgba(255,255,255,0.6)  0%, transparent 100%),
-    radial-gradient(1px 1px at 38% 22%,  rgba(123,47,255,0.5)   0%, transparent 100%),
-    radial-gradient(1px 1px at 44% 77%,  rgba(255,255,255,0.45) 0%, transparent 100%),
-    radial-gradient(1px 1px at 53% 11%,  rgba(0,255,136,0.4)    0%, transparent 100%),
-    radial-gradient(1px 1px at 62% 55%,  rgba(255,255,255,0.55) 0%, transparent 100%),
-    radial-gradient(1px 1px at 72% 84%,  rgba(0,212,255,0.5)    0%, transparent 100%),
-    radial-gradient(1px 1px at 81% 33%,  rgba(255,255,255,0.6)  0%, transparent 100%),
-    radial-gradient(1px 1px at 90% 71%,  rgba(123,47,255,0.45)  0%, transparent 100%),
-    radial-gradient(2px 2px at 30% 85%,  rgba(0,212,255,0.35)   0%, transparent 100%),
-    radial-gradient(2px 2px at 77% 19%,  rgba(0,255,136,0.3)    0%, transparent 100%),
-    radial-gradient(1px 1px at 48% 43%,  rgba(255,255,255,0.5)  0%, transparent 100%),
-    radial-gradient(1px 1px at 95% 55%,  rgba(255,255,255,0.4)  0%, transparent 100%),
-    radial-gradient(1px 1px at  1% 32%,  rgba(0,212,255,0.4)    0%, transparent 100%);
-  background-size: 100% 100%;
-  animation: starDrift2 120s linear infinite;
-  opacity: 0.7;
-}
-
-/* Layer 6 — star field layer 3 (closest, fastest, brightest) */
-.stars-c {
-  background-image:
-    radial-gradient(1.5px 1.5px at  8% 18%,  rgba(255,255,255,0.9)  0%, transparent 100%),
-    radial-gradient(1.5px 1.5px at 22% 52%,  rgba(0,212,255,0.7)   0%, transparent 100%),
-    radial-gradient(1.5px 1.5px at 35% 75%,  rgba(255,255,255,0.8)  0%, transparent 100%),
-    radial-gradient(1.5px 1.5px at 48% 28%,  rgba(123,47,255,0.75)  0%, transparent 100%),
-    radial-gradient(1.5px 1.5px at 62% 88%,  rgba(255,255,255,0.85) 0%, transparent 100%),
-    radial-gradient(1.5px 1.5px at 75% 42%,  rgba(0,255,136,0.7)   0%, transparent 100%),
-    radial-gradient(1.5px 1.5px at 88% 15%,  rgba(255,255,255,0.8)  0%, transparent 100%),
-    radial-gradient(2px 2px at 15% 65%,  rgba(0,212,255,0.5)    0%, transparent 100%),
-    radial-gradient(2px 2px at 45% 12%,  rgba(0,255,136,0.45)   0%, transparent 100%),
-    radial-gradient(2px 2px at 68% 55%,  rgba(255,255,255,0.6)  0%, transparent 100%);
-  background-size: 100% 100%;
-  animation: starDrift3 150s linear infinite;
-  opacity: 0.5;
-}
-
-/* All content above background layers */
-body > *:not(.stars-a):not(.stars-b) {
-  position: relative;
-  z-index: 1;
-}
-
-/* ─── Keyframes ──────────────────────────────────────────────── */
 @keyframes pulse {
   0%, 100% { opacity: 1;    transform: scale(1);    }
   50%       { opacity: 0.7; transform: scale(1.04); }
@@ -693,4 +468,71 @@ nav a.active::after {
   .hero h1 { font-size: 2.2em; }
   .container { padding: 14px; }
   .token-card { flex-wrap: wrap; }
+}
+
+/* Persistent site chrome and live, high-DPI galaxy canvas. */
+body { isolation: isolate; background: #03030a; }
+.galaxy-canvas {
+  position: fixed !important;
+  inset: 0;
+  z-index: 0 !important;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  opacity: 0.92;
+}
+body > *:not(.galaxy-canvas) { position: relative; z-index: 1; }
+nav {
+  position: sticky !important;
+  top: 0;
+  width: 100%;
+  background: rgba(5, 6, 20, 0.78);
+  border-top: 0;
+}
+nav .container { max-width: 1500px; }
+.nav-toggle {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border: 1px solid rgba(0,212,255,.25);
+  border-radius: 10px;
+  color: #dce9ff;
+  background: rgba(255,255,255,.05);
+  cursor: pointer;
+}
+.nav-toggle svg, .wallet-button svg { width: 18px; height: 18px; flex: 0 0 auto; }
+.wallet-button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+.wallet-button svg { stroke: currentColor; fill: none; stroke-width: 1.8; }
+.wallet-button::before {
+  content: '';
+  width: 18px;
+  height: 18px;
+  flex: 0 0 18px;
+  background: center / contain no-repeat url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 6.5A2.5 2.5 0 0 1 6.5 4H19a1 1 0 0 1 1 1v2H6.5A2.5 2.5 0 0 0 4 9.5v-3Z'/%3E%3Cpath d='M4 9.5A2.5 2.5 0 0 1 6.5 7H20v13H6.5A2.5 2.5 0 0 1 4 17.5v-8Z'/%3E%3Cpath d='M15.5 13h.01'/%3E%3C/svg%3E");
+}
+.result { white-space: pre-wrap; overflow-wrap: anywhere; }
+.wallet-button:focus-visible, .nav-toggle:focus-visible, nav a:focus-visible {
+  outline: 2px solid var(--cyan);
+  outline-offset: 4px;
+}
+.feature-status, .estimate-note { color: #b8bfd6; line-height: 1.7; margin-top: 10px; }
+.feature-status::before { content: 'STATUS · '; color: #ffc46b; font-weight: 700; }
+.price-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.estimate-note { font-size: .88em; color: #aab4cc; margin-top: 10px; }
+.grid-cell.unverified { background: rgba(150,160,190,.08); border: 1px solid rgba(170,185,215,.18); color: #8791aa; }
+@media (max-width: 900px) {
+  nav { padding: 10px 16px; }
+  nav .container { flex-direction: row; flex-wrap: wrap; gap: 10px; }
+  nav ul { display: none; width: 100%; flex-direction: column; align-items: stretch; gap: 4px; padding: 10px 0 4px; }
+  nav ul.nav-open { display: flex; }
+  nav ul li { width: 100%; }
+  nav ul a { display: block; padding: 10px 8px; }
+  nav ul .wallet-button { width: 100%; min-height: 42px; }
+  .nav-toggle { display: inline-flex; margin-left: auto; }
+}
+@media (max-width: 600px) { .price-fields { grid-template-columns: 1fr; } }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; }
 }

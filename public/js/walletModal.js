@@ -11,7 +11,7 @@
       id:   'phantom',
       name: 'Phantom',
       type: 'SOLANA',
-      detect:  function () { return typeof window.solana !== 'undefined' && !!window.solana.isPhantom; },
+      detect:  function () { return !!((window.phantom && window.phantom.solana && window.phantom.solana.isPhantom) || (window.solana && window.solana.isPhantom)); },
       connect: function () { return walletManager.connectPhantom(); },
       url:     'https://phantom.app/'
     },
@@ -19,108 +19,15 @@
       id:   'metamask',
       name: 'MetaMask',
       type: 'EVM',
-      detect:  function () {
-        return typeof window.ethereum !== 'undefined'
-          && !!window.ethereum.isMetaMask
-          && !window.ethereum.isBraveWallet;
-      },
+      detect:  function () { return !!walletManager.getMetaMaskProvider(); },
       connect: function () { return walletManager.connectMetaMask(); },
       url:     'https://metamask.io/download/'
     },
-    {
-      id:   'coinbase',
-      name: 'Coinbase Wallet',
-      type: 'EVM',
-      detect:  function () { return typeof window.ethereum !== 'undefined' && !!window.ethereum.isCoinbaseWallet; },
-      connect: function () { return walletManager.connectMetaMask(); },
-      url:     'https://www.coinbase.com/wallet'
-    },
-    {
-      id:   'brave',
-      name: 'Brave Wallet',
-      type: 'EVM',
-      detect:  function () { return typeof window.ethereum !== 'undefined' && !!window.ethereum.isBraveWallet; },
-      connect: function () { return walletManager.connectMetaMask(); },
-      url:     'https://brave.com/wallet/'
-    },
-    {
-      id:   'solflare',
-      name: 'Solflare',
-      type: 'SOLANA',
-      detect:  function () { return typeof window.solflare !== 'undefined' && !!window.solflare.isSolflare; },
-      connect: function () {
-        return window.solflare.connect().then(function (r) {
-          var a = r.publicKey.toString();
-          walletManager.currentWallet = 'solflare';
-          walletManager.currentAddress = a;
-          walletManager.connected = true;
-          walletManager.emit('connected', { wallet: 'solflare', address: a });
-          return { success: true, wallet: 'Solflare', address: a };
-        });
-      },
-      url: 'https://solflare.com/'
-    },
-    {
-      id:   'backpack',
-      name: 'Backpack',
-      type: 'SOLANA',
-      detect:  function () { return typeof window.xnft !== 'undefined' || typeof window.backpack !== 'undefined'; },
-      connect: function () {
-        var bp = window.backpack || (window.xnft && window.xnft.solana);
-        return bp.connect().then(function (r) {
-          var a = r.publicKey.toString();
-          walletManager.currentWallet = 'backpack';
-          walletManager.currentAddress = a;
-          walletManager.connected = true;
-          walletManager.emit('connected', { wallet: 'backpack', address: a });
-          return { success: true, wallet: 'Backpack', address: a };
-        });
-      },
-      url: 'https://www.backpack.app/'
-    },
-    {
-      id:   'okx',
-      name: 'OKX Wallet',
-      type: 'EVM',
-      detect:  function () { return typeof window.okxwallet !== 'undefined'; },
-      connect: function () {
-        return window.okxwallet.request({ method: 'eth_requestAccounts' }).then(function (acc) {
-          var a = acc[0];
-          walletManager.currentWallet = 'okx';
-          walletManager.currentAddress = a;
-          walletManager.connected = true;
-          walletManager.emit('connected', { wallet: 'okx', address: a });
-          return { success: true, wallet: 'OKX', address: a };
-        });
-      },
-      url: 'https://www.okx.com/web3'
-    },
-    {
-      id:   'trust',
-      name: 'Trust Wallet',
-      type: 'EVM',
-      detect:  function () {
-        return typeof window.trustwallet !== 'undefined'
-          || (typeof window.ethereum !== 'undefined' && !!window.ethereum.isTrust);
-      },
-      connect: function () { return walletManager.connectMetaMask(); },
-      url:     'https://trustwallet.com/'
-    },
-    {
-      id:   'rabby',
-      name: 'Rabby',
-      type: 'EVM',
-      detect:  function () { return typeof window.ethereum !== 'undefined' && !!window.ethereum.isRabby; },
-      connect: function () { return walletManager.connectMetaMask(); },
-      url:     'https://rabby.io/'
-    }
   ];
 
   // Fallback colours shown while SVG loads or if it errors
   var FALLBACK_COLOR = {
-    phantom:  '#4e44ce', metamask: '#e8831a', coinbase: '#0052ff',
-    brave:    '#fb542b', solflare: '#fc8c00', backpack: '#e33d3d',
-    okx:      '#111111', trust:    '#3375bb', rabby:    '#7084ff'
+    phantom: '#4e44ce', metamask: '#e8831a'
   };
 
   // ── Inject styles ─────────────────────────────────────────────────────────
@@ -302,6 +209,14 @@
     });
   }
 
+  walletManager.on('connected', function (data) { updateNavButtons(data.address); });
+  walletManager.on('disconnected', function () {
+    document.querySelectorAll('.wallet-button, #navWalletBtn').forEach(function (btn) {
+      btn.textContent = 'Connect Wallet';
+      btn.removeAttribute('data-wallet-connected');
+    });
+  });
+
   // ── Open / close ──────────────────────────────────────────────────────────
   function openModal() {
     buildModal();
@@ -329,17 +244,16 @@
     var w = WALLETS.find(function (x) { return x.id === lastId; });
     if (!w || !w.detect()) return;
     try {
-      if (lastId === 'phantom' && window.solana && window.solana.isConnected && window.solana.publicKey) {
-        var a = window.solana.publicKey.toString();
-        walletManager.currentWallet = 'phantom'; walletManager.currentAddress = a; walletManager.connected = true;
-        walletManager.emit('connected', { wallet: 'phantom', address: a });
-        updateNavButtons(a);
-      } else if (window.ethereum) {
-        window.ethereum.request({ method: 'eth_accounts' }).then(function (acc) {
+      var phantom = window.phantom && window.phantom.solana
+        ? window.phantom.solana
+        : (window.solana && window.solana.isPhantom ? window.solana : null);
+      if (lastId === 'phantom' && phantom && phantom.isConnected && phantom.publicKey) {
+        var a = phantom.publicKey.toString();
+        walletManager.attach(phantom, 'phantom', a);
+      } else if (lastId === 'metamask' && walletManager.getMetaMaskProvider()) {
+        walletManager.getMetaMaskProvider().request({ method: 'eth_accounts' }).then(function (acc) {
           if (acc && acc[0]) {
-            walletManager.currentWallet = lastId; walletManager.currentAddress = acc[0]; walletManager.connected = true;
-            walletManager.emit('connected', { wallet: lastId, address: acc[0] });
-            updateNavButtons(acc[0]);
+            walletManager.attach(walletManager.getMetaMaskProvider(), lastId, acc[0]);
           }
         }).catch(function () {});
       }
