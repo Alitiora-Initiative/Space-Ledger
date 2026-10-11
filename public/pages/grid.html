@@ -72,8 +72,12 @@
     <div class="card">
       <h2>Navigate Blocks</h2>
       <div class="input-group">
-        <label>Block ID (0 – 9,999,999,999)</label>
-        <input type="number" id="blockId" value="0" min="0" max="9999999999">
+        <label for="blockId">Block ID</label>
+        <input type="text" id="blockId" value="000A" maxlength="8" autocomplete="off" aria-describedby="blockIdHelp">
+        <details class="block-id-help" id="blockIdHelp">
+          <summary>Quick tip: use short block labels</summary>
+          <p>Labels run 000A to 999A, then 000B to 999B, then 000C, and so on. After Z, they continue AA, AB, and onward. You can also enter the original numeric block number.</p>
+        </details>
       </div>
       <div style="display:flex;gap:10px;margin-bottom:15px;flex-wrap:wrap;">
         <button class="button" onclick="loadGrid()">Load Grid</button>
@@ -140,6 +144,7 @@
   <!-- Hover tooltip -->
   <div id="tooltip"></div>
 
+  <script src="../js/block-id.js"></script>
   <script>
     let currentBlockId = 0;
 
@@ -162,12 +167,19 @@
       ctx.fillRect(x, 46, 4, 8);
       ctx.fillStyle = '#fff';
       ctx.font = '9px monospace';
-      ctx.fillText('Block ' + blockId.toLocaleString(), 4, 92);
+      ctx.fillText('Block ' + BlockId.format(blockId), 4, 92);
     }
 
     // ── Navigation ────────────────────────────────────────────────────────────
     async function loadGrid() {
-      currentBlockId = parseInt(document.getElementById('blockId').value) || 0;
+      const input = document.getElementById('blockId');
+      const parsed = BlockId.parse(input.value);
+      if (parsed === null) {
+        document.getElementById('blockInfo').textContent = 'Enter a label such as 000A or a valid block number.';
+        return;
+      }
+      currentBlockId = parsed;
+      input.value = BlockId.format(currentBlockId);
       await renderGrid();
     }
 
@@ -177,16 +189,17 @@
       gridContainer.innerHTML = '';
 
       try {
-        const priceRes = await fetch('/api/price/' + currentBlockId);
+        const blockLabel = BlockId.format(currentBlockId);
+        const priceRes = await fetch('/api/price/' + encodeURIComponent(blockLabel));
         const priceData  = await priceRes.json();
         if (!priceRes.ok) throw new Error(priceData.error || 'Could not load this estimate.');
 
         const blockPrice = priceData.price;
 
-        document.getElementById('currentBlockDisplay').textContent = currentBlockId.toLocaleString();
+        document.getElementById('currentBlockDisplay').textContent = blockLabel;
         document.getElementById('blockPriceDisplay').textContent   = '$' + blockPrice.toFixed(6);
 
-        blockInfo.textContent = 'Block ' + currentBlockId.toLocaleString() + ' · estimated model price $' + blockPrice.toFixed(6) + ' · ownership unverified';
+        blockInfo.textContent = 'Block ' + blockLabel + ' · estimated model price $' + blockPrice.toFixed(6) + ' · ownership unverified';
 
         const tooltip = document.getElementById('tooltip');
 
@@ -234,7 +247,7 @@
         updateMinimap(currentBlockId);
 
       } catch (error) {
-        blockInfo.innerHTML = '<span class="error">Error loading grid: ' + (error.message || 'unknown') + '</span>';
+        blockInfo.textContent = 'Error loading grid: ' + (error.message || 'unknown');
       }
     }
 
@@ -245,7 +258,7 @@
         '<tr><th>Property</th><th>Value</th></tr>' +
         '<tr><td>Pixel Index (in block)</td><td>' + pixelIndex + '</td></tr>' +
         '<tr><td>Global Pixel ID</td><td>' + globalPixelId.toLocaleString() + '</td></tr>' +
-        '<tr><td>Block ID</td><td>' + currentBlockId.toLocaleString() + '</td></tr>' +
+        '<tr><td>Block ID</td><td>' + BlockId.format(currentBlockId) + ' (' + currentBlockId.toLocaleString() + ')</td></tr>' +
         '<tr><td>Grid Position</td><td>Row ' + row + ', Column ' + col + '</td></tr>' +
         '<tr><td>Estimated model block price</td><td>$' + blockPrice.toFixed(6) + '</td></tr>' +
         '<tr><td>Estimated model pixel price</td><td>$' + pixelPrice.toFixed(8) + '</td></tr>' +
@@ -255,7 +268,7 @@
     function previousBlock() {
       if (currentBlockId > 0) {
         currentBlockId--;
-        document.getElementById('blockId').value = currentBlockId;
+        document.getElementById('blockId').value = BlockId.format(currentBlockId);
         loadGrid();
       }
     }
@@ -263,7 +276,7 @@
     function nextBlock() {
       if (currentBlockId < 9999999999) {
         currentBlockId++;
-        document.getElementById('blockId').value = currentBlockId;
+        document.getElementById('blockId').value = BlockId.format(currentBlockId);
         loadGrid();
       }
     }

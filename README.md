@@ -9,6 +9,7 @@ The concept draws inspiration from [The Million Dollar Homepage](https://www.web
 - Responsive static pages with a high-DPI animated galaxy canvas and a persistent navigation bar.
 - Phantom and MetaMask wallet identity connections. The app does not request signatures or send wallet transactions.
 - A read-only estimator for the proposed bonding curve and a grid preview whose ownership state is explicitly unverified.
+- Compact block labels: `000A`–`999A`, then `000B`–`999B`, continuing through `Z`, `AA`, and onward. Numeric IDs remain the canonical on-chain positions.
 - A fixed-list public EVM RPC explorer. It accepts allowlisted read-only methods and rejects transaction methods.
 - An Express server for static pages, estimate endpoints, and deployment-status responses.
 
@@ -37,7 +38,7 @@ The tests cover static pages, read-only API responses, and JavaScript syntax. `n
 
 ## Not live yet
 
-- No ownership contract or program is deployed. The Solidity source is an unconnected draft and does not implement a Solana program.
+- No ownership contract or Solana program is deployed. The Solidity source is an unconnected draft and does not implement a Solana program.
 - Purchase and resale APIs return HTTP 503. The app does not accept a payment transaction signature or claim ownership after a wallet transfer.
 - Holdings, activity, supply sold, fees collected, and vesting progress are not reported as live data.
 - The configured wallet address does not by itself enable payment collection or settlement.

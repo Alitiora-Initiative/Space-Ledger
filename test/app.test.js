@@ -97,11 +97,21 @@ test('Express app serves its pages and read-only API endpoints', async t => {
   assert.match(responses.get('/'), /About Space Ledger/);
   assert.equal(responses.get('/api/config').totalBlocks, 10_000_000_000);
   assert.equal(responses.get('/api/price/0').price, 0.001);
+  const labelResponse = await fetch(`${baseUrl}/api/price/000B`);
+  assert.equal(labelResponse.status, 200);
+  assert.equal((await labelResponse.json()).blockId, 1000);
+  assert.equal((await fetch(`${baseUrl}/api/price/range?start=000A&count=2`)).status, 200);
   assert.equal(responses.get('/api/price/range?start=0&count=2').length, 2);
   assert.equal(responses.get('/api/supply').totalSupply, 10_000_000_000);
   assert.equal(responses.get('/api/supply').currentSupply, null);
   assert.equal(responses.get('/api/supply').status, 'not_deployed');
   assert.equal(responses.get('/api/grid?block=1').grid.length, 10);
+  assert.equal(responses.get('/api/grid?block=1').blockLabel, '001A');
+  const namedGridResponse = await fetch(`${baseUrl}/api/grid?block=000AA`);
+  assert.equal(namedGridResponse.status, 200);
+  const namedGrid = await namedGridResponse.json();
+  assert.equal(namedGrid.blockId, 26_000);
+  assert.equal(namedGrid.blockLabel, '000AA');
   assert.equal(responses.get('/api/genesis').verified, false);
 
   const ownerResponse = await fetch(`${baseUrl}/api/block-owner/0`);

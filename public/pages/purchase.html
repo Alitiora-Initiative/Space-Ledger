@@ -45,7 +45,11 @@
         <div class="price-fields">
           <div class="input-group">
             <label for="blockId">First block ID</label>
-            <input id="blockId" name="blockId" type="number" min="0" max="9999999999" value="1000000000" required>
+            <input id="blockId" name="blockId" type="text" inputmode="text" autocomplete="off" maxlength="8" value="000BDWGO" aria-describedby="blockIdHelp" required>
+            <details class="block-id-help" id="blockIdHelp">
+              <summary>Quick tip: block labels advance automatically</summary>
+              <p>Enter a short label instead of a long number: 000A through 999A, then 000B through 999B, then 000C, and so on. After Z, labels continue AA, AB, and onward. The calculator accepts either a label or its original number.</p>
+            </details>
           </div>
           <div class="input-group">
             <label for="blockCount">Number of blocks (up to 100)</label>
@@ -58,6 +62,7 @@
     </section>
   </main>
 
+  <script src="../js/block-id.js"></script>
   <script src="../js/wallet.js"></script>
   <script src="../js/walletModal.js"></script>
   <script>
@@ -65,21 +70,23 @@
     const result = document.getElementById('estimateResult');
     form.addEventListener('submit', async event => {
       event.preventDefault();
-      const start = Number(form.elements.blockId.value);
+      const startLabel = form.elements.blockId.value.trim().toUpperCase();
+      const start = BlockId.parse(startLabel);
       const count = Number(form.elements.blockCount.value);
-      if (!Number.isInteger(start) || !Number.isInteger(count) || start < 0 || count < 1 || count > 100 || start + count > 10000000000) {
-        result.textContent = 'Enter a valid block range. The calculator accepts up to 100 blocks at a time.';
+      if (start === null || !Number.isInteger(count) || count < 1 || count > 100 || start + count > BlockId.totalBlocks) {
+        result.textContent = 'Enter a valid block label such as 000A or 000B and a range of up to 100 blocks.';
         return;
       }
       result.textContent = 'Calculating…';
       try {
-        const response = await fetch(`/api/price/range?start=${start}&count=${count}`);
+        const response = await fetch(`/api/price/range?start=${encodeURIComponent(startLabel)}&count=${count}`);
         const data = await response.json();
         if (!response.ok) throw new Error(data.error || 'Price estimate unavailable.');
         const total = data.reduce((sum, block) => sum + block.price, 0);
         result.replaceChildren();
         const summary = document.createElement('p');
-        summary.textContent = `${count.toLocaleString()} block${count === 1 ? '' : 's'} · estimated model total $${total.toFixed(6)}`;
+        const lastLabel = BlockId.format(start + count - 1);
+        summary.textContent = `${count.toLocaleString()} block${count === 1 ? '' : 's'} (${BlockId.format(start)}–${lastLabel}) · estimated model total $${total.toFixed(6)}`;
         const note = document.createElement('p');
         note.className = 'estimate-note';
         note.textContent = 'This is not a live price or a purchase. Ownership, availability, fees, and settlement are not verified.';

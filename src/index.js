@@ -3,6 +3,7 @@ const express = require('express');
 const path = require('path');
 const bondingCurve = require('./bondingCurve');
 const rpcRouter = require('./rpcRouter');
+const blockIds = require('./blockId');
 
 const PORT = Number.parseInt(process.env.PORT, 10) || 3000;
 const SOLANA_NETWORK = process.env.SOLANA_NETWORK || 'devnet';
@@ -35,25 +36,26 @@ app.get('/api/config', (_req, res) => {
 
 // Bonding curve values are estimates from the published formula, not live sale quotes.
 app.get('/api/price/range', (req, res) => {
-  const start = Number.parseInt(req.query.start, 10);
+  const start = blockIds.parse(req.query.start ?? '');
   const requestedCount = Number.parseInt(req.query.count, 10);
   const count = Number.isFinite(requestedCount) ? Math.min(Math.max(requestedCount, 1), 100) : 1;
-  if (!Number.isInteger(start) || start < 0 || start >= bondingCurve.TOTAL_SUPPLY || start + count > bondingCurve.TOTAL_SUPPLY) {
-    return res.status(400).json({ error: 'Choose a block range within the published supply.' });
+  if (start === null || start >= bondingCurve.TOTAL_SUPPLY || start + count > bondingCurve.TOTAL_SUPPLY) {
+    return res.status(400).json({ error: 'Choose a block ID and range within the published supply.' });
   }
   res.json(Array.from({ length: count }, (_, i) => ({
     blockId: start + i,
+    blockLabel: blockIds.format(start + i),
     price: bondingCurve.calculatePrice(start + i),
     status: 'estimate'
   })));
 });
 
 app.get('/api/price/:blockId', (req, res) => {
-  const blockId = Number.parseInt(req.params.blockId, 10);
-  if (!Number.isInteger(blockId) || blockId < 0 || blockId >= bondingCurve.TOTAL_SUPPLY) {
-    return res.status(400).json({ error: 'Block ID must be within the published supply.' });
+  const blockId = blockIds.parse(req.params.blockId);
+  if (blockId === null || blockId >= bondingCurve.TOTAL_SUPPLY) {
+    return res.status(400).json({ error: 'Block ID must be a valid label or number within the published supply.' });
   }
-  res.json({ blockId, price: bondingCurve.calculatePrice(blockId), status: 'estimate', message: NOT_DEPLOYED });
+  res.json({ blockId, blockLabel: blockIds.format(blockId), price: bondingCurve.calculatePrice(blockId), status: 'estimate', message: NOT_DEPLOYED });
 });
 
 app.get('/api/supply', (_req, res) => {
@@ -80,25 +82,26 @@ app.post('/api/rpc', async (req, res) => {
 app.get('/api/networks', (_req, res) => res.json(rpcRouter.getNetworks()));
 
 app.get('/api/grid', (req, res) => {
-  const blockId = Number.parseInt(req.query.block, 10);
-  if (!Number.isInteger(blockId) || blockId < 0 || blockId >= bondingCurve.TOTAL_SUPPLY) {
-    return res.status(400).json({ error: 'Block ID must be within the published supply.' });
+  const blockId = blockIds.parse(req.query.block ?? '');
+  if (blockId === null || blockId >= bondingCurve.TOTAL_SUPPLY) {
+    return res.status(400).json({ error: 'Block ID must be a valid label or number within the published supply.' });
   }
   const grid = Array.from({ length: 10 }, (_, row) => Array.from({ length: 10 }, (_, column) => {
     const pixelIndex = row * 10 + column;
     return {
       blockId,
+      blockLabel: blockIds.format(blockId),
       pixelIndex,
       globalPixelId: blockId * 100 + pixelIndex,
       estimatedUsd: bondingCurve.calculatePrice(blockId) / 100,
       ownership: 'unverified'
     };
   }));
-  res.json({ blockId, ownershipStatus: 'unverified', grid });
+  res.json({ blockId, blockLabel: blockIds.format(blockId), ownershipStatus: 'unverified', grid });
 });
 
 app.get('/api/genesis', (_req, res) => {
-  res.json({ status: 'planned', verified: false, ownerAddress: null, startBlock: 0, endBlock: 999999999, totalBlocks: 1000000000, message: NOT_DEPLOYED });
+  res.json({ status: 'planned', verified: false, ownerAddress: null, startBlock: 0, startBlockLabel: blockIds.format(0), endBlock: 999999999, endBlockLabel: blockIds.format(999999999), totalBlocks: 1000000000, message: NOT_DEPLOYED });
 });
 
 app.get('/api/stats', (_req, res) => {

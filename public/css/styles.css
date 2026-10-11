@@ -512,6 +512,48 @@ nav .container { max-width: 1500px; }
   flex: 0 0 18px;
   background: center / contain no-repeat url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 6.5A2.5 2.5 0 0 1 6.5 4H19a1 1 0 0 1 1 1v2H6.5A2.5 2.5 0 0 0 4 9.5v-3Z'/%3E%3Cpath d='M4 9.5A2.5 2.5 0 0 1 6.5 7H20v13H6.5A2.5 2.5 0 0 1 4 17.5v-8Z'/%3E%3Cpath d='M15.5 13h.01'/%3E%3C/svg%3E");
 }
+
+.block-id-help {
+  position: relative;
+  margin: 8px 0 14px;
+  color: rgba(220, 232, 255, 0.82);
+  font-size: 0.9rem;
+}
+.block-id-help summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  cursor: pointer;
+  color: #9dd8ff;
+  list-style: none;
+}
+.block-id-help summary::-webkit-details-marker { display: none; }
+.block-id-help summary::after {
+  content: '?';
+  display: inline-grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  font-size: 0.72rem;
+}
+.block-id-help p {
+  position: absolute;
+  z-index: 20;
+  top: 1.7rem;
+  left: 0;
+  width: min(420px, calc(100vw - 48px));
+  margin: 0;
+  padding: 12px 14px;
+  border: 1px solid rgba(102, 183, 255, 0.42);
+  border-radius: 12px;
+  background: rgba(8, 12, 25, 0.96);
+  box-shadow: 0 14px 45px rgba(0, 0, 0, 0.45);
+  color: #e8efff;
+  line-height: 1.55;
+}
+.block-id-help:not([open]) p { display: none; }
 .result { white-space: pre-wrap; overflow-wrap: anywhere; }
 .wallet-button:focus-visible, .nav-toggle:focus-visible, nav a:focus-visible {
   outline: 2px solid var(--cyan);
