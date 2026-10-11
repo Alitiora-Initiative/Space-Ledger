@@ -22,5 +22,10 @@
   },
   "devDependencies": {
     "hardhat": "^3.19.0"
+  },
+  "overrides": {
+    "rpc-websockets": {
+      "uuid": "11.1.0"
+    }
   }
 }
