@@ -5,6 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Spatial Ledger Protocol — Dashboard</title>
   <link rel="stylesheet" href="../css/styles.css">
+  <style>
+    @keyframes livePulse {
+      0%,100% { opacity: 1; }
+      50%      { opacity: 0.3; }
+    }
+  </style>
 </head>
 <body><div class="stars-a"></div><div class="stars-b"></div>
   <nav>
@@ -48,6 +54,24 @@
           </div>
           <button class="button" onclick="walletManager.disconnect()">Disconnect</button>
         </div>
+        <div style="padding: 12px 16px; background: rgba(0,0,0,0.2); border-radius: 8px; border: 1px solid rgba(0,212,255,0.15);">
+          <div style="font-size: 0.75em; color: #888; margin-bottom: 8px;">WALLET BALANCE</div>
+          <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+            <div>
+              <span style="color: #888; font-size: 0.8em;">SOL:</span>
+              <span id="balanceSOL" style="font-weight: 600; color: #e0e0e0; margin-left: 4px;">0</span>
+            </div>
+            <div>
+              <span style="color: #888; font-size: 0.8em;">USDC:</span>
+              <span id="balanceUSDC" style="font-weight: 600; color: #e0e0e0; margin-left: 4px;">0</span>
+            </div>
+            <div>
+              <span style="color: #888; font-size: 0.8em;">USDT:</span>
+              <span id="balanceUSDT" style="font-weight: 600; color: #e0e0e0; margin-left: 4px;">0</span>
+            </div>
+          </div>
+          <button class="button" id="refreshBalanceBtn" style="padding: 4px 10px; font-size: 0.75em; margin-top: 8px;">Refresh</button>
+        </div>
       </div>
     </div>
 
@@ -66,24 +90,24 @@
           <div class="label">Total pixels</div>
         </div>
         <div class="stat-card">
-          <h3>Total Value</h3>
-          <div class="value" id="totalValue">$0.00</div>
+          <h3>Total Invested</h3>
+          <div class="value" id="totalInvestedStat">$0.00</div>
+          <div class="label">Based on purchase prices</div>
+        </div>
+        <div class="stat-card">
+          <h3>Current Value</h3>
+          <div class="value" id="currentValueStat">$0.00</div>
           <div class="label">Based on current prices</div>
+        </div>
+        <div class="stat-card">
+          <h3>Total P&L</h3>
+          <div class="value" id="totalPnlStat">$0.00</div>
+          <div class="label">Profit/Loss</div>
         </div>
         <div class="stat-card">
           <h3>First Purchase</h3>
           <div class="value" id="firstPurchase">-</div>
           <div class="label">Block ID</div>
-        </div>
-        <div class="stat-card">
-          <h3>Last Purchase</h3>
-          <div class="value" id="lastPurchase">-</div>
-          <div class="label">Block ID</div>
-        </div>
-        <div class="stat-card">
-          <h3>Rank</h3>
-          <div class="value" id="userRank">#-</div>
-          <div class="label">Among all owners</div>
         </div>
       </div>
     </div>
@@ -91,11 +115,31 @@
     <!-- Owned Blocks List -->
     <div class="card" id="ownedBlocks" style="display: none;">
       <h2>Your Owned Blocks</h2>
-      <div class="input-group">
-        <label>Search / Filter</label>
-        <input type="text" id="blockSearch" placeholder="Search by block ID..." onkeyup="filterBlocks()">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+        <div class="input-group" style="margin-bottom: 0; flex: 1; margin-right: 12px;">
+          <label>Search / Filter</label>
+          <input type="text" id="blockSearch" placeholder="Search by block ID..." onkeyup="filterBlocks()">
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px; font-size: 0.85em; color: #00ff88;">
+          <div style="width: 8px; height: 8px; border-radius: 50%; background: #00ff88; box-shadow: 0 0 6px #00ff88; animation: livePulse 1.5s ease-in-out infinite;"></div>
+          <span>Live P&L</span>
+        </div>
       </div>
       <div id="blocksList" style="max-height: 400px; overflow-y: auto;"></div>
+      <div style="margin-top: 16px; padding: 12px; background: rgba(0,0,0,0.2); border-radius: 8px;">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+          <span style="color: #888;">Total Invested</span>
+          <span id="totalInvested" style="font-weight: 600;">$0.00</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+          <span style="color: #888;">Current Value</span>
+          <span id="currentValue" style="font-weight: 600;">$0.00</span>
+        </div>
+        <div style="display: flex; justify-content: space-between;">
+          <span style="font-weight: 700;">Total P&L</span>
+          <span id="totalPnl" style="font-weight: 700;">$0.00</span>
+        </div>
+      </div>
     </div>
 
     <!-- Recent Activity -->
@@ -166,6 +210,9 @@
 
         document.getElementById('walletType').textContent = data.wallet.charAt(0).toUpperCase() + data.wallet.slice(1);
         document.getElementById('walletAddress').textContent = walletManager.shortenAddress(data.address);
+
+        // Fetch initial balances
+        updateBalances();
       } else {
         notConnected.style.display = 'block';
         connected.style.display = 'none';
@@ -176,26 +223,42 @@
       }
     }
 
+    // Update wallet balances
+    async function updateBalances() {
+      if (!walletManager.isConnected()) return;
+
+      try {
+        var balances = await walletManager.getAllBalances();
+        document.getElementById('balanceSOL').textContent  = balances.sol.toFixed(6);
+        document.getElementById('balanceUSDC').textContent = balances.usdc.toFixed(2);
+        document.getElementById('balanceUSDT').textContent = balances.usdt.toFixed(2);
+      } catch(e) {
+        console.error('Error updating balances:', e);
+      }
+    }
+
+    // Refresh balance button
+    document.getElementById('refreshBalanceBtn').addEventListener('click', updateBalances);
+
     async function loadUserData(address) {
-      // In production, this would fetch from a backend database
-      // For demo, we'll use localStorage
-      const storedData = localStorage.getItem(`spice_ledger_${address}`);
-      
-      if (storedData) {
-        const data = JSON.parse(storedData);
-        ownedBlocks = data.blocks || [];
-        updateStats(ownedBlocks);
-        renderBlocksList(ownedBlocks);
-        renderActivity(data.activity || []);
-      } else {
-        // Initialize empty data for new user
+      // Fetch from backend API instead of localStorage
+      try {
+        var res = await fetch('/api/blocks/' + encodeURIComponent(address));
+        if (res.ok) {
+          var blocks = await res.json();
+          ownedBlocks = Array.isArray(blocks) ? blocks : [];
+          updateStats(ownedBlocks);
+          renderBlocksList(ownedBlocks);
+          renderActivity([]); // Activity tracking can be added later
+        } else {
+          ownedBlocks = [];
+          updateStats([]);
+          renderBlocksList([]);
+          renderActivity([]);
+        }
+      } catch(e) {
+        console.error('Error loading user data:', e);
         ownedBlocks = [];
-        const initialData = {
-          address,
-          blocks: [],
-          activity: []
-        };
-        localStorage.setItem(`spice_ledger_${address}`, JSON.stringify(initialData));
         updateStats([]);
         renderBlocksList([]);
         renderActivity([]);
@@ -205,52 +268,88 @@
     function updateStats(blocks) {
       const totalBlocks = blocks.length;
       const totalPixels = totalBlocks * 100;
-      
+
       document.getElementById('blocksOwned').textContent = totalBlocks.toLocaleString();
       document.getElementById('pixelsOwned').textContent = totalPixels.toLocaleString();
 
       if (blocks.length > 0) {
         const firstBlock = Math.min(...blocks.map(function(b){ return typeof b === 'number' ? b : b.blockId; }));
-        const lastBlock = Math.max(...blocks.map(function(b){ return typeof b === 'number' ? b : b.blockId; }));
         document.getElementById('firstPurchase').textContent = firstBlock.toLocaleString();
-        document.getElementById('lastPurchase').textContent = lastBlock.toLocaleString();
-        document.getElementById('userRank').textContent = '#' + Math.floor(Math.random() * 1000) + 1; // Demo rank
       } else {
         document.getElementById('firstPurchase').textContent = '-';
-        document.getElementById('lastPurchase').textContent = '-';
-        document.getElementById('userRank').textContent = '#-';
       }
 
-      // Calculate total value (demo)
+      // Calculate total invested, current value, and P&L
+      let totalInvested = 0;
       let totalValue = 0;
+
       blocks.forEach(function(item) {
         var id = typeof item === 'number' ? item : item.blockId;
-        totalValue += 0.001 + (id * 9.999e-10);
+        var purchasePrice = typeof item === 'number'
+          ? (0.001 + id * 9.999e-10)
+          : (item.purchasePrice || (0.001 + id * 9.999e-10));
+        var currentValue = 0.001 + (id * 9.999e-10);
+
+        totalInvested += purchasePrice;
+        totalValue += currentValue;
       });
-      document.getElementById('totalValue').textContent = '$' + totalValue.toFixed(4);
+
+      var totalPnl = totalValue - totalInvested;
+
+      // Update stat cards
+      document.getElementById('totalInvestedStat').textContent = '$' + totalInvested.toFixed(4);
+      document.getElementById('currentValueStat').textContent = '$' + totalValue.toFixed(4);
+
+      var pnlStatEl = document.getElementById('totalPnlStat');
+      pnlStatEl.textContent = (totalPnl >= 0 ? '+' : '') + '$' + totalPnl.toFixed(4);
+      pnlStatEl.style.color = totalPnl >= 0 ? '#00ff88' : '#ff4757';
+
+      // Update blocks list summary
+      var totalInvestedEl = document.getElementById('totalInvested');
+      var currentValueEl = document.getElementById('currentValue');
+      var pnlEl = document.getElementById('totalPnl');
+
+      if (totalInvestedEl) totalInvestedEl.textContent = '$' + totalInvested.toFixed(4);
+      if (currentValueEl) currentValueEl.textContent = '$' + totalValue.toFixed(4);
+      if (pnlEl) {
+        pnlEl.textContent = (totalPnl >= 0 ? '+' : '') + '$' + totalPnl.toFixed(4);
+        pnlEl.style.color = totalPnl >= 0 ? '#00ff88' : '#ff4757';
+      }
     }
 
     function renderBlocksList(blocks) {
       const container = document.getElementById('blocksList');
-      
+
       if (blocks.length === 0) {
         container.innerHTML = '<p style="color: #888;">No blocks owned yet. Start purchasing!</p>';
         return;
       }
 
-      let html = '<table class="table"><thead><tr><th>Block ID</th><th>Pixels</th><th>Purchase Price</th></tr></thead><tbody>';
-      
+      let html = '<table class="table"><thead><tr><th>Block ID</th><th>Pixels</th><th>Purchase Price</th><th>Current Value</th><th>P&L</th></tr></thead><tbody>';
+
       blocks.forEach(function(item) {
         var blockId = typeof item === 'number' ? item : item.blockId;
-        var price = typeof item === 'number'
+        var purchasePrice = typeof item === 'number'
           ? (0.001 + blockId * 9.999e-10)
           : (item.purchasePrice || (0.001 + blockId * 9.999e-10));
-        html += '<tr><td>' + blockId.toLocaleString() + '</td><td>100</td><td>$' + price.toFixed(6) + '</td></tr>';
+        var currentValue = 0.001 + (blockId * 9.999e-10);
+        var pnl = currentValue - purchasePrice;
+        var pnlColor = pnl >= 0 ? '#00ff88' : '#ff4757';
+
+        html += '<tr><td>' + blockId.toLocaleString() + '</td><td>100</td><td>$' + purchasePrice.toFixed(6) + '</td><td>$' + currentValue.toFixed(6) + '</td><td style="color:' + pnlColor + ';">' + (pnl >= 0 ? '+' : '') + '$' + pnl.toFixed(6) + '</td></tr>';
       });
-      
+
       html += '</tbody></table>';
       container.innerHTML = html;
     }
+
+    // Auto-refresh P&L every 30 seconds
+    setInterval(function() {
+      if (walletManager.isConnected() && ownedBlocks.length > 0) {
+        updateStats(ownedBlocks);
+        renderBlocksList(ownedBlocks);
+      }
+    }, 30000);
 
     function filterBlocks() {
       const searchTerm = document.getElementById('blockSearch').value.toLowerCase();

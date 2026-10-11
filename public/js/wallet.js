@@ -7,6 +7,7 @@ class WalletManager {
     this.currentAddress = null;
     this.connected = false;
     this.listeners = [];
+    this.solBalance = 0;
   }
 
   // Subscribe to wallet events
@@ -56,6 +57,10 @@ class WalletManager {
       this.currentWallet = 'phantom';
       this.currentAddress = address;
       this.connected = true;
+
+      // Fetch initial balance
+      await this.updateSolBalance();
+
       this.emit('connected', { wallet: 'phantom', address: this.currentAddress });
       return { success: true, wallet: 'Phantom', address: this.currentAddress };
     } catch (error) {
@@ -68,6 +73,7 @@ class WalletManager {
     this.currentWallet = null;
     this.currentAddress = null;
     this.connected = false;
+    this.solBalance = 0;
     this.emit('disconnected');
     return { success: true };
   }
@@ -77,7 +83,8 @@ class WalletManager {
     return {
       connected: this.connected,
       wallet: this.currentWallet,
-      address: this.currentAddress
+      address: this.currentAddress,
+      solBalance: this.solBalance
     };
   }
 
@@ -90,6 +97,112 @@ class WalletManager {
   shortenAddress(address) {
     if (!address) return '';
     return `${address.slice(0, 6)}...${address.slice(-4)}`;
+  }
+
+  // Update SOL balance (requires Solana web3 to be loaded)
+  async updateSolBalance() {
+    if (!this.connected || this.currentWallet !== 'phantom' || !this.currentAddress) {
+      this.solBalance = 0;
+      return 0;
+    }
+
+    try {
+      // Use the same loading mechanism as solanaPayment.js
+      const web3Module = await import('https://esm.sh/@solana/web3.js');
+      const Connection = web3Module.Connection || (web3Module.default && web3Module.default.Connection);
+      const PublicKey = web3Module.PublicKey || (web3Module.default && web3Module.default.PublicKey);
+
+      if (!Connection || !PublicKey) {
+        console.warn('Solana web3 exports not found');
+        return 0;
+      }
+
+      const connection = new Connection('https://api.devnet.solana.com', 'confirmed');
+      const publicKey = new PublicKey(this.currentAddress);
+      const balance = await connection.getBalance(publicKey);
+      this.solBalance = balance / 1e9; // Convert lamports to SOL
+
+      // Emit balance update event
+      this.emit('balanceUpdated', { solBalance: this.solBalance });
+
+      return this.solBalance;
+    } catch (error) {
+      console.error('Error fetching SOL balance:', error);
+      this.solBalance = 0;
+      return 0;
+    }
+  }
+
+  // Get all token balances (SOL, USDC, USDT)
+  async getAllBalances() {
+    if (!this.connected || this.currentWallet !== 'phantom' || !this.currentAddress) {
+      return { sol: 0, usdc: 0, usdt: 0 };
+    }
+
+    try {
+      const [web3Module, splTokenModule] = await Promise.all([
+        import('https://esm.sh/@solana/web3.js'),
+        import('https://esm.sh/@solana/spl-token')
+      ]);
+
+      const Connection = web3Module.Connection || (web3Module.default && web3Module.default.Connection);
+      const PublicKey = web3Module.PublicKey || (web3Module.default && web3Module.default.PublicKey);
+      const getATA = splTokenModule.getAssociatedTokenAddressSync
+        || (splTokenModule.default && splTokenModule.default.getAssociatedTokenAddressSync);
+
+      if (!Connection || !PublicKey || !getATA) {
+        console.warn('Solana web3 exports not found');
+        return { sol: 0, usdc: 0, usdt: 0 };
+      }
+
+      const connection = new Connection('https://api.devnet.solana.com', 'confirmed');
+      const publicKey = new PublicKey(this.currentAddress);
+
+      // Get SOL balance
+      const solBalanceLamports = await connection.getBalance(publicKey);
+      const solBalance = solBalanceLamports / 1e9;
+
+      // Get SPL token addresses
+      const usdcMintDevnet = '4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU';
+      const usdtMintMainnet = 'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB';
+
+      // Get token balances
+      let usdcBalance = 0;
+      let usdtBalance = 0;
+
+      try {
+        const usdcAta = getATA(new PublicKey(usdcMintDevnet), publicKey);
+        const usdcAccount = await connection.getTokenAccountBalance(usdcAta);
+        usdcBalance = parseFloat(usdcAccount.value.amount) / 1e6; // USDC has 6 decimals
+      } catch (e) {
+        // Token account might not exist
+        usdcBalance = 0;
+      }
+
+      try {
+        const usdtAta = getATA(new PublicKey(usdtMintMainnet), publicKey);
+        const usdtAccount = await connection.getTokenAccountBalance(usdtAta);
+        usdtBalance = parseFloat(usdtAccount.value.amount) / 1e6; // USDT has 6 decimals
+      } catch (e) {
+        // Token account might not exist
+        usdtBalance = 0;
+      }
+
+      const balances = { sol: solBalance, usdc: usdcBalance, usdt: usdtBalance };
+
+      // Emit balance update event
+      this.emit('balanceUpdated', balances);
+
+      return balances;
+    } catch (error) {
+      console.error('Error fetching token balances:', error);
+      return { sol: 0, usdc: 0, usdt: 0 };
+    }
+  }
+
+  // Get current SOL balance
+  getSolBalance() {
+    return this.solBalance;
   }
 }
 

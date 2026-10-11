@@ -169,6 +169,28 @@
       <button class="button" id="disconnectBtn" style="padding:6px 16px;font-size:.82em;">Disconnect</button>
     </div>
 
+    <!-- Balance display — shows when connected -->
+    <div id="balanceBanner" class="card" style="display:none;align-items:center;gap:16px;padding:14px 20px;border-color:rgba(0,212,255,.2);">
+      <div style="flex:1;">
+        <div style="font-size:0.75em;color:#888;margin-bottom:4px;">WALLET BALANCE</div>
+        <div style="display:flex;gap:20px;flex-wrap:wrap;">
+          <div>
+            <span style="color:#888;font-size:0.8em;">SOL:</span>
+            <span id="balanceSOL" style="font-weight:600;color:#e0e0e0;margin-left:4px;">0</span>
+          </div>
+          <div>
+            <span style="color:#888;font-size:0.8em;">USDC:</span>
+            <span id="balanceUSDC" style="font-weight:600;color:#e0e0e0;margin-left:4px;">0</span>
+          </div>
+          <div>
+            <span style="color:#888;font-size:0.8em;">USDT:</span>
+            <span id="balanceUSDT" style="font-weight:600;color:#e0e0e0;margin-left:4px;">0</span>
+          </div>
+        </div>
+      </div>
+      <button class="button" id="refreshBalanceBtn" style="padding:6px 12px;font-size:.75em;">Refresh</button>
+    </div>
+
     <!-- Step 1 — Pick blocks -->
     <div class="card">
       <h2>1 — Choose Blocks</h2>
@@ -266,18 +288,18 @@
     <!-- Pricing info card -->
     <div class="card">
       <h2>How Pricing Works</h2>
-      <div class="formula">P(x) = (9.999 × 10⁻¹⁰) × x + 0.001</div>
+      <div class="formula">P(x) = (9.99999999 × 10⁻⁸) × x + 0.001</div>
       <p style="color:#888;margin-top:12px;line-height:1.7;font-size:.9em;">
         Price starts at <strong style="color:#e0e0e0;">$0.001</strong> per block and rises linearly to
-        <strong style="color:#e0e0e0;">$10.00</strong> at block 9,999,999,999.
-        Early buyers get lower prices — as more blocks sell, the price increases automatically.
+        <strong style="color:#e0e0e0;">$1,000.00</strong> at block 9,999,999,999.
+        Early buyers get lower prices — as more blocks sell, the price increases automatically with massive upside potential.
         A flat <strong style="color:#00d4ff;">$0.10 platform fee</strong> is added per transaction and routed automatically.
       </p>
       <div class="stats-grid" style="margin-top:20px;">
         <div class="stat-card"><h3>Starting Price</h3><div class="value">$0.001</div><div class="label">Block 0</div></div>
-        <div class="stat-card"><h3>At Block 1B</h3><div class="value">$1.00</div><div class="label">10% sold</div></div>
-        <div class="stat-card"><h3>At Block 5B</h3><div class="value">$5.00</div><div class="label">50% sold</div></div>
-        <div class="stat-card"><h3>Final Price</h3><div class="value">$10.00</div><div class="label">Block 9,999,999,999</div></div>
+        <div class="stat-card"><h3>At Block 1B</h3><div class="value">$100.00</div><div class="label">10% sold</div></div>
+        <div class="stat-card"><h3>At Block 5B</h3><div class="value">$500.00</div><div class="label">50% sold</div></div>
+        <div class="stat-card"><h3>Final Price</h3><div class="value">$1,000.00</div><div class="label">Block 9,999,999,999</div></div>
       </div>
     </div>
   </div>
@@ -305,14 +327,36 @@
       var short = data.address.slice(0,6) + '...' + data.address.slice(-4);
       document.getElementById('walletBanner').style.display    = 'none';
       document.getElementById('connectedBanner').style.display = 'flex';
+      document.getElementById('balanceBanner').style.display   = 'flex';
       document.getElementById('connectedLabel').textContent    =
         data.wallet.charAt(0).toUpperCase() + data.wallet.slice(1) + ' · ' + short;
+
+      // Fetch initial balances
+      updateBalances();
     }
 
     function showDisconnected() {
       document.getElementById('walletBanner').style.display    = 'flex';
       document.getElementById('connectedBanner').style.display = 'none';
+      document.getElementById('balanceBanner').style.display   = 'none';
     }
+
+    // Update wallet balances
+    async function updateBalances() {
+      if (!walletManager.isConnected()) return;
+
+      try {
+        var balances = await walletManager.getAllBalances();
+        document.getElementById('balanceSOL').textContent  = balances.sol.toFixed(6);
+        document.getElementById('balanceUSDC').textContent = balances.usdc.toFixed(2);
+        document.getElementById('balanceUSDT').textContent = balances.usdt.toFixed(2);
+      } catch(e) {
+        console.error('Error updating balances:', e);
+      }
+    }
+
+    // Refresh balance button
+    document.getElementById('refreshBalanceBtn').addEventListener('click', updateBalances);
 
     document.getElementById('disconnectBtn').addEventListener('click', function() {
       walletManager.disconnect();
@@ -439,6 +483,18 @@
     window._executePayment    = executePayment;
     window._fetchJupiterPrices = fetchJupiterPrices;
 
+    // Fetch network config
+    async function fetchConfig() {
+      try {
+        var res = await fetch('/api/config');
+        if (res.ok) {
+          var cfg = await res.json();
+          window.SOLANA_NETWORK = cfg.solanaNetwork;
+        }
+      } catch(e) {}
+    }
+    fetchConfig();
+
     // ── Buy flow ─────────────────────────────────────────────────────────────
     window.buyBlocks = async function() {
       var blockId    = parseInt(document.getElementById('blockId').value);
@@ -500,11 +556,51 @@
       spinner.style.display = 'none';
       btn.disabled           = false;
 
-      // Show inline success with Solscan link
+      // Calculate currency amount spent
+      var currencySpent = 0;
+      try {
+        var prices = await window._fetchJupiterPrices();
+        if (selectedCurrency === 'SOL' && prices && prices.SOL && prices.SOL.price) {
+          currencySpent = totalUsd / prices.SOL.price;
+        } else if (selectedCurrency === 'USDC' || selectedCurrency === 'USDT') {
+          currencySpent = totalUsd; // Stablecoins are 1:1 with USD
+        }
+      } catch(e) {}
+
+      // Record purchase in backend
+      try {
+        var purchaseRes = await fetch('/api/purchase', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            walletAddress: connectedAddress,
+            blockId: blockId,
+            blockCount: blockCount,
+            network: SOLANA_NETWORK,
+            txSignature: sig
+          })
+        });
+
+        if (purchaseRes.ok) {
+          var purchaseData = await purchaseRes.json();
+          console.log('Purchase recorded:', purchaseData);
+        }
+      } catch(e) {
+        console.error('Failed to record purchase:', e);
+      }
+
+      // Show inline success with details
       txSuccess.innerHTML =
-        '✓ Transaction confirmed<br>' +
+        '✓ Transaction confirmed!<br>' +
+        '<span style="color:#888;font-size:0.9em;">' +
+        selectedCurrency + ' spent: ' + currencySpent.toFixed(6) + ' ' + selectedCurrency + '<br>' +
+        'Pixels purchased: ' + (blockCount * 100).toLocaleString() + '<br>' +
+        '</span><br>' +
         '<a href="https://solscan.io/tx/' + sig + '" target="_blank" rel="noopener noreferrer">View on Solscan ↗</a>';
       txSuccess.style.display = 'block';
+
+      // Refresh balances after purchase
+      updateBalances();
 
       // Record purchase in backend (non-blocking — on-chain tx already done)
       try {

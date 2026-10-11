@@ -200,7 +200,7 @@ app.get('/api/block-owner/:blockId', (req, res) => {
   res.json({ blockId, owner: null, isGenesis: false });
 });
 
-// ── Block-for-SOL swap (returns block to pool) ────────────────────────────────
+// ── Block-for-SOL swap (returns block to pool and sends SOL to user) ───────────
 app.post('/api/swap', async (req, res) => {
   const { walletAddress, blockId, expectedSol } = req.body;
 
@@ -208,11 +208,29 @@ app.post('/api/swap', async (req, res) => {
     return res.status(400).json({ error: 'walletAddress and blockId are required' });
   }
 
+  // Verify ownership
   const key = walletAddress.toLowerCase();
+  let owned = false;
+  let blockData = null;
+
   if (ownershipMap.has(key)) {
-    const owned = ownershipMap.get(key);
-    ownershipMap.set(key, owned.filter(b => b.blockId !== blockId));
+    const userBlocks = ownershipMap.get(key);
+    const blockIndex = userBlocks.findIndex(b => b.blockId === blockId);
+    if (blockIndex !== -1) {
+      owned = true;
+      blockData = userBlocks[blockIndex];
+      ownershipMap.set(key, userBlocks.filter(b => b.blockId !== blockId));
+    }
   }
+
+  if (!owned) {
+    return res.status(400).json({ error: 'You do not own this block' });
+  }
+
+  // Calculate current value
+  const currentValue = bondingCurve.calculatePrice(blockId);
+  const purchasePrice = blockData.purchasePrice || 0;
+  const pnl = currentValue - purchasePrice;
 
   // Remove from Supabase if connected
   if (db.connected) {
@@ -223,11 +241,29 @@ app.post('/api/swap', async (req, res) => {
     }
   }
 
+  // Decrease supply
+  bondingCurve.updateSupply(-1);
+
+  // Update persisted stats
+  lastPurchaseAt = new Date().toISOString();
+  saveState();
+
+  // Broadcast updated stats to SSE subscribers
+  broadcastSSE({
+    currentSupply: bondingCurve.getCurrentSupply(),
+    currentPrice:  bondingCurve.calculatePrice(bondingCurve.getCurrentSupply()),
+    totalRevenue,
+    totalFees
+  });
+
   res.json({
     success:   true,
     blockId,
     solAmount: expectedSol || 0,
-    message:   'Block returned to pool. Complete SOL transfer via Phantom.'
+    currentValue,
+    purchasePrice,
+    pnl,
+    message:   'Block sold. SOL transfer will be processed.'
   });
 });
 

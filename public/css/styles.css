@@ -15,41 +15,64 @@
 }
 
 /* ══════════════════════════════════════════════════════════════
-   LIQUID GALAXY BACKGROUND
-   Three layers:
-   1. Deep base gradient — void of space
-   2. Slow-drifting nebula blobs (CSS radial gradients + animation)
-   3. Star field — tiny points with parallax drift
+   LIQUID GALAXY BACKGROUND - 4K ENHANCED
+   Five layers for depth and parallax:
+   1. Deep void base — darkest space
+   2. Distant galaxies — subtle background glow
+   3. Nebula clouds — animated radial gradients
+   4. Star field layer 1 — distant stars (slow)
+   5. Star field layer 2 — closer stars (faster)
    ══════════════════════════════════════════════════════════════ */
 
 @keyframes nebulaFlow {
-  0%   { transform: translate(0, 0)     scale(1);    opacity: 0.55; }
-  25%  { transform: translate(3%, 5%)   scale(1.08); opacity: 0.65; }
-  50%  { transform: translate(-4%, 2%)  scale(0.96); opacity: 0.5;  }
-  75%  { transform: translate(2%, -4%)  scale(1.06); opacity: 0.6;  }
-  100% { transform: translate(0, 0)     scale(1);    opacity: 0.55; }
+  0%   { transform: translate(0, 0)     scale(1)    rotate(0deg); opacity: 0.55; }
+  25%  { transform: translate(3%, 5%)   scale(1.08) rotate(1deg); opacity: 0.65; }
+  50%  { transform: translate(-4%, 2%)  scale(0.96) rotate(-1deg); opacity: 0.5;  }
+  75%  { transform: translate(2%, -4%)  scale(1.06) rotate(0.5deg); opacity: 0.6;  }
+  100% { transform: translate(0, 0)     scale(1)    rotate(0deg); opacity: 0.55; }
 }
 
 @keyframes nebulaFlow2 {
-  0%   { transform: translate(0, 0)     scale(1);    opacity: 0.4;  }
-  33%  { transform: translate(-5%, 3%)  scale(1.1);  opacity: 0.52; }
-  66%  { transform: translate(4%, -5%)  scale(0.94); opacity: 0.38; }
-  100% { transform: translate(0, 0)     scale(1);    opacity: 0.4;  }
+  0%   { transform: translate(0, 0)     scale(1)    rotate(0deg); opacity: 0.4;  }
+  33%  { transform: translate(-5%, 3%)  scale(1.1)  rotate(-2deg); opacity: 0.52; }
+  66%  { transform: translate(4%, -5%)  scale(0.94) rotate(1deg); opacity: 0.38; }
+  100% { transform: translate(0, 0)     scale(1)    rotate(0deg); opacity: 0.4;  }
+}
+
+@keyframes nebulaFlow3 {
+  0%   { transform: translate(0, 0)     scale(1);    opacity: 0.35; }
+  50%  { transform: translate(6%, -8%)  scale(1.15); opacity: 0.45; }
+  100% { transform: translate(0, 0)     scale(1);    opacity: 0.35; }
 }
 
 @keyframes starDrift {
-  0%   { transform: translateY(0);    }
-  100% { transform: translateY(-40px); }
+  0%   { transform: translateY(0) translateX(0);    }
+  100% { transform: translateY(-50px) translateX(20px); }
 }
 
 @keyframes starDrift2 {
-  0%   { transform: translateY(0);   }
-  100% { transform: translateY(-60px); }
+  0%   { transform: translateY(0) translateX(0);   }
+  100% { transform: translateY(-80px) translateX(-30px); }
+}
+
+@keyframes starDrift3 {
+  0%   { transform: translateY(0) translateX(0);   }
+  100% { transform: translateY(-120px) translateX(10px); }
 }
 
 @keyframes liquidShimmer {
   0%, 100% { opacity: 0.6; }
   50%       { opacity: 1;   }
+}
+
+@keyframes galaxyRotate {
+  0%   { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes pulseGlow {
+  0%, 100% { opacity: 0.3; }
+  50%       { opacity: 0.6; }
 }
 
 body {
@@ -61,18 +84,27 @@ body {
   overflow-x: hidden;
 }
 
-/* Layer 1 — deep space base (solid, no animation needed) */
+/* Layer 1 — deep space base with distant galaxies */
 body::before {
   content: '';
   position: fixed;
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  /* Radial vignette — edges darker than centre */
+  /* Deep void with galaxy hints */
   background:
-    radial-gradient(ellipse 120% 80% at 50% 50%,
-      rgba(10, 8, 30, 0) 0%,
-      rgba(3, 3, 10, 0.85) 100%),
+    /* Vignette — edges darker */
+    radial-gradient(ellipse 130% 90% at 50% 50%,
+      rgba(8, 6, 25, 0) 0%,
+      rgba(2, 2, 8, 0.9) 100%),
+    /* Distant galaxy 1 — faint spiral */
+    radial-gradient(ellipse 40% 25% at 20% 30%,
+      rgba(60, 40, 140, 0.15) 0%,
+      transparent 60%),
+    /* Distant galaxy 2 — faint blue */
+    radial-gradient(ellipse 35% 30% at 80% 70%,
+      rgba(40, 80, 150, 0.12) 0%,
+      transparent 60%),
     /* Nebula blob 1 — blue-cyan top-left */
     radial-gradient(ellipse 70% 50% at 15% 25%,
       rgba(0, 80, 180, 0.18) 0%,
@@ -86,10 +118,10 @@ body::before {
       rgba(0, 150, 160, 0.12) 0%,
       transparent 70%),
     /* Base void */
-    linear-gradient(160deg, #06061a 0%, #03030a 50%, #060416 100%);
+    linear-gradient(160deg, #080818 0%, #020205 50%, #060612 100%);
 }
 
-/* Layer 2 — animated nebula clouds */
+/* Layer 2 — animated nebula clouds (layer 1) */
 body::after {
   content: '';
   position: fixed;
@@ -118,15 +150,27 @@ body::after {
   animation: nebulaFlow 28s ease-in-out infinite;
 }
 
-/* Layer 3 — star field (two sheets, different speeds = parallax) */
-.stars-a,
-.stars-b {
+/* Layer 3 — additional nebula layer */
+.nebula-c {
   position: fixed;
-  inset: 0;
+  inset: -30%;
+  width: 160%;
+  height: 160%;
   z-index: 0;
   pointer-events: none;
+  background:
+    /* Pink/magenta accent */
+    radial-gradient(ellipse 45% 25% at 30% 70%,
+      rgba(200, 50, 150, 0.08) 0%,
+      transparent 60%),
+    /* Blue accent */
+    radial-gradient(ellipse 50% 30% at 70% 20%,
+      rgba(50, 100, 200, 0.07) 0%,
+      transparent 60%);
+  animation: nebulaFlow2 35s ease-in-out infinite;
 }
 
+/* Layer 4 — star field layer 1 (distant, slow) */
 .stars-a {
   background-image:
     radial-gradient(1px 1px at  4%  7%,  rgba(255,255,255,0.75) 0%, transparent 100%),
@@ -158,6 +202,7 @@ body::after {
   animation: starDrift 80s linear infinite;
 }
 
+/* Layer 5 — star field layer 2 (medium distance) */
 .stars-b {
   background-image:
     radial-gradient(1px 1px at  6% 13%,  rgba(255,255,255,0.5)  0%, transparent 100%),
@@ -178,6 +223,24 @@ body::after {
   background-size: 100% 100%;
   animation: starDrift2 120s linear infinite;
   opacity: 0.7;
+}
+
+/* Layer 6 — star field layer 3 (closest, fastest, brightest) */
+.stars-c {
+  background-image:
+    radial-gradient(1.5px 1.5px at  8% 18%,  rgba(255,255,255,0.9)  0%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 22% 52%,  rgba(0,212,255,0.7)   0%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 35% 75%,  rgba(255,255,255,0.8)  0%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 48% 28%,  rgba(123,47,255,0.75)  0%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 62% 88%,  rgba(255,255,255,0.85) 0%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 75% 42%,  rgba(0,255,136,0.7)   0%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 88% 15%,  rgba(255,255,255,0.8)  0%, transparent 100%),
+    radial-gradient(2px 2px at 15% 65%,  rgba(0,212,255,0.5)    0%, transparent 100%),
+    radial-gradient(2px 2px at 45% 12%,  rgba(0,255,136,0.45)   0%, transparent 100%),
+    radial-gradient(2px 2px at 68% 55%,  rgba(255,255,255,0.6)  0%, transparent 100%);
+  background-size: 100% 100%;
+  animation: starDrift3 150s linear infinite;
+  opacity: 0.5;
 }
 
 /* All content above background layers */
@@ -214,16 +277,16 @@ body > *:not(.stars-a):not(.stars-b) {
 
 /* ─── Navigation ─────────────────────────────────────────────── */
 nav {
-  background: rgba(3, 3, 15, 0.65);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  padding: 12px 30px;
+  background: linear-gradient(135deg, rgba(5, 5, 20, 0.95) 0%, rgba(10, 10, 35, 0.95) 100%);
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
+  padding: 16px 32px;
   position: sticky;
   top: 0;
   z-index: 1000;
-  border-bottom: 1px solid rgba(0,212,255,0.1);
-  /* Liquid shimmer on nav bottom border */
-  box-shadow: 0 1px 0 rgba(0,212,255,0.08), 0 4px 24px rgba(0,0,0,0.4);
+  border-bottom: 2px solid rgba(0,212,255,0.2);
+  border-top: 1px solid rgba(0,212,255,0.1);
+  box-shadow: 0 4px 30px rgba(0,0,0,0.5), 0 0 0 1px rgba(0,212,255,0.05);
 }
 
 nav .container {
@@ -233,35 +296,66 @@ nav .container {
   justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 12px;
 }
 
 nav .logo {
-  font-size: 1.4em;
-  font-weight: 700;
-  background: linear-gradient(90deg, var(--cyan), var(--purple));
+  font-size: 1.5em;
+  font-weight: 800;
+  background: linear-gradient(135deg, #00d4ff 0%, #7b2fff 50%, #00ff88 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
 }
 
 nav ul {
   display: flex;
   list-style: none;
-  gap: 22px;
+  gap: 28px;
   flex-wrap: wrap;
   align-items: center;
 }
 
 nav a {
-  color: rgba(224,224,224,0.8);
+  color: rgba(220,220,240,0.85);
   text-decoration: none;
-  font-weight: 500;
-  font-size: 0.9em;
-  letter-spacing: 0.01em;
-  transition: color 0.2s;
+  font-weight: 600;
+  font-size: 0.92em;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  position: relative;
+  padding: 8px 0;
+  transition: color 0.3s;
 }
-nav a:hover { color: var(--cyan); }
+
+nav a::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--cyan), var(--purple));
+  transition: width 0.3s ease;
+}
+
+nav a:hover {
+  color: var(--cyan);
+}
+
+nav a:hover::after {
+  width: 100%;
+}
+
+nav a.active {
+  color: var(--cyan);
+}
+
+nav a.active::after {
+  width: 100%;
+}
 
 /* ─── Wallet button ──────────────────────────────────────────── */
 .wallet-button {
