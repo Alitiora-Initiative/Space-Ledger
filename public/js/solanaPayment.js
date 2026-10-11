@@ -20,20 +20,6 @@ async function getConfig() {
   }
 }
 
-// ── Network mode toggle (persisted in localStorage) ───────────────────────────
-
-export function setDevnetMode(enabled) {
-  localStorage.setItem('spaceledger_devnet', enabled ? 'true' : 'false');
-}
-
-export function isDevnet() {
-  return localStorage.getItem('spaceledger_devnet') === 'true';
-}
-
-export function getNetworkLabel() {
-  return isDevnet() ? 'Solana Devnet' : 'Solana Mainnet';
-}
-
 // ── Lazy-load Solana modules from esm.sh ──────────────────────────────────────
 
 let _web3     = null;
@@ -59,71 +45,59 @@ function resolveExports(web3, splToken) {
   const Connection  = web3.Connection  || (web3.default && web3.default.Connection);
   const PublicKey   = web3.PublicKey   || (web3.default && web3.default.PublicKey);
   const Transaction = web3.Transaction || (web3.default && web3.default.Transaction);
+  const SystemProgram = web3.SystemProgram || (web3.default && web3.default.SystemProgram);
 
   const getATA = splToken.getAssociatedTokenAddressSync
     || (splToken.default && splToken.default.getAssociatedTokenAddressSync);
   const createTransferChecked = splToken.createTransferCheckedInstruction
     || (splToken.default && splToken.default.createTransferCheckedInstruction);
 
-  if (!Connection || !PublicKey || !Transaction || !getATA || !createTransferChecked) {
+  if (!Connection || !PublicKey || !Transaction || !SystemProgram || !getATA || !createTransferChecked) {
     throw new Error(
       'Solana library exports not found. The esm.sh bundle may have changed. ' +
       'Please report this issue.'
     );
   }
-  return { Connection, PublicKey, Transaction, getATA, createTransferChecked };
+  return { Connection, PublicKey, Transaction, SystemProgram, getATA, createTransferChecked };
 }
 
-// ── Dry run ───────────────────────────────────────────────────────────────────
+// ── Jupiter price feed ────────────────────────────────────────────────────────
 
 /**
- * Simulates the full payment flow without broadcasting anything on-chain.
- * Returns a fake signature. Safe to use for testing PnL and UI flows.
+ * Fetches current USD prices for SOL, USDC, and USDT from the Jupiter price API.
+ * @returns {{ SOL: object, USDC: object, USDT: object }}
  */
-export async function dryRunPayment(wallet, recipientStr, totalAmountUsdc) {
-  if (!wallet || !wallet.publicKey) {
-    throw new Error('Wallet not connected.');
+export async function fetchJupiterPrices() {
+  try {
+    const res = await fetch('https://price.jup.ag/v4/price?ids=SOL,USDC,USDT');
+    if (!res.ok) throw new Error('Jupiter API returned HTTP ' + res.status);
+    const data = await res.json();
+    if (!data || !data.data) throw new Error('Unexpected Jupiter API response shape');
+    return {
+      SOL:  data.data.SOL,
+      USDC: data.data.USDC,
+      USDT: data.data.USDT
+    };
+  } catch (err) {
+    throw new Error('Failed to fetch Jupiter prices: ' + err.message);
   }
-
-  const mainPaymentUnits = Math.round((totalAmountUsdc - 0.10) * 1_000_000);
-  if (mainPaymentUnits <= 0) {
-    throw new Error('Amount too small. Must be greater than $0.10.');
-  }
-
-  const cfg = await getConfig();
-
-  // Simulate a 600ms network delay
-  await new Promise(resolve => setTimeout(resolve, 600));
-
-  const fakeSig = 'DRY_RUN_' + Date.now().toString(16).toUpperCase() + '_SIMULATED';
-
-  console.log('[DRY RUN] Simulated payment (no broadcast):', {
-    from:       wallet.publicKey.toString(),
-    to:         recipientStr,
-    feeWallet:  cfg.feeWallet,
-    amount:     totalAmountUsdc,
-    network:    getNetworkLabel(),
-    signature:  fakeSig
-  });
-
-  return { success: true, signature: fakeSig, dryRun: true, network: getNetworkLabel() };
 }
 
 // ── Real payment ──────────────────────────────────────────────────────────────
 
+const USDT_MINT_MAINNET = 'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB';
+
 /**
- * Routes a flat $0.10 USDC fee to the platform fee wallet (from server config)
- * and the remainder to the recipient — all in one atomic Solana transaction.
+ * Executes a real on-chain payment via Phantom's signAndSendTransaction.
+ * Supports SOL (SystemProgram.transfer), USDC, and USDT (SPL createTransferChecked).
+ * All fees are routed to the platform fee wallet automatically.
  *
- * Works with Phantom, Solflare, Backpack, and any Wallet Adapter wallet.
- * Network (devnet / mainnet) is controlled by the localStorage toggle.
- *
- * @param {Object} wallet          - Connected wallet (window.solana or useWallet())
- * @param {string} recipientStr    - Base58 recipient public key
- * @param {number} totalAmountUsdc - Total USDC (must be > 0.10)
- * @returns {{ success: boolean, signature: string, dryRun: boolean, network: string }}
+ * @param {Object} wallet    - Connected wallet (window.solana / window.phantom.solana)
+ * @param {string} currency  - 'SOL' | 'USDC' | 'USDT'
+ * @param {number} usdAmount - Total USD amount to pay (subtotal + platform fee)
+ * @returns {{ success: boolean, signature: string, network: string }}
  */
-export async function executeUsdcPaymentWithFee(wallet, recipientStr, totalAmountUsdc) {
+export async function executePayment(wallet, currency, usdAmount) {
   if (!wallet || !wallet.publicKey) {
     throw new Error('Wallet not connected. Please connect your Solana wallet first.');
   }
@@ -134,14 +108,8 @@ export async function executeUsdcPaymentWithFee(wallet, recipientStr, totalAmoun
     loadSolanaModules()
   ]);
 
-  const { Connection, PublicKey, Transaction, getATA, createTransferChecked } =
+  const { Connection, PublicKey, Transaction, SystemProgram, getATA, createTransferChecked } =
     resolveExports(web3, splToken);
-
-  // Pick network from toggle
-  const devnet       = isDevnet();
-  const rpcUrl       = devnet ? cfg.solanaRpc : cfg.solanaRpc;
-  const usdcMintStr  = devnet ? cfg.usdcMintDevnet : cfg.usdcMintMainnet;
-  const networkLabel = getNetworkLabel();
 
   if (!cfg.feeWallet || cfg.feeWallet.length < 32) {
     throw new Error(
@@ -150,62 +118,53 @@ export async function executeUsdcPaymentWithFee(wallet, recipientStr, totalAmoun
     );
   }
 
-  const USDC_MINT_PK    = new PublicKey(usdcMintStr);
-  const FEE_WALLET_PK   = new PublicKey(cfg.feeWallet);
-  const userPublicKey   = wallet.publicKey;
-  const recipientPK     = new PublicKey(recipientStr);
+  const connection    = new Connection(cfg.solanaRpc, 'confirmed');
+  const transaction   = new Transaction();
+  const userPublicKey = wallet.publicKey;
+  const feeWalletPK   = new PublicKey(cfg.feeWallet);
 
-  // Derive Associated Token Accounts
-  const userAta      = getATA(USDC_MINT_PK, userPublicKey);
-  const feeAta       = getATA(USDC_MINT_PK, FEE_WALLET_PK);
-  const recipientAta = getATA(USDC_MINT_PK, recipientPK);
-
-  const decimals         = 6;
-  const feeUnits         = Math.round(cfg.platformFeeUsd * 1_000_000);
-  const mainPaymentUnits = Math.round((totalAmountUsdc - cfg.platformFeeUsd) * 1_000_000);
-
-  if (mainPaymentUnits <= 0) {
-    throw new Error(
-      'Amount too small. Must be greater than $' + cfg.platformFeeUsd + ' to cover the platform fee.'
+  if (currency === 'SOL') {
+    // Fetch live SOL price and convert USD amount to lamports
+    const prices = await fetchJupiterPrices();
+    if (!prices.SOL || !prices.SOL.price) throw new Error('Could not fetch SOL price from Jupiter');
+    const lamports = Math.round((usdAmount / prices.SOL.price) * 1e9);
+    transaction.add(
+      SystemProgram.transfer({
+        fromPubkey: userPublicKey,
+        toPubkey:   feeWalletPK,
+        lamports
+      })
     );
+
+  } else if (currency === 'USDC' || currency === 'USDT') {
+    const mintStr = currency === 'USDC'
+      ? cfg.usdcMintMainnet
+      : USDT_MINT_MAINNET;
+
+    const mintPK  = new PublicKey(mintStr);
+    const userAta = getATA(mintPK, userPublicKey);
+    const feeAta  = getATA(mintPK, feeWalletPK);
+    const amount  = Math.round(usdAmount * 1_000_000); // 6 decimals
+
+    transaction.add(
+      createTransferChecked(userAta, mintPK, feeAta, userPublicKey, amount, 6)
+    );
+
+  } else {
+    throw new Error('Unsupported currency: ' + currency + '. Use SOL, USDC, or USDT.');
   }
-
-  const connection = new Connection(rpcUrl, 'confirmed');
-  const transaction = new Transaction();
-
-  // Instruction A — platform fee
-  transaction.add(
-    createTransferChecked(userAta, USDC_MINT_PK, feeAta, userPublicKey, feeUnits, decimals)
-  );
-
-  // Instruction B — payment to recipient
-  transaction.add(
-    createTransferChecked(userAta, USDC_MINT_PK, recipientAta, userPublicKey, mainPaymentUnits, decimals)
-  );
 
   transaction.feePayer = userPublicKey;
 
-  const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash();
+  const { blockhash } = await connection.getLatestBlockhash();
   transaction.recentBlockhash = blockhash;
 
-  try {
-    // Single wallet approval prompt showing both transfers
-    const signedTx = await wallet.signTransaction(transaction);
+  // Phantom returns { signature } directly from signAndSendTransaction
+  const result = await wallet.signAndSendTransaction(transaction);
 
-    const txSignature = await connection.sendRawTransaction(signedTx.serialize(), {
-      skipPreflight: false,
-      preflightCommitment: 'confirmed'
-    });
-
-    await connection.confirmTransaction(
-      { blockhash, lastValidBlockHeight, signature: txSignature },
-      'confirmed'
-    );
-
-    return { success: true, signature: txSignature, dryRun: false, network: networkLabel };
-
-  } catch (error) {
-    console.error('Solana USDC payment failed:', error);
-    throw error;
-  }
+  return {
+    success:   true,
+    signature: result.signature,
+    network:   cfg.solanaNetwork
+  };
 }
