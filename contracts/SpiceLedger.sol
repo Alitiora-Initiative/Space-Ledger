@@ -2,7 +2,7 @@
 pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 /**
@@ -61,7 +61,7 @@ contract SpiceLedger is Ownable, ReentrancyGuard {
     /**
      * @dev Returns true for blocks in the treasury-reserved range [0, TREASURY_ALLOCATION).
      */
-    function isTreasuryBlock(uint256 blockId) public view returns (bool) {
+    function isTreasuryBlock(uint256 blockId) public pure returns (bool) {
         return blockId < TREASURY_ALLOCATION;
     }
     

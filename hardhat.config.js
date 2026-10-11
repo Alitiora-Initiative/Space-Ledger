@@ -1,7 +1,7 @@
-require("@nomicfoundation/hardhat-toolbox");
+import 'dotenv/config';
+import { defineConfig } from 'hardhat/config';
 
-/** @type import('hardhat/config').HardhatUserConfig */
-module.exports = {
+export default defineConfig({
   solidity: {
     version: "0.8.20",
     settings: {
@@ -13,21 +13,21 @@ module.exports = {
   },
   networks: {
     hardhat: {
+      type: "edr-simulated",
+      chainType: "l1",
       chainId: 31337
     },
     sepolia: {
-      url: process.env.SEPOLIA_RPC_URL || "",
+      type: "http",
+      chainType: "l1",
+      url: process.env.SEPOLIA_RPC_URL || 'https://ethereum-sepolia-rpc.publicnode.com',
       accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : []
     },
     baseSepolia: {
-      url: process.env.BASE_SEPOLIA_RPC_URL || "https://sepolia.base.org",
+      type: "http",
+      chainType: "l1",
+      url: process.env.BASE_SEPOLIA_RPC_URL || 'https://sepolia.base.org',
       accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : []
     }
-  },
-  etherscan: {
-    apiKey: {
-      sepolia: process.env.ETHERSCAN_API_KEY || "",
-      baseSepolia: process.env.BASESCAN_API_KEY || ""
-    }
   }
-};
+});

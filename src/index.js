@@ -1,4 +1,4 @@
-require('dotenv').config();
+if (process.env.NODE_ENV !== 'test') require('dotenv').config();
 const express = require('express');
 const path = require('path');
 const fs = require('fs');
