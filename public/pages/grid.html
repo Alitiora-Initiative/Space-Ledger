@@ -3,34 +3,63 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Grid View - Spice Ledger</title>
+  <title>Spatial Ledger Protocol — Grid</title>
   <link rel="stylesheet" href="../css/styles.css">
   <style>
-    @keyframes flash {
-      0%   { background: #00d4ff; box-shadow: 0 0 10px #00d4ff; }
-      100% { background: ''; box-shadow: ''; }
+    /* ── Pixelated grid cells ─────────────────────────────────────────────── */
+    .grid-cell {
+      border: 1px solid rgba(0,212,255,0.12);
+      border-radius: 0;
+      image-rendering: pixelated;
+      min-width: 32px;
+      min-height: 32px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.5em;
+      color: rgba(255,255,255,0.3);
+      transition: transform 0.1s ease, opacity 0.1s ease;
     }
+
+    /* Genesis allocation — dev treasury (blocks 0–999,999,999) */
+    .grid-cell.genesis {
+      background: rgba(123,47,255,0.25);
+      box-shadow: 0 0 8px #7b2fff;
+    }
+
+    /* Purchased / owned blocks */
+    .grid-cell.owned {
+      background: rgba(0,255,136,0.15);
+      box-shadow: 0 0 8px #00ff88;
+    }
+
+    /* Available public blocks */
+    .grid-cell.available {
+      background: rgba(0,30,40,0.8);
+    }
+
+    /* Shimmer for available cells */
     @keyframes shimmer {
-      0%   { opacity: 1; }
-      50%  { opacity: 0.55; }
-      100% { opacity: 1; }
+      0%,100% { opacity: 1; }
+      50%      { opacity: 0.55; }
     }
     .shimmer-anim {
       animation: shimmer 2s ease-in-out infinite;
     }
-    .grid-cell.owned {
-      background: rgba(0, 212, 255, 0.25);
-      border-color: rgba(0, 212, 255, 0.6);
+
+    /* Flash on click */
+    @keyframes flash {
+      0%,100% { opacity: 1; }
+      50%      { opacity: 0.2; }
     }
-    .grid-cell.treasury {
-      background: rgba(255, 170, 0, 0.18);
-      border-color: rgba(255, 170, 0, 0.5);
-    }
+
+    /* Tooltip */
     #tooltip {
       display: none;
       position: fixed;
-      background: rgba(10, 10, 15, 0.92);
-      border: 1px solid rgba(0, 212, 255, 0.4);
+      background: rgba(10,10,15,0.92);
+      border: 1px solid rgba(0,212,255,0.4);
       color: #e0e0e0;
       font-size: 0.75em;
       font-family: monospace;
@@ -44,34 +73,36 @@
   </style>
 </head>
 <body><div class="stars-a"></div><div class="stars-b"></div>
+
   <nav>
     <div class="container">
       <a href="/index.html" style="display:flex;align-items:center;gap:8px;text-decoration:none;">
-      <img src="/img/logo.jpg" alt="SLP" style="width:32px;height:32px;border-radius:7px;object-fit:cover;">
-      <span class="logo">Spatial Ledger</span>
-    </a>
+        <img src="/img/logo.jpg" alt="SLP" style="width:32px;height:32px;border-radius:7px;object-fit:cover;">
+        <span class="logo">Spatial Ledger Protocol</span>
+      </a>
       <ul>
         <li><a href="../index.html">Home</a></li>
         <li><a href="purchase.html">Purchase</a></li>
-        <li><a href="grid.html">Grid View</a></li>
+        <li><a href="grid.html" style="color:#00d4ff;">Grid View</a></li>
         <li><a href="treasury.html">Treasury</a></li>
         <li><a href="network.html">Network</a></li>
         <li><a href="dashboard.html">Dashboard</a></li>
         <li><a href="profile.html">Profile</a></li>
+        <li><a href="swap.html">Swap</a></li>
       </ul>
     </div>
   </nav>
 
   <div class="container">
-    <h1 style="text-align: center; margin-bottom: 30px;">Block Grid Viewer</h1>
+    <h1 style="text-align:center;margin-bottom:30px;">Block Grid Viewer</h1>
 
     <div class="card">
       <h2>Navigate Blocks</h2>
       <div class="input-group">
-        <label>Block ID (0 - 9,999,999,999)</label>
+        <label>Block ID (0 – 9,999,999,999)</label>
         <input type="number" id="blockId" value="0" min="0" max="9999999999">
       </div>
-      <div style="display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap;">
+      <div style="display:flex;gap:10px;margin-bottom:15px;flex-wrap:wrap;">
         <button class="button" onclick="loadGrid()">Load Grid</button>
         <button class="button" onclick="previousBlock()">Previous Block</button>
         <button class="button" onclick="nextBlock()">Next Block</button>
@@ -82,9 +113,9 @@
 
     <div class="card">
       <h2>10 × 10 Pixel Grid</h2>
-      <p style="color: #888; margin-bottom: 15px;">
+      <p style="color:#888;margin-bottom:15px;">
         Each block contains 100 pixels arranged in a 10×10 grid.
-        Click on a pixel to view details.
+        Click a pixel to view details. Purple = Genesis (dev treasury). Green = Owned. Teal shimmer = Available.
       </p>
 
       <!-- Zoom controls -->
@@ -94,7 +125,7 @@
         <button class="button" onclick="setZoom(4)">4×</button>
       </div>
 
-      <div style="overflow: hidden;">
+      <div style="overflow:hidden;">
         <div class="grid-container" id="pixelGrid"></div>
       </div>
     </div>
@@ -102,7 +133,7 @@
     <div class="card">
       <h2>Pixel Details</h2>
       <div id="pixelDetails">
-        <p style="color: #888;">Click on a pixel to see details</p>
+        <p style="color:#888;">Click on a pixel to see details</p>
       </div>
     </div>
 
@@ -129,6 +160,15 @@
     </div>
   </div>
 
+  <!-- Genesis block-owner modal -->
+  <div id="genesisModal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.8);align-items:center;justify-content:center;">
+    <div style="background:#08080f;border:1px solid #7b2fff;border-radius:16px;padding:24px;max-width:380px;width:90%;">
+      <h3 style="color:#7b2fff;margin-bottom:12px;">Genesis Block</h3>
+      <p id="genesisModalText" style="color:#e0e0e0;line-height:1.6;"></p>
+      <button onclick="document.getElementById('genesisModal').style.display='none'" class="button" style="margin-top:16px;">Close</button>
+    </div>
+  </div>
+
   <!-- Mini-map -->
   <div id="minimap" style="position:fixed;bottom:20px;right:20px;width:200px;height:120px;background:rgba(10,10,15,0.9);border:1px solid rgba(0,212,255,0.3);z-index:500;overflow:hidden;padding:4px;">
     <div style="font-size:0.65em;color:#888;margin-bottom:2px;">Position</div>
@@ -144,14 +184,14 @@
     // ── Zoom ──────────────────────────────────────────────────────────────────
     function setZoom(level) {
       const g = document.getElementById('pixelGrid');
-      g.style.transform = 'scale(' + level + ')';
+      g.style.transform       = 'scale(' + level + ')';
       g.style.transformOrigin = 'top left';
     }
 
     // ── Mini-map ──────────────────────────────────────────────────────────────
     function updateMinimap(blockId) {
       const canvas = document.getElementById('minimapCanvas');
-      const ctx = canvas.getContext('2d');
+      const ctx    = canvas.getContext('2d');
       ctx.clearRect(0, 0, 192, 100);
       ctx.fillStyle = 'rgba(0,212,255,0.1)';
       ctx.fillRect(0, 0, 192, 100);
@@ -178,65 +218,82 @@
 
     async function renderGrid() {
       const gridContainer = document.getElementById('pixelGrid');
-      const blockInfo = document.getElementById('blockInfo');
+      const blockInfo     = document.getElementById('blockInfo');
       gridContainer.innerHTML = '';
 
-      // soldUpTo declared outside try so closures can access it
       let soldUpTo = 0;
 
       try {
-        const response = await fetch(`/api/price/${currentBlockId}`);
-        const data = await response.json();
-        const blockPrice = data.price;
-
-        // Fetch supply for ownership colour-coding
-        const supplyRes = await fetch('/api/supply');
+        const [priceRes, supplyRes] = await Promise.all([
+          fetch('/api/price/' + currentBlockId),
+          fetch('/api/supply')
+        ]);
+        const priceData  = await priceRes.json();
         const supplyData = await supplyRes.json();
+
+        const blockPrice = priceData.price;
         soldUpTo = supplyData.currentSupply || 0;
 
         document.getElementById('currentBlockDisplay').textContent = currentBlockId.toLocaleString();
-        document.getElementById('blockPriceDisplay').textContent = `$${blockPrice.toFixed(6)}`;
+        document.getElementById('blockPriceDisplay').textContent   = '$' + blockPrice.toFixed(6);
 
-        blockInfo.innerHTML = `<span class="success">Block ${currentBlockId.toLocaleString()} loaded. Price: $${blockPrice.toFixed(6)}</span>`;
+        blockInfo.innerHTML = '<span class="success">Block ' + currentBlockId.toLocaleString() + ' loaded. Price: $' + blockPrice.toFixed(6) + '</span>';
 
         const tooltip = document.getElementById('tooltip');
 
-        // Generate 10×10 grid
+        // Generate 10×10 pixelated grid
         for (let row = 0; row < 10; row++) {
           for (let col = 0; col < 10; col++) {
-            const pixelIndex = row * 10 + col;
+            const pixelIndex   = row * 10 + col;
             const globalPixelId = currentBlockId * 100 + pixelIndex;
 
             const cell = document.createElement('div');
 
-            // Ownership colour-coding
-            let cellClass = 'grid-cell';
+            // Determine cell class per FEAT-002 spec
+            let cellClass;
             if (globalPixelId < soldUpTo) {
-              cellClass += ' owned';
+              cellClass = 'grid-cell owned';
             } else if (currentBlockId < 1000000000) {
-              cellClass += ' treasury';
+              cellClass = 'grid-cell genesis';
             } else {
-              cellClass += ' available shimmer-anim';
+              cellClass = 'grid-cell available shimmer-anim';
             }
             cell.className = cellClass;
-
             cell.textContent = pixelIndex;
-            cell.title = `Pixel: ${pixelIndex}\nGlobal ID: ${globalPixelId.toLocaleString()}\nRow: ${row}, Col: ${col}`;
 
-            // Click: flash + show details
-            cell.onclick = () => {
-              cell.style.animation = 'flash 0.2s ease';
-              setTimeout(() => { cell.style.animation = ''; }, 220);
-              showPixelDetails(pixelIndex, globalPixelId, row, col, blockPrice);
-            };
+            // Genesis tooltip
+            if (currentBlockId < 1000000000) {
+              cell.title = 'Genesis Allocation — Dev Treasury\nPixel: ' + pixelIndex + '\nGlobal ID: ' + globalPixelId.toLocaleString();
+            } else {
+              cell.title = 'Pixel: ' + pixelIndex + '\nGlobal ID: ' + globalPixelId.toLocaleString() + '\nRow: ' + row + ', Col: ' + col;
+            }
+
+            // Click handler
+            cell.onclick = (function(px, gid, r, c, bp, isGenesis) {
+              return function() {
+                cell.style.animation = 'flash 0.2s ease';
+                setTimeout(function() { cell.style.animation = ''; }, 220);
+                if (isGenesis) {
+                  showGenesisModal(currentBlockId);
+                } else {
+                  showPixelDetails(px, gid, r, c, bp);
+                }
+              };
+            })(pixelIndex, globalPixelId, row, col, blockPrice, currentBlockId < 1000000000);
 
             // Hover tooltip
             cell.addEventListener('mousemove', function(e) {
               tooltip.style.display = 'block';
-              tooltip.style.left = (e.clientX + 14) + 'px';
-              tooltip.style.top  = (e.clientY + 14) + 'px';
-              const status = globalPixelId < soldUpTo ? 'Owned' : (currentBlockId < 1e9 ? 'Treasury' : 'Available');
-              tooltip.textContent = 'Pixel: ' + pixelIndex + '\nGlobal ID: ' + globalPixelId.toLocaleString() + '\nPrice: $' + (blockPrice / 100).toFixed(8) + '\nStatus: ' + status;
+              tooltip.style.left    = (e.clientX + 14) + 'px';
+              tooltip.style.top     = (e.clientY + 14) + 'px';
+              const status = globalPixelId < soldUpTo
+                ? 'Owned'
+                : (currentBlockId < 1e9 ? 'Genesis (Dev Treasury)' : 'Available');
+              tooltip.textContent =
+                'Pixel: ' + pixelIndex + '\n' +
+                'Global ID: ' + globalPixelId.toLocaleString() + '\n' +
+                'Price: $' + (blockPrice / 100).toFixed(8) + '\n' +
+                'Status: ' + status;
             });
             cell.addEventListener('mouseleave', function() {
               tooltip.style.display = 'none';
@@ -246,27 +303,49 @@
           }
         }
 
-        // Update mini-map with current block position
         updateMinimap(currentBlockId);
 
       } catch (error) {
-        blockInfo.innerHTML = '<span class="error">Error loading grid</span>';
+        blockInfo.innerHTML = '<span class="error">Error loading grid: ' + (error.message || 'unknown') + '</span>';
+      }
+    }
+
+    // ── Genesis modal ─────────────────────────────────────────────────────────
+    async function showGenesisModal(blockId) {
+      const modal   = document.getElementById('genesisModal');
+      const textEl  = document.getElementById('genesisModalText');
+
+      // Show modal immediately with static info
+      textEl.textContent = 'Genesis Allocation — Dev Treasury (Cliff: 12 months, Vesting: 36 months)';
+      modal.style.display = 'flex';
+
+      // Optionally fetch live owner data and enrich
+      try {
+        const res  = await fetch('/api/block-owner/' + blockId);
+        const data = await res.json();
+        if (data.isGenesis) {
+          textEl.textContent =
+            'Genesis Allocation — Dev Treasury\n\n' +
+            'Cliff: 12 months\nVesting: 36 months\n\n' +
+            'Blocks 0–999,999,999 are pre-allocated to the founding team and are locked under a vesting schedule. They cannot be purchased.';
+        }
+      } catch(e) {
+        // Keep the static message already shown
       }
     }
 
     function showPixelDetails(pixelIndex, globalPixelId, row, col, blockPrice) {
       const pixelPrice = blockPrice / 100;
-      document.getElementById('pixelDetails').innerHTML = `
-        <table class="table">
-          <tr><th>Property</th><th>Value</th></tr>
-          <tr><td>Pixel Index (in block)</td><td>${pixelIndex}</td></tr>
-          <tr><td>Global Pixel ID</td><td>${globalPixelId.toLocaleString()}</td></tr>
-          <tr><td>Block ID</td><td>${currentBlockId.toLocaleString()}</td></tr>
-          <tr><td>Grid Position</td><td>Row ${row}, Column ${col}</td></tr>
-          <tr><td>Block Price</td><td>$${blockPrice.toFixed(6)}</td></tr>
-          <tr><td>Pixel Price (approx)</td><td>$${pixelPrice.toFixed(8)}</td></tr>
-        </table>
-      `;
+      document.getElementById('pixelDetails').innerHTML =
+        '<table class="table">' +
+        '<tr><th>Property</th><th>Value</th></tr>' +
+        '<tr><td>Pixel Index (in block)</td><td>' + pixelIndex + '</td></tr>' +
+        '<tr><td>Global Pixel ID</td><td>' + globalPixelId.toLocaleString() + '</td></tr>' +
+        '<tr><td>Block ID</td><td>' + currentBlockId.toLocaleString() + '</td></tr>' +
+        '<tr><td>Grid Position</td><td>Row ' + row + ', Column ' + col + '</td></tr>' +
+        '<tr><td>Block Price</td><td>$' + blockPrice.toFixed(6) + '</td></tr>' +
+        '<tr><td>Pixel Price (approx)</td><td>$' + pixelPrice.toFixed(8) + '</td></tr>' +
+        '</table>';
     }
 
     function previousBlock() {
@@ -288,6 +367,7 @@
     // Initialize
     loadGrid();
   </script>
+
   <script src="../js/wallet.js"></script>
   <script src="../js/walletModal.js?v=202610111259"></script>
 </body>
