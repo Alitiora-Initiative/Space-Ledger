@@ -3,10 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Spice Ledger - Home</title>
+  <title>Spatial Ledger Protocol — Home</title>
   <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
+  <div class="stars-a"></div>
+  <div class="stars-b"></div>
   <nav>
     <div class="container">
       <a href="/index.html" style="display:flex;align-items:center;gap:8px;text-decoration:none;">
@@ -28,9 +30,9 @@
 
   <div class="container">
     <div class="hero">
-      <h1>Spice Ledger</h1>
-      <p>1 Trillion Pixels • 10 Billion Blocks • Own a Piece of the Digital Universe</p>
-      <p>Like the Million Dollar Homepage, but at trillion scale</p>
+      <h1>Spatial Ledger Protocol</h1>
+      <p>1 Trillion Pixels · 10 Billion Blocks · Own a Piece of the Digital Universe</p>
+      <p>Like the Million Dollar Homepage — at trillion scale</p>
       <br>
       <a href="pages/purchase.html" class="button">Buy Your Pixels Now</a>
     </div>
@@ -101,24 +103,10 @@
   </div>
 
   <script src="js/wallet.js"></script>
-  <script src="js/walletModal.js?v=202610111250"></script>
+  <script src="js/walletModal.js?v=202610111259"></script>
   <script>
     async function connectWallet() {
-      try {
-        let result;
-        if (typeof window.ethereum !== 'undefined') {
-          result = await walletManager.connectMetaMask();
-        } else if (typeof window.solana !== 'undefined' && window.solana.isPhantom) {
-          result = await walletManager.connectPhantom();
-        } else {
-          alert('No wallet detected. Please install MetaMask or Phantom.');
-          return;
-        }
-        const btn = document.querySelector('.wallet-button');
-        if (btn) btn.textContent = result.address.slice(0,6)+'...'+result.address.slice(-4);
-      } catch (error) {
-        alert(error.message);
-      }
+      window.openWalletModal();
     }
   </script>
 
@@ -135,27 +123,6 @@
     }
     loadStats();
   </script>
-  <script>
-  (function() {
-    var frag = document.createDocumentFragment();
-    for (var i = 0; i < 80; i++) {
-      var dot = document.createElement('div');
-      var sz = Math.random() < 0.5 ? '1px' : '2px';
-      dot.style.cssText = [
-        'position:fixed',
-        'left:' + (Math.random()*100) + 'vw',
-        'top:' + (Math.random()*100) + 'vh',
-        'width:' + sz,
-        'height:' + sz,
-        'background:rgba(255,255,255,' + (Math.random()*0.5+0.15).toFixed(2) + ')',
-        'border-radius:50%',
-        'pointer-events:none',
-        'z-index:0'
-      ].join(';');
-      frag.appendChild(dot);
-    }
-    document.body.appendChild(frag);
-  })();
-  </script>
+
 </body>
 </html>
