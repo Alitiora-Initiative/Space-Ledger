@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dashboard - Spice Ledger</title>
+  <title>Spatial Ledger Protocol — Dashboard</title>
   <link rel="stylesheet" href="../css/styles.css">
 </head>
 <body><div class="stars-a"></div><div class="stars-b"></div>
@@ -11,7 +11,7 @@
     <div class="container">
       <a href="/index.html" style="display:flex;align-items:center;gap:8px;text-decoration:none;">
       <img src="/img/logo.jpg" alt="SLP" style="width:32px;height:32px;border-radius:7px;object-fit:cover;">
-      <span class="logo">Spatial Ledger</span>
+      <span class="logo">Spatial Ledger Protocol</span>
     </a>
       <ul>
         <li><a href="../index.html">Home</a></li>
@@ -21,6 +21,8 @@
         <li><a href="network.html">Network</a></li>
         <li><a href="dashboard.html" style="color: #00d4ff;">Dashboard</a></li>
         <li><a href="profile.html">Profile</a></li>
+        <li><a href="swap.html">Swap</a></li>
+        <li><button class="wallet-button" id="navWalletBtn" onclick="window.openWalletModal()">Connect Wallet</button></li>
       </ul>
     </div>
   </nav>
@@ -34,8 +36,7 @@
       <div id="walletNotConnected">
         <p style="color: #888; margin-bottom: 20px;">Connect your wallet to view your owned blocks and make purchases.</p>
         <div style="display: flex; gap: 15px; flex-wrap: wrap;">
-          <button class="button" onclick="connectMetaMask()">Connect MetaMask</button>
-          <button class="button" onclick="connectPhantom()">Connect Phantom</button>
+          <button class="button" onclick="window.openWalletModal()">Connect Wallet</button>
         </div>
       </div>
       <div id="walletConnected" style="display: none;">
@@ -45,7 +46,7 @@
             <p style="font-size: 1.2em; font-weight: bold; color: #00d4ff;" id="walletType">-</p>
             <p style="font-size: 1.1em;" id="walletAddress">-</p>
           </div>
-          <button class="button" onclick="disconnectWallet()">Disconnect</button>
+          <button class="button" onclick="walletManager.disconnect()">Disconnect</button>
         </div>
       </div>
     </div>
@@ -146,29 +147,6 @@
     walletManager.on('disconnected', () => {
       updateWalletUI(null);
     });
-
-    async function connectMetaMask() {
-      try {
-        const result = await walletManager.connectMetaMask();
-        alert(`Connected to MetaMask: ${result.address}`);
-      } catch (error) {
-        alert(error.message);
-      }
-    }
-
-    async function connectPhantom() {
-      try {
-        const result = await walletManager.connectPhantom();
-        alert(`Connected to Phantom: ${result.address}`);
-      } catch (error) {
-        alert(error.message);
-      }
-    }
-
-    function disconnectWallet() {
-      walletManager.disconnect();
-      alert('Wallet disconnected');
-    }
 
     function updateWalletUI(data) {
       const notConnected = document.getElementById('walletNotConnected');
@@ -309,7 +287,12 @@
 
     function exportOwnership() {
       if (!walletManager.isConnected()) {
-        alert('Please connect your wallet first');
+        document.getElementById('quickActions').insertAdjacentHTML('beforeend',
+          '<p id="exportErr" style="color:#ff4757;margin-top:10px;">Please connect your wallet first.</p>');
+        setTimeout(function() {
+          var el = document.getElementById('exportErr');
+          if (el) el.remove();
+        }, 3000);
         return;
       }
 
@@ -333,16 +316,16 @@
     window.addEventListener('load', () => {
       const savedWallet = localStorage.getItem('spice_ledger_last_wallet');
       if (savedWallet) {
-        // Auto-connect if supported
-        if (savedWallet === 'metamask' && window.ethereum) {
-          connectMetaMask();
-        }
+        // Auto-reconnect via modal if a wallet was previously used
+        // User can reconnect via the Connect Wallet button
       }
     });
 
     // Save wallet preference
     walletManager.on('connected', (data) => {
       localStorage.setItem('spice_ledger_last_wallet', data.wallet);
+      var btn = document.getElementById('navWalletBtn');
+      if (btn) btn.textContent = data.address.slice(0, 6) + '...' + data.address.slice(-4);
     });
 
     // Load system status

@@ -1,7 +1,17 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
-  <rect width="128" height="128" rx="22" fill="#e33d3d"/>
-  <rect x="36" y="46" width="56" height="54" rx="12" fill="white"/>
-  <rect x="48" y="28" width="32" height="24" rx="10" fill="white"/>
-  <rect x="57" y="62" width="14" height="20" rx="4" fill="#e33d3d"/>
-  <rect x="48" y="68" width="32" height="8" rx="4" fill="#e33d3d"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <rect width="128" height="128" rx="16" fill="#1a1a2a"/>
+  <!-- Backpack strap left -->
+  <rect x="36" y="24" width="14" height="80" rx="2" fill="#e33d3d"/>
+  <!-- Top horizontal bar -->
+  <rect x="36" y="24" width="56" height="14" rx="2" fill="#e33d3d"/>
+  <!-- Upper arc / compartment top -->
+  <rect x="50" y="38" width="28" height="20" rx="12" fill="#e33d3d"/>
+  <!-- Middle horizontal bar -->
+  <rect x="36" y="56" width="56" height="12" rx="2" fill="#e33d3d"/>
+  <!-- Lower body -->
+  <rect x="36" y="68" width="56" height="12" rx="2" fill="#e33d3d"/>
+  <!-- Bottom arc -->
+  <rect x="50" y="68" width="28" height="24" rx="12" fill="#e33d3d"/>
+  <!-- Buckle / zipper pull -->
+  <rect x="58" y="44" width="12" height="6" rx="2" fill="#1a1a2a"/>
 </svg>

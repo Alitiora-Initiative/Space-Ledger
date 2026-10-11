@@ -63,13 +63,6 @@ class WalletManager {
     }
   }
 
-  // Connect to WalletConnect
-  async connectWalletConnect() {
-    // Placeholder for WalletConnect integration
-    // In production, install @walletconnect/web3-provider
-    throw new Error('WalletConnect integration requires additional setup. Please use MetaMask or Phantom for now.');
-  }
-
   // Disconnect wallet
   disconnect() {
     this.currentWallet = null;

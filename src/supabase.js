@@ -17,7 +17,6 @@ if (SUPABASE_URL && SUPABASE_SERVICE_KEY) {
     auth: { persistSession: false }
   });
   connected = true;
-  console.log('Supabase connected ✓');
 } else {
   console.warn(
     'Supabase env vars not set — running in memory-only mode.\n' +

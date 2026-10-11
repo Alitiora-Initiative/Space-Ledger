@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Spatial Ledger Protocol — Block Swap</title>
+  <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body><div class="stars-a"></div><div class="stars-b"></div>
+  <nav>
+    <div class="container">
+      <a href="/index.html" style="display:flex;align-items:center;gap:8px;text-decoration:none;">
+        <img src="/img/logo.jpg" alt="SLP" style="width:32px;height:32px;border-radius:7px;object-fit:cover;">
+        <span class="logo">Spatial Ledger Protocol</span>
+      </a>
+      <ul>
+        <li><a href="../index.html">Home</a></li>
+        <li><a href="purchase.html">Purchase</a></li>
+        <li><a href="grid.html">Grid View</a></li>
+        <li><a href="treasury.html">Treasury</a></li>
+        <li><a href="network.html">Network</a></li>
+        <li><a href="dashboard.html">Dashboard</a></li>
+        <li><a href="profile.html">Profile</a></li>
+        <li><a href="swap.html" style="color:#00d4ff;">Swap</a></li>
+        <li><button class="wallet-button" id="navWalletBtn" onclick="window.openWalletModal()">Connect Wallet</button></li>
+      </ul>
+    </div>
+  </nav>
+
+  <div class="container">
+    <h1 style="text-align:center;margin-bottom:30px;">Block Swap — Swap Your Blocks for SOL</h1>
+
+    <!-- Block ID Input Card -->
+    <div class="card">
+      <h2>Block to Swap</h2>
+      <div class="input-group">
+        <label for="swapBlockId">Block ID</label>
+        <input
+          type="number"
+          id="swapBlockId"
+          placeholder="Enter block ID (e.g. 1000000050)"
+          min="1000000000"
+          oninput="onBlockIdChange(this.value)"
+        >
+      </div>
+      <div class="input-group">
+        <label>Current Block Value (USD)</label>
+        <input type="text" id="blockValue" readonly placeholder="Enter a block ID above" style="background:rgba(0,0,0,0.3);color:#00d4ff;">
+      </div>
+    </div>
+
+    <!-- Output Card -->
+    <div class="card">
+      <h2>You Receive</h2>
+      <div class="input-group">
+        <label>SOL Amount</label>
+        <input type="text" id="solReceive" readonly placeholder="—" style="background:rgba(0,0,0,0.3);color:#00ff88;font-size:1.2em;">
+      </div>
+      <p style="color:#888;font-size:0.85em;margin-top:8px;">
+        Note: actual SOL received may vary ±0.5% due to price movement.
+      </p>
+    </div>
+
+    <!-- Swap Button -->
+    <div class="card" style="text-align:center;">
+      <button class="button" id="swapBtn" onclick="swapBlock()" style="min-width:180px;font-size:1.1em;">
+        Swap Block for SOL
+      </button>
+      <div id="swapStatus" style="margin-top:18px;"></div>
+    </div>
+  </div>
+
+  <!-- Non-module script: UI logic, walletManager listeners -->
+  <script src="../js/wallet.js"></script>
+  <script src="../js/walletModal.js?v=202610111259"></script>
+  <script>
+    var _solPrice = null;
+    var _blockValueUsd = null;
+
+    walletManager.on('connected', function(data) {
+      var btn = document.getElementById('navWalletBtn');
+      if (btn) btn.textContent = data.address.slice(0, 6) + '...' + data.address.slice(-4);
+    });
+
+    walletManager.on('disconnected', function() {
+      var btn = document.getElementById('navWalletBtn');
+      if (btn) btn.textContent = 'Connect Wallet';
+    });
+
+    function setSwapStatus(msg, color) {
+      var el = document.getElementById('swapStatus');
+      el.style.color = color || '#888';
+      el.textContent = msg;
+    }
+
+    async function onBlockIdChange(val) {
+      var blockId = parseInt(val, 10);
+      document.getElementById('blockValue').value = '';
+      document.getElementById('solReceive').value = '';
+      _blockValueUsd = null;
+      _solPrice = null;
+
+      if (!blockId || isNaN(blockId) || blockId < 1) return;
+
+      try {
+        var res = await fetch('/api/price/' + blockId);
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        var data = await res.json();
+        _blockValueUsd = data.price;
+        document.getElementById('blockValue').value = '$' + _blockValueUsd.toFixed(6);
+        updateSolReceive();
+      } catch (e) {
+        document.getElementById('blockValue').value = 'Error loading price';
+      }
+    }
+
+    function updateSolReceive() {
+      if (_blockValueUsd === null || _solPrice === null) return;
+      var solAmount = _blockValueUsd / _solPrice;
+      document.getElementById('solReceive').value = solAmount.toFixed(6) + ' SOL';
+    }
+
+    async function swapBlock() {
+      var blockId = parseInt(document.getElementById('swapBlockId').value, 10);
+      var statusEl = document.getElementById('swapStatus');
+
+      if (!blockId || isNaN(blockId)) {
+        setSwapStatus('Please enter a valid block ID.', '#ff4757');
+        return;
+      }
+
+      if (!walletManager.isConnected()) {
+        window.openWalletModal();
+        return;
+      }
+
+      if (_blockValueUsd === null) {
+        setSwapStatus('Block value not loaded yet. Please wait.', '#ff4757');
+        return;
+      }
+
+      setSwapStatus('Checking ownership…', '#888');
+
+      var address = walletManager.currentAddress;
+
+      try {
+        var res = await fetch('/api/blocks/' + encodeURIComponent(address));
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        var blocks = await res.json();
+        var owned = Array.isArray(blocks) && blocks.some(function(b) {
+          return (typeof b === 'number' ? b : b.blockId) === blockId;
+        });
+        if (!owned) {
+          setSwapStatus('You do not own block #' + blockId.toLocaleString(), '#ff4757');
+          return;
+        }
+      } catch (e) {
+        setSwapStatus('Could not verify ownership: ' + e.message, '#ff4757');
+        return;
+      }
+
+      setSwapStatus('Waiting for wallet confirmation…', '#f0a500');
+
+      try {
+        var wallet = window.solana || (window.phantom && window.phantom.solana);
+        if (!wallet) throw new Error('Solana wallet not available.');
+
+        var paymentResult = await window._swapExecutePayment(wallet, 'SOL', _blockValueUsd);
+
+        setSwapStatus('Transaction sent. Confirming…', '#f0a500');
+
+        var solAmount = document.getElementById('solReceive').value;
+
+        var postRes = await fetch('/api/swap', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            walletAddress: address,
+            blockId: blockId,
+            expectedSol: solAmount,
+            txSignature: paymentResult.signature
+          })
+        });
+
+        if (!postRes.ok) {
+          var errData = await postRes.json().catch(function() { return {}; });
+          throw new Error(errData.error || 'Swap API returned HTTP ' + postRes.status);
+        }
+
+        setSwapStatus('Swap complete! Transaction: ' + paymentResult.signature.slice(0, 16) + '…', '#00ff88');
+      } catch (e) {
+        setSwapStatus('Swap failed: ' + e.message, '#ff4757');
+      }
+    }
+  </script>
+
+  <!-- Module script: imports fetchJupiterPrices and executePayment -->
+  <script type="module">
+    import { fetchJupiterPrices, executePayment } from '../js/solanaPayment.js';
+
+    // Expose executePayment so the non-module swapBlock() can call it
+    window._swapExecutePayment = executePayment;
+
+    // Fetch SOL price and store globally so updateSolReceive can use it
+    async function initSolPrice() {
+      try {
+        var prices = await fetchJupiterPrices();
+        if (prices && prices.SOL && prices.SOL.price) {
+          window._solPrice = prices.SOL.price;
+          // Also set the module-scope variable via parent scope trick
+          // We use a custom event to notify the non-module script
+          document.dispatchEvent(new CustomEvent('solPriceReady', { detail: prices.SOL.price }));
+        }
+      } catch (e) {
+        // silently ignore — price display will remain empty
+      }
+    }
+
+    initSolPrice();
+  </script>
+
+  <script>
+    // Listen for SOL price from module script
+    document.addEventListener('solPriceReady', function(e) {
+      _solPrice = e.detail;
+      updateSolReceive();
+    });
+  </script>
+</body>
+</html>

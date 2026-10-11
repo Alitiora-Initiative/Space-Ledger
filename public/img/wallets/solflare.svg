@@ -1,5 +1,23 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
-  <rect width="128" height="128" rx="22" fill="#fc8c00"/>
-  <path fill="white" d="M64,18 L102,94 L26,94 Z"/>
-  <path fill="#fc8c00" d="M64,40 L86,82 L42,82 Z"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <rect width="128" height="128" rx="16" fill="#fc8c00"/>
+  <!-- 8 ray triangles evenly distributed -->
+  <!-- Ray 0deg (top) -->
+  <polygon points="64,20 60,42 68,42" fill="white"/>
+  <!-- Ray 45deg (top-right) -->
+  <polygon points="93,35 76,51 89,64" fill="white"/>
+  <!-- Ray 90deg (right) -->
+  <polygon points="108,64 86,60 86,68" fill="white"/>
+  <!-- Ray 135deg (bottom-right) -->
+  <polygon points="93,93 76,77 89,64" fill="white"/>
+  <!-- Ray 180deg (bottom) -->
+  <polygon points="64,108 60,86 68,86" fill="white"/>
+  <!-- Ray 225deg (bottom-left) -->
+  <polygon points="35,93 52,77 39,64" fill="white"/>
+  <!-- Ray 270deg (left) -->
+  <polygon points="20,64 42,60 42,68" fill="white"/>
+  <!-- Ray 315deg (top-left) -->
+  <polygon points="35,35 52,51 39,64" fill="white"/>
+  <!-- Center circle -->
+  <circle cx="64" cy="64" r="16" fill="white"/>
+  <circle cx="64" cy="64" r="8" fill="#fc8c00"/>
 </svg>

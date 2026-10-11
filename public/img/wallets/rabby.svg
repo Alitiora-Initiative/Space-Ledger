@@ -1,9 +1,21 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
-  <rect width="128" height="128" rx="22" fill="#7084ff"/>
-  <ellipse cx="48" cy="46" rx="14" ry="20" fill="white"/>
-  <ellipse cx="80" cy="46" rx="14" ry="20" fill="white"/>
-  <ellipse cx="64" cy="74" rx="32" ry="28" fill="white"/>
-  <circle cx="56" cy="70" r="5" fill="#7084ff"/>
-  <circle cx="72" cy="70" r="5" fill="#7084ff"/>
-  <path d="M56,82 Q64,90 72,82" stroke="#7084ff" stroke-width="3" fill="none" stroke-linecap="round"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <rect width="128" height="128" rx="16" fill="#7084ff"/>
+  <!-- Left ear -->
+  <rect x="44" y="16" width="16" height="40" rx="8" fill="white"/>
+  <!-- Right ear -->
+  <rect x="68" y="16" width="16" height="40" rx="8" fill="white"/>
+  <!-- Ear inner left -->
+  <rect x="48" y="20" width="8" height="28" rx="4" fill="#c0c8ff"/>
+  <!-- Ear inner right -->
+  <rect x="72" y="20" width="8" height="28" rx="4" fill="#c0c8ff"/>
+  <!-- Head / body circle -->
+  <circle cx="64" cy="72" r="30" fill="white"/>
+  <!-- Left eye -->
+  <circle cx="55" cy="68" r="4" fill="#7084ff"/>
+  <!-- Right eye -->
+  <circle cx="73" cy="68" r="4" fill="#7084ff"/>
+  <!-- Smile -->
+  <path d="M55,80 Q64,87 73,80" stroke="#7084ff" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  <!-- Nose -->
+  <circle cx="64" cy="75" r="2.5" fill="#a0a8ff"/>
 </svg>
