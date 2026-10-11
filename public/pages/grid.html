@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Grid View - Spice Ledger</title>
+  <link rel="stylesheet" href="../css/styles.css">
+  <style>
+    @keyframes flash {
+      0%   { background: #00d4ff; box-shadow: 0 0 10px #00d4ff; }
+      100% { background: ''; box-shadow: ''; }
+    }
+    @keyframes shimmer {
+      0%   { opacity: 1; }
+      50%  { opacity: 0.55; }
+      100% { opacity: 1; }
+    }
+    .shimmer-anim {
+      animation: shimmer 2s ease-in-out infinite;
+    }
+    .grid-cell.owned {
+      background: rgba(0, 212, 255, 0.25);
+      border-color: rgba(0, 212, 255, 0.6);
+    }
+    .grid-cell.treasury {
+      background: rgba(255, 170, 0, 0.18);
+      border-color: rgba(255, 170, 0, 0.5);
+    }
+    #tooltip {
+      display: none;
+      position: fixed;
+      background: rgba(10, 10, 15, 0.92);
+      border: 1px solid rgba(0, 212, 255, 0.4);
+      color: #e0e0e0;
+      font-size: 0.75em;
+      font-family: monospace;
+      padding: 6px 10px;
+      border-radius: 4px;
+      pointer-events: none;
+      z-index: 9999;
+      white-space: pre;
+      line-height: 1.6;
+    }
+  </style>
+</head>
+<body>
+  <nav>
+    <div class="container">
+      <a href="/index.html" style="display:flex;align-items:center;gap:8px;text-decoration:none;">
+      <img src="/img/logo.jpg" alt="SLP" style="width:32px;height:32px;border-radius:7px;object-fit:cover;">
+      <span class="logo">Spatial Ledger</span>
+    </a>
+      <ul>
+        <li><a href="../index.html">Home</a></li>
+        <li><a href="purchase.html">Purchase</a></li>
+        <li><a href="grid.html">Grid View</a></li>
+        <li><a href="treasury.html">Treasury</a></li>
+        <li><a href="network.html">Network</a></li>
+        <li><a href="dashboard.html">Dashboard</a></li>
+        <li><a href="profile.html">Profile</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <div class="container">
+    <h1 style="text-align: center; margin-bottom: 30px;">Block Grid Viewer</h1>
+
+    <div class="card">
+      <h2>Navigate Blocks</h2>
+      <div class="input-group">
+        <label>Block ID (0 - 9,999,999,999)</label>
+        <input type="number" id="blockId" value="0" min="0" max="9999999999">
+      </div>
+      <div style="display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap;">
+        <button class="button" onclick="loadGrid()">Load Grid</button>
+        <button class="button" onclick="previousBlock()">Previous Block</button>
+        <button class="button" onclick="nextBlock()">Next Block</button>
+        <button class="button" onclick="randomJump()">Random Jump</button>
+      </div>
+      <div class="result" id="blockInfo"></div>
+    </div>
+
+    <div class="card">
+      <h2>10 × 10 Pixel Grid</h2>
+      <p style="color: #888; margin-bottom: 15px;">
+        Each block contains 100 pixels arranged in a 10×10 grid.
+        Click on a pixel to view details.
+      </p>
+
+      <!-- Zoom controls -->
+      <div style="display:flex;gap:8px;margin-bottom:10px;">
+        <button class="button" onclick="setZoom(1)">1×</button>
+        <button class="button" onclick="setZoom(2)">2×</button>
+        <button class="button" onclick="setZoom(4)">4×</button>
+      </div>
+
+      <div style="overflow: hidden;">
+        <div class="grid-container" id="pixelGrid"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Pixel Details</h2>
+      <div id="pixelDetails">
+        <p style="color: #888;">Click on a pixel to see details</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Grid Statistics</h2>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <h3>Current Block</h3>
+          <div class="value" id="currentBlockDisplay">0</div>
+        </div>
+        <div class="stat-card">
+          <h3>Block Price</h3>
+          <div class="value" id="blockPriceDisplay">$0.001</div>
+        </div>
+        <div class="stat-card">
+          <h3>Pixels per Block</h3>
+          <div class="value">100</div>
+        </div>
+        <div class="stat-card">
+          <h3>Grid Size</h3>
+          <div class="value">10 × 10</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mini-map -->
+  <div id="minimap" style="position:fixed;bottom:20px;right:20px;width:200px;height:120px;background:rgba(10,10,15,0.9);border:1px solid rgba(0,212,255,0.3);z-index:500;overflow:hidden;padding:4px;">
+    <div style="font-size:0.65em;color:#888;margin-bottom:2px;">Position</div>
+    <canvas id="minimapCanvas" width="192" height="100" style="display:block;image-rendering:pixelated;"></canvas>
+  </div>
+
+  <!-- Hover tooltip -->
+  <div id="tooltip"></div>
+
+  <script>
+    let currentBlockId = 0;
+
+    // ── Zoom ──────────────────────────────────────────────────────────────────
+    function setZoom(level) {
+      const g = document.getElementById('pixelGrid');
+      g.style.transform = 'scale(' + level + ')';
+      g.style.transformOrigin = 'top left';
+    }
+
+    // ── Mini-map ──────────────────────────────────────────────────────────────
+    function updateMinimap(blockId) {
+      const canvas = document.getElementById('minimapCanvas');
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, 192, 100);
+      ctx.fillStyle = 'rgba(0,212,255,0.1)';
+      ctx.fillRect(0, 0, 192, 100);
+      const x = Math.floor((blockId / 9999999999) * 188);
+      ctx.fillStyle = '#00d4ff';
+      ctx.fillRect(x, 46, 4, 8);
+      ctx.fillStyle = '#fff';
+      ctx.font = '9px monospace';
+      ctx.fillText('Block ' + blockId.toLocaleString(), 4, 92);
+    }
+
+    // ── Random Jump ───────────────────────────────────────────────────────────
+    function randomJump() {
+      currentBlockId = Math.floor(Math.random() * 10000000000);
+      document.getElementById('blockId').value = currentBlockId;
+      loadGrid();
+    }
+
+    // ── Navigation ────────────────────────────────────────────────────────────
+    async function loadGrid() {
+      currentBlockId = parseInt(document.getElementById('blockId').value) || 0;
+      await renderGrid();
+    }
+
+    async function renderGrid() {
+      const gridContainer = document.getElementById('pixelGrid');
+      const blockInfo = document.getElementById('blockInfo');
+      gridContainer.innerHTML = '';
+
+      // soldUpTo declared outside try so closures can access it
+      let soldUpTo = 0;
+
+      try {
+        const response = await fetch(`/api/price/${currentBlockId}`);
+        const data = await response.json();
+        const blockPrice = data.price;
+
+        // Fetch supply for ownership colour-coding
+        const supplyRes = await fetch('/api/supply');
+        const supplyData = await supplyRes.json();
+        soldUpTo = supplyData.currentSupply || 0;
+
+        document.getElementById('currentBlockDisplay').textContent = currentBlockId.toLocaleString();
+        document.getElementById('blockPriceDisplay').textContent = `$${blockPrice.toFixed(6)}`;
+
+        blockInfo.innerHTML = `<span class="success">Block ${currentBlockId.toLocaleString()} loaded. Price: $${blockPrice.toFixed(6)}</span>`;
+
+        const tooltip = document.getElementById('tooltip');
+
+        // Generate 10×10 grid
+        for (let row = 0; row < 10; row++) {
+          for (let col = 0; col < 10; col++) {
+            const pixelIndex = row * 10 + col;
+            const globalPixelId = currentBlockId * 100 + pixelIndex;
+
+            const cell = document.createElement('div');
+
+            // Ownership colour-coding
+            let cellClass = 'grid-cell';
+            if (globalPixelId < soldUpTo) {
+              cellClass += ' owned';
+            } else if (currentBlockId < 1000000000) {
+              cellClass += ' treasury';
+            } else {
+              cellClass += ' available shimmer-anim';
+            }
+            cell.className = cellClass;
+
+            cell.textContent = pixelIndex;
+            cell.title = `Pixel: ${pixelIndex}\nGlobal ID: ${globalPixelId.toLocaleString()}\nRow: ${row}, Col: ${col}`;
+
+            // Click: flash + show details
+            cell.onclick = () => {
+              cell.style.animation = 'flash 0.2s ease';
+              setTimeout(() => { cell.style.animation = ''; }, 220);
+              showPixelDetails(pixelIndex, globalPixelId, row, col, blockPrice);
+            };
+
+            // Hover tooltip
+            cell.addEventListener('mousemove', function(e) {
+              tooltip.style.display = 'block';
+              tooltip.style.left = (e.clientX + 14) + 'px';
+              tooltip.style.top  = (e.clientY + 14) + 'px';
+              const status = globalPixelId < soldUpTo ? 'Owned' : (currentBlockId < 1e9 ? 'Treasury' : 'Available');
+              tooltip.textContent = 'Pixel: ' + pixelIndex + '\nGlobal ID: ' + globalPixelId.toLocaleString() + '\nPrice: $' + (blockPrice / 100).toFixed(8) + '\nStatus: ' + status;
+            });
+            cell.addEventListener('mouseleave', function() {
+              tooltip.style.display = 'none';
+            });
+
+            gridContainer.appendChild(cell);
+          }
+        }
+
+        // Update mini-map with current block position
+        updateMinimap(currentBlockId);
+
+      } catch (error) {
+        blockInfo.innerHTML = '<span class="error">Error loading grid</span>';
+      }
+    }
+
+    function showPixelDetails(pixelIndex, globalPixelId, row, col, blockPrice) {
+      const pixelPrice = blockPrice / 100;
+      document.getElementById('pixelDetails').innerHTML = `
+        <table class="table">
+          <tr><th>Property</th><th>Value</th></tr>
+          <tr><td>Pixel Index (in block)</td><td>${pixelIndex}</td></tr>
+          <tr><td>Global Pixel ID</td><td>${globalPixelId.toLocaleString()}</td></tr>
+          <tr><td>Block ID</td><td>${currentBlockId.toLocaleString()}</td></tr>
+          <tr><td>Grid Position</td><td>Row ${row}, Column ${col}</td></tr>
+          <tr><td>Block Price</td><td>$${blockPrice.toFixed(6)}</td></tr>
+          <tr><td>Pixel Price (approx)</td><td>$${pixelPrice.toFixed(8)}</td></tr>
+        </table>
+      `;
+    }
+
+    function previousBlock() {
+      if (currentBlockId > 0) {
+        currentBlockId--;
+        document.getElementById('blockId').value = currentBlockId;
+        loadGrid();
+      }
+    }
+
+    function nextBlock() {
+      if (currentBlockId < 9999999999) {
+        currentBlockId++;
+        document.getElementById('blockId').value = currentBlockId;
+        loadGrid();
+      }
+    }
+
+    // Initialize
+    loadGrid();
+  </script>
+  <script src="../js/wallet.js"></script>
+  <script src="../js/walletModal.js?v=202610111137"></script>
+</body>
+</html>

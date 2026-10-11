@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard - Spice Ledger</title>
+  <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+  <nav>
+    <div class="container">
+      <a href="/index.html" style="display:flex;align-items:center;gap:8px;text-decoration:none;">
+      <img src="/img/logo.jpg" alt="SLP" style="width:32px;height:32px;border-radius:7px;object-fit:cover;">
+      <span class="logo">Spatial Ledger</span>
+    </a>
+      <ul>
+        <li><a href="../index.html">Home</a></li>
+        <li><a href="purchase.html">Purchase</a></li>
+        <li><a href="grid.html">Grid View</a></li>
+        <li><a href="treasury.html">Treasury</a></li>
+        <li><a href="network.html">Network</a></li>
+        <li><a href="dashboard.html" style="color: #00d4ff;">Dashboard</a></li>
+        <li><a href="profile.html">Profile</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <div class="container">
+    <h1 style="text-align: center; margin-bottom: 30px;">Your Dashboard</h1>
+
+    <!-- Wallet Connection Section -->
+    <div class="card" id="walletSection">
+      <h2>Wallet Connection</h2>
+      <div id="walletNotConnected">
+        <p style="color: #888; margin-bottom: 20px;">Connect your wallet to view your owned blocks and make purchases.</p>
+        <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+          <button class="button" onclick="connectMetaMask()">Connect MetaMask</button>
+          <button class="button" onclick="connectPhantom()">Connect Phantom</button>
+        </div>
+      </div>
+      <div id="walletConnected" style="display: none;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+          <div>
+            <p style="color: #888;">Connected Wallet:</p>
+            <p style="font-size: 1.2em; font-weight: bold; color: #00d4ff;" id="walletType">-</p>
+            <p style="font-size: 1.1em;" id="walletAddress">-</p>
+          </div>
+          <button class="button" onclick="disconnectWallet()">Disconnect</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- User Stats -->
+    <div class="card" id="userStats" style="display: none;">
+      <h2>Your Statistics</h2>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <h3>Blocks Owned</h3>
+          <div class="value" id="blocksOwned">0</div>
+          <div class="label">Total blocks</div>
+        </div>
+        <div class="stat-card">
+          <h3>Pixels Owned</h3>
+          <div class="value" id="pixelsOwned">0</div>
+          <div class="label">Total pixels</div>
+        </div>
+        <div class="stat-card">
+          <h3>Total Value</h3>
+          <div class="value" id="totalValue">$0.00</div>
+          <div class="label">Based on current prices</div>
+        </div>
+        <div class="stat-card">
+          <h3>First Purchase</h3>
+          <div class="value" id="firstPurchase">-</div>
+          <div class="label">Block ID</div>
+        </div>
+        <div class="stat-card">
+          <h3>Last Purchase</h3>
+          <div class="value" id="lastPurchase">-</div>
+          <div class="label">Block ID</div>
+        </div>
+        <div class="stat-card">
+          <h3>Rank</h3>
+          <div class="value" id="userRank">#-</div>
+          <div class="label">Among all owners</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Owned Blocks List -->
+    <div class="card" id="ownedBlocks" style="display: none;">
+      <h2>Your Owned Blocks</h2>
+      <div class="input-group">
+        <label>Search / Filter</label>
+        <input type="text" id="blockSearch" placeholder="Search by block ID..." onkeyup="filterBlocks()">
+      </div>
+      <div id="blocksList" style="max-height: 400px; overflow-y: auto;"></div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="card" id="recentActivity" style="display: none;">
+      <h2>Recent Activity</h2>
+      <div id="activityList"></div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="card" id="quickActions" style="display: none;">
+      <h2>Quick Actions</h2>
+      <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+        <a href="purchase.html" class="button">Purchase More Blocks</a>
+        <a href="grid.html" class="button">View Grid</a>
+        <button class="button" onclick="exportOwnership()">Export Ownership Data</button>
+      </div>
+    </div>
+
+    <!-- System Status -->
+    <div class="card">
+      <h2>System Status</h2>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <h3>Total Blocks Sold</h3>
+          <div class="value" id="totalBlocksSold">Loading...</div>
+        </div>
+        <div class="stat-card">
+          <h3>Available Blocks</h3>
+          <div class="value" id="availableBlocks">Loading...</div>
+        </div>
+        <div class="stat-card">
+          <h3>Total Fees Collected</h3>
+          <div class="value" id="totalFeesCollected">Loading...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="../js/wallet.js"></script>`n  <script src="../js/walletModal.js?v=202610111137"></script>
+  <script>
+    let ownedBlocks = [];
+
+    // Initialize wallet manager
+    walletManager.on('connected', (data) => {
+      updateWalletUI(data);
+      loadUserData(data.address);
+    });
+
+    walletManager.on('disconnected', () => {
+      updateWalletUI(null);
+    });
+
+    async function connectMetaMask() {
+      try {
+        const result = await walletManager.connectMetaMask();
+        alert(`Connected to MetaMask: ${result.address}`);
+      } catch (error) {
+        alert(error.message);
+      }
+    }
+
+    async function connectPhantom() {
+      try {
+        const result = await walletManager.connectPhantom();
+        alert(`Connected to Phantom: ${result.address}`);
+      } catch (error) {
+        alert(error.message);
+      }
+    }
+
+    function disconnectWallet() {
+      walletManager.disconnect();
+      alert('Wallet disconnected');
+    }
+
+    function updateWalletUI(data) {
+      const notConnected = document.getElementById('walletNotConnected');
+      const connected = document.getElementById('walletConnected');
+      const userStats = document.getElementById('userStats');
+      const ownedBlocks = document.getElementById('ownedBlocks');
+      const recentActivity = document.getElementById('recentActivity');
+      const quickActions = document.getElementById('quickActions');
+
+      if (data) {
+        notConnected.style.display = 'none';
+        connected.style.display = 'block';
+        userStats.style.display = 'block';
+        ownedBlocks.style.display = 'block';
+        recentActivity.style.display = 'block';
+        quickActions.style.display = 'block';
+
+        document.getElementById('walletType').textContent = data.wallet.charAt(0).toUpperCase() + data.wallet.slice(1);
+        document.getElementById('walletAddress').textContent = walletManager.shortenAddress(data.address);
+      } else {
+        notConnected.style.display = 'block';
+        connected.style.display = 'none';
+        userStats.style.display = 'none';
+        ownedBlocks.style.display = 'none';
+        recentActivity.style.display = 'none';
+        quickActions.style.display = 'none';
+      }
+    }
+
+    async function loadUserData(address) {
+      // In production, this would fetch from a backend database
+      // For demo, we'll use localStorage
+      const storedData = localStorage.getItem(`spice_ledger_${address}`);
+      
+      if (storedData) {
+        const data = JSON.parse(storedData);
+        ownedBlocks = data.blocks || [];
+        updateStats(ownedBlocks);
+        renderBlocksList(ownedBlocks);
+        renderActivity(data.activity || []);
+      } else {
+        // Initialize empty data for new user
+        ownedBlocks = [];
+        const initialData = {
+          address,
+          blocks: [],
+          activity: []
+        };
+        localStorage.setItem(`spice_ledger_${address}`, JSON.stringify(initialData));
+        updateStats([]);
+        renderBlocksList([]);
+        renderActivity([]);
+      }
+    }
+
+    function updateStats(blocks) {
+      const totalBlocks = blocks.length;
+      const totalPixels = totalBlocks * 100;
+      
+      document.getElementById('blocksOwned').textContent = totalBlocks.toLocaleString();
+      document.getElementById('pixelsOwned').textContent = totalPixels.toLocaleString();
+
+      if (blocks.length > 0) {
+        const firstBlock = Math.min(...blocks.map(function(b){ return typeof b === 'number' ? b : b.blockId; }));
+        const lastBlock = Math.max(...blocks.map(function(b){ return typeof b === 'number' ? b : b.blockId; }));
+        document.getElementById('firstPurchase').textContent = firstBlock.toLocaleString();
+        document.getElementById('lastPurchase').textContent = lastBlock.toLocaleString();
+        document.getElementById('userRank').textContent = '#' + Math.floor(Math.random() * 1000) + 1; // Demo rank
+      } else {
+        document.getElementById('firstPurchase').textContent = '-';
+        document.getElementById('lastPurchase').textContent = '-';
+        document.getElementById('userRank').textContent = '#-';
+      }
+
+      // Calculate total value (demo)
+      let totalValue = 0;
+      blocks.forEach(function(item) {
+        var id = typeof item === 'number' ? item : item.blockId;
+        totalValue += 0.001 + (id * 9.999e-10);
+      });
+      document.getElementById('totalValue').textContent = '$' + totalValue.toFixed(4);
+    }
+
+    function renderBlocksList(blocks) {
+      const container = document.getElementById('blocksList');
+      
+      if (blocks.length === 0) {
+        container.innerHTML = '<p style="color: #888;">No blocks owned yet. Start purchasing!</p>';
+        return;
+      }
+
+      let html = '<table class="table"><thead><tr><th>Block ID</th><th>Pixels</th><th>Purchase Price</th></tr></thead><tbody>';
+      
+      blocks.forEach(function(item) {
+        var blockId = typeof item === 'number' ? item : item.blockId;
+        var price = typeof item === 'number'
+          ? (0.001 + blockId * 9.999e-10)
+          : (item.purchasePrice || (0.001 + blockId * 9.999e-10));
+        html += '<tr><td>' + blockId.toLocaleString() + '</td><td>100</td><td>$' + price.toFixed(6) + '</td></tr>';
+      });
+      
+      html += '</tbody></table>';
+      container.innerHTML = html;
+    }
+
+    function filterBlocks() {
+      const searchTerm = document.getElementById('blockSearch').value.toLowerCase();
+      const filtered = ownedBlocks.filter(function(item) {
+        var id = typeof item === 'number' ? item : item.blockId;
+        return id.toString().includes(searchTerm);
+      });
+      renderBlocksList(filtered);
+    }
+
+    function renderActivity(activity) {
+      const container = document.getElementById('activityList');
+      
+      if (activity.length === 0) {
+        container.innerHTML = '<p style="color: #888;">No recent activity</p>';
+        return;
+      }
+
+      let html = '<table class="table"><thead><tr><th>Date</th><th>Action</th><th>Details</th></tr></thead><tbody>';
+      
+      activity.slice(0, 10).forEach(item => {
+        html += `
+          <tr>
+            <td>${new Date(item.date).toLocaleString()}</td>
+            <td>${item.action}</td>
+            <td>${item.details}</td>
+          </tr>
+        `;
+      });
+      
+      html += '</tbody></table>';
+      container.innerHTML = html;
+    }
+
+    function exportOwnership() {
+      if (!walletManager.isConnected()) {
+        alert('Please connect your wallet first');
+        return;
+      }
+
+      const data = {
+        wallet: walletManager.currentWallet,
+        address: walletManager.currentAddress,
+        blocks: ownedBlocks,
+        exportDate: new Date().toISOString()
+      };
+
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `spice-ledger-ownership-${walletManager.currentAddress}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    // Check if wallet was previously connected
+    window.addEventListener('load', () => {
+      const savedWallet = localStorage.getItem('spice_ledger_last_wallet');
+      if (savedWallet) {
+        // Auto-connect if supported
+        if (savedWallet === 'metamask' && window.ethereum) {
+          connectMetaMask();
+        }
+      }
+    });
+
+    // Save wallet preference
+    walletManager.on('connected', (data) => {
+      localStorage.setItem('spice_ledger_last_wallet', data.wallet);
+    });
+
+    // Load system status
+    async function loadSystemStatus() {
+      try {
+        const [supplyResponse, treasuryResponse] = await Promise.all([
+          fetch('/api/supply'),
+          fetch('/api/treasury')
+        ]);
+
+        const supplyData = await supplyResponse.json();
+        const treasuryData = await treasuryResponse.json();
+
+        const totalSold = supplyData.currentSupply;
+        const available = supplyData.totalSupply - totalSold;
+
+        document.getElementById('totalBlocksSold').textContent = totalSold.toLocaleString();
+        document.getElementById('availableBlocks').textContent = available.toLocaleString();
+        document.getElementById('totalFeesCollected').textContent = '$' + treasuryData.collectedFees.toFixed(2);
+      } catch (error) {
+        console.error('Error loading system status:', error);
+      }
+    }
+
+    loadSystemStatus();
+  </script>
+</body>
+</html>

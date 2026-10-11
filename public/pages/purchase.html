@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Purchase Blocks - Space Ledger</title>
+  <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+  <nav>
+    <div class="container">
+      <a href="/index.html" style="display:flex;align-items:center;gap:8px;text-decoration:none;">
+      <img src="/img/logo.jpg" alt="SLP" style="width:32px;height:32px;border-radius:7px;object-fit:cover;">
+      <span class="logo">Spatial Ledger</span>
+    </a>
+      <ul>
+        <li><a href="../index.html">Home</a></li>
+        <li><a href="purchase.html" style="color:#00d4ff;">Purchase</a></li>
+        <li><a href="grid.html">Grid View</a></li>
+        <li><a href="treasury.html">Treasury</a></li>
+        <li><a href="network.html">Network</a></li>
+        <li><a href="dashboard.html">Dashboard</a></li>
+        <li><a href="profile.html">Profile</a></li>
+        <li><button class="wallet-button" id="navWalletBtn">Connect Wallet</button></li>
+      </ul>
+    </div>
+  </nav>
+
+  <div class="container">
+    <h1 style="text-align:center;margin-bottom:8px;">Purchase Pixel Blocks</h1>
+    <p style="text-align:center;color:#555;margin-bottom:30px;font-size:.9em;">
+      Fees are collected automatically on every transaction. Nothing to configure.
+    </p>
+
+    <!-- Wallet status bar — shows when not connected -->
+    <div id="walletBanner" class="card" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;padding:16px 20px;">
+      <span style="color:#888;font-size:.9em;">Connect your wallet to purchase blocks</span>
+      <button class="wallet-button" id="bannerConnectBtn">Connect Wallet</button>
+    </div>
+
+    <!-- Connected address strip — hidden until connected -->
+    <div id="connectedBanner" class="card" style="display:none;align-items:center;gap:14px;padding:14px 20px;border-color:rgba(0,255,136,.2);">
+      <div style="width:10px;height:10px;border-radius:50%;background:#00ff88;flex-shrink:0;box-shadow:0 0 8px #00ff88;"></div>
+      <span id="connectedLabel" style="font-weight:600;color:#00ff88;flex:1;"></span>
+      <button class="button" id="disconnectBtn" style="padding:6px 16px;font-size:.82em;">Disconnect</button>
+    </div>
+
+    <!-- Step 1 — Pick blocks -->
+    <div class="card">
+      <h2>1 — Choose Blocks</h2>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <div class="input-group" style="margin-bottom:0;">
+          <label>Starting Block ID</label>
+          <input type="number" id="blockId" placeholder="0 – 9,999,999,999" min="0" max="9999999999" value="">
+        </div>
+        <div class="input-group" style="margin-bottom:0;">
+          <label>Number of Blocks</label>
+          <input type="number" id="blockCount" min="1" max="1000" value="1">
+        </div>
+      </div>
+      <div style="margin-top:16px;">
+        <button class="button" onclick="calcPrice()">Calculate Price</button>
+      </div>
+      <div id="priceResult" style="margin-top:14px;"></div>
+    </div>
+
+    <!-- Step 2 — Buy -->
+    <div class="card">
+      <h2>2 — Buy</h2>
+
+      <!-- Price summary — populated after calcPrice() -->
+      <div id="priceSummary" style="display:none;background:rgba(0,0,0,.25);border:1px solid rgba(0,212,255,.15);border-radius:10px;padding:16px;margin-bottom:18px;">
+        <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+          <span style="color:#888;">Blocks</span>
+          <span id="sumBlocks" style="font-weight:600;"></span>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+          <span style="color:#888;">Pixels</span>
+          <span id="sumPixels" style="font-weight:600;"></span>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+          <span style="color:#888;">Block price range</span>
+          <span id="sumRange" style="font-weight:600;"></span>
+        </div>
+        <div style="border-top:1px solid rgba(255,255,255,.07);margin:10px 0;"></div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
+          <span style="color:#888;">Subtotal</span>
+          <span id="sumSubtotal" style="font-weight:600;"></span>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
+          <span style="color:#888;">Platform fee</span>
+          <span style="color:#00d4ff;font-weight:600;">$0.10 (auto-routed)</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;">
+          <span style="font-weight:700;">Total</span>
+          <span id="sumTotal" style="font-weight:700;color:#00ff88;font-size:1.1em;"></span>
+        </div>
+      </div>
+
+      <button class="button" id="buyBtn" onclick="buyBlocks()" style="width:100%;padding:16px;font-size:1.05em;letter-spacing:.03em;">
+        Buy Blocks
+      </button>
+      <div id="buyResult" style="margin-top:14px;"></div>
+    </div>
+
+    <!-- Step 3 — Bonding curve info (collapsed, readable) -->
+    <div class="card">
+      <h2>How Pricing Works</h2>
+      <div class="formula">P(x) = (9.999 × 10⁻¹⁰) × x + 0.001</div>
+      <p style="color:#888;margin-top:12px;line-height:1.7;font-size:.9em;">
+        Price starts at <strong style="color:#e0e0e0;">$0.001</strong> per block and rises linearly to
+        <strong style="color:#e0e0e0;">$10.00</strong> at block 9,999,999,999.
+        Early buyers get lower prices — as more blocks sell, the price increases automatically.
+        A flat <strong style="color:#00d4ff;">$0.10 platform fee</strong> is added per transaction and routed automatically — you never configure it.
+      </p>
+      <div class="stats-grid" style="margin-top:20px;">
+        <div class="stat-card"><h3>Starting Price</h3><div class="value">$0.001</div><div class="label">Block 0</div></div>
+        <div class="stat-card"><h3>At Block 1B</h3><div class="value">$1.00</div><div class="label">10% sold</div></div>
+        <div class="stat-card"><h3>At Block 5B</h3><div class="value">$5.00</div><div class="label">50% sold</div></div>
+        <div class="stat-card"><h3>Final Price</h3><div class="value">$10.00</div><div class="label">Block 9,999,999,999</div></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="../js/wallet.js"></script>
+  <script src="../js/walletModal.js?v=202610111137"></script>
+  <script>
+    var connectedAddress = null;
+    var lastPrices       = [];    // [{blockId, price}] from last calcPrice()
+    var serverCfg        = null;  // /api/config response
+
+    // Load server config once
+    fetch('/api/config').then(function(r){ return r.json(); }).then(function(cfg){
+      serverCfg = cfg;
+    }).catch(function(){});
+
+    // ── Wallet events ────────────────────────────────────────────────────────
+    walletManager.on('connected', function(data) {
+      connectedAddress = data.address;
+      showConnected(data);
+    });
+
+    walletManager.on('disconnected', function() {
+      connectedAddress = null;
+      showDisconnected();
+    });
+
+    function showConnected(data) {
+      var short = data.address.slice(0,6) + '...' + data.address.slice(-4);
+      document.getElementById('walletBanner').style.display   = 'none';
+      document.getElementById('connectedBanner').style.display = 'flex';
+      document.getElementById('connectedLabel').textContent   =
+        data.wallet.charAt(0).toUpperCase() + data.wallet.slice(1) + ' · ' + short;
+    }
+
+    function showDisconnected() {
+      document.getElementById('walletBanner').style.display    = 'flex';
+      document.getElementById('connectedBanner').style.display = 'none';
+    }
+
+    document.getElementById('disconnectBtn').addEventListener('click', function() {
+      walletManager.disconnect();
+    });
+
+    // ── Price calculator ──────────────────────────────────────────────────────
+    async function calcPrice() {
+      var blockId    = parseInt(document.getElementById('blockId').value);
+      var blockCount = parseInt(document.getElementById('blockCount').value);
+      var result     = document.getElementById('priceResult');
+
+      if (isNaN(blockId) || blockId < 0 || blockId > 9999999999) {
+        result.innerHTML = '<span class="error">Enter a valid block ID (0 – 9,999,999,999)</span>';
+        return;
+      }
+      if (isNaN(blockCount) || blockCount < 1 || blockCount > 1000) {
+        result.innerHTML = '<span class="error">Enter 1 – 1,000 blocks</span>';
+        return;
+      }
+
+      result.innerHTML = '<span class="loading">Fetching prices…</span>';
+
+      try {
+        // Use batch endpoint when count > 1, single endpoint for 1
+        var prices = [];
+        var resp, d;
+        if (blockCount <= 100) {
+          resp = await fetch('/api/price/range?start=' + blockId + '&count=' + blockCount);
+          d    = await resp.json();
+          prices = d;
+        } else {
+          // chunked — 100 at a time
+          for (var offset = 0; offset < blockCount; offset += 100) {
+            var chunk = Math.min(100, blockCount - offset);
+            resp = await fetch('/api/price/range?start=' + (blockId + offset) + '&count=' + chunk);
+            d    = await resp.json();
+            prices = prices.concat(d);
+          }
+        }
+
+        lastPrices = prices;
+        var total  = prices.reduce(function(s, p){ return s + p.price; }, 0);
+        var fee    = 0.10;
+        var grand  = total + fee;
+
+        // Populate summary card
+        document.getElementById('sumBlocks').textContent   = blockCount.toLocaleString();
+        document.getElementById('sumPixels').textContent   = (blockCount * 100).toLocaleString();
+        document.getElementById('sumRange').textContent    =
+          '$' + prices[0].price.toFixed(6) + (prices.length > 1 ? ' – $' + prices[prices.length-1].price.toFixed(6) : '');
+        document.getElementById('sumSubtotal').textContent = '$' + total.toFixed(6);
+        document.getElementById('sumTotal').textContent    = '$' + grand.toFixed(6);
+        document.getElementById('priceSummary').style.display = 'block';
+
+        result.innerHTML = '<span class="success">Price calculated ✓ — review the summary above and click Buy Blocks.</span>';
+      } catch(e) {
+        result.innerHTML = '<span class="error">Error fetching price. Try again.</span>';
+      }
+    }
+
+    // ── Buy ───────────────────────────────────────────────────────────────────
+    async function buyBlocks() {
+      var blockId    = parseInt(document.getElementById('blockId').value);
+      var blockCount = parseInt(document.getElementById('blockCount').value);
+      var result     = document.getElementById('buyResult');
+      var btn        = document.getElementById('buyBtn');
+
+      if (!connectedAddress) {
+        // Open wallet modal instead of showing an error
+        window.openWalletModal();
+        return;
+      }
+
+      if (!lastPrices.length) {
+        result.innerHTML = '<span class="error">Calculate price first.</span>';
+        return;
+      }
+
+      if (isNaN(blockId) || isNaN(blockCount)) {
+        result.innerHTML = '<span class="error">Invalid block ID or count.</span>';
+        return;
+      }
+
+      btn.disabled     = true;
+      btn.textContent  = 'Processing…';
+      result.innerHTML = '<span class="loading">Sending transaction…</span>';
+
+      try {
+        var total = lastPrices.reduce(function(s, p){ return s + p.price; }, 0);
+
+        // Detect network from connected wallet type
+        var network = 'demo';
+        if (walletManager.currentWallet === 'phantom' ||
+            walletManager.currentWallet === 'solflare' ||
+            walletManager.currentWallet === 'backpack') {
+          network = serverCfg ? 'solana-' + serverCfg.solanaNetwork : 'solana-devnet';
+        } else if (walletManager.currentWallet) {
+          network = 'evm';
+        }
+
+        var resp = await fetch('/api/purchase', {
+          method:  'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body:    JSON.stringify({
+            walletAddress: connectedAddress,
+            blockId:       blockId,
+            blockCount:    blockCount,
+            network:       network,
+            txSignature:   null   // real sig attached after on-chain confirmation
+          })
+        });
+
+        var data = await resp.json();
+
+        if (!data.success) throw new Error('Purchase rejected by server');
+
+        // Persist to localStorage for PnL tracking
+        var key     = 'spice_ledger_' + connectedAddress;
+        var stored  = localStorage.getItem(key);
+        var ud      = stored ? JSON.parse(stored) : { address: connectedAddress, blocks: [], activity: [] };
+
+        // Migrate legacy plain-int format
+        if (ud.blocks.length > 0 && typeof ud.blocks[0] === 'number') {
+          ud.blocks = ud.blocks.map(function(n){
+            return { blockId: n, purchasePrice: 9.999e-10 * n + 0.001, timestamp: Date.now() };
+          });
+        }
+
+        lastPrices.forEach(function(p){
+          ud.blocks.push({ blockId: p.blockId, purchasePrice: p.price, timestamp: Date.now() });
+        });
+
+        ud.activity.unshift({
+          date:    new Date().toISOString(),
+          action:  'Purchase',
+          details: blockCount + ' block' + (blockCount > 1 ? 's' : '') + ' from #' + blockId.toLocaleString()
+        });
+
+        localStorage.setItem(key, JSON.stringify(ud));
+
+        result.innerHTML =
+          '<span class="success">' +
+          '✓ Purchase recorded<br>' +
+          blockCount.toLocaleString() + ' block' + (blockCount > 1 ? 's' : '') +
+          ' · ' + (blockCount * 100).toLocaleString() + ' pixels<br>' +
+          'Total paid: $' + (total + 0.10).toFixed(6) + ' (incl. $0.10 fee)' +
+          '</span>';
+
+        // Reset calculator
+        lastPrices = [];
+        document.getElementById('priceSummary').style.display = 'none';
+        document.getElementById('priceResult').innerHTML = '';
+
+      } catch(e) {
+        result.innerHTML = '<span class="error">' + (e.message || 'Transaction failed') + '</span>';
+      } finally {
+        btn.disabled    = false;
+        btn.textContent = 'Buy Blocks';
+      }
+    }
+
+    // Wire the banner connect button to the modal
+    document.getElementById('bannerConnectBtn').addEventListener('click', function() {
+      window.openWalletModal();
+    });
+  </script>
+
+  <!-- Solana USDC payment wired in background — no UI exposed to users -->
+  <script type="module">
+    import { executeUsdcPaymentWithFee, dryRunPayment, setDevnetMode } from '../js/solanaPayment.js';
+
+    // Sync devnet mode from server config
+    fetch('/api/config').then(function(r){ return r.json(); }).then(function(cfg){
+      var isDevnet = cfg.solanaNetwork !== 'mainnet-beta';
+      setDevnetMode(isDevnet);
+    }).catch(function(){});
+
+    // Expose for the buy flow — called automatically when wallet is Solana type
+    window._solanaPaymentWithFee = async function(totalUsdc) {
+      var wallet = window.solana;
+      if (!wallet || !wallet.publicKey) throw new Error('Solana wallet not connected');
+      var cfg = await fetch('/api/config').then(function(r){ return r.json(); });
+      // Route payment: fee goes to platform wallet, rest is the block purchase amount
+      return executeUsdcPaymentWithFee(wallet, cfg.feeWallet, totalUsdc);
+    };
+  </script>
+</body>
+</html>

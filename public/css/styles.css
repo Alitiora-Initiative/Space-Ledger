@@ -1,0 +1,812 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
+
+/* ─── Reset ─────────────────────────────────────────────────── */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* ─── Design tokens ──────────────────────────────────────────── */
+:root {
+  --cyan:         #00d4ff;
+  --green:        #00ff88;
+  --purple:       #7b2fff;
+  --red:          #ff4757;
+  --bg:           #0a0a0f;
+  --glass:        rgba(255, 255, 255, 0.03);
+  --glass-border: rgba(0, 212, 255, 0.15);
+}
+
+/* ─── Keyframes (transform + opacity only) ───────────────────── */
+@keyframes pulse {
+  0%, 100% { opacity: 1;   transform: scale(1); }
+  50%       { opacity: 0.7; transform: scale(1.04); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-8px); }
+}
+
+@keyframes scanline {
+  0%   { transform: translateY(-100%); }
+  100% { transform: translateY(100vh); }
+}
+
+@keyframes shimmer {
+  0%, 100% { opacity: 0.4; }
+  50%       { opacity: 1; }
+}
+
+@keyframes starfield {
+  0%   { transform: translateY(0); }
+  100% { transform: translateY(-50%); }
+}
+
+@keyframes flash {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0; }
+}
+
+/* ─── Body + star-field ─────────────────────────────────────── */
+body {
+  font-family: 'Space Grotesk', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: var(--bg);
+  color: #e0e0e0;
+  min-height: 100vh;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* Star-field: two layers of dots tile-scrolling via translateY */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image:
+    radial-gradient(1px 1px at  5%  8%, rgba(0,212,255,0.7) 0%, transparent 100%),
+    radial-gradient(1px 1px at 12% 22%, rgba(255,255,255,0.5) 0%, transparent 100%),
+    radial-gradient(1px 1px at 20%  3%, rgba(0,212,255,0.4) 0%, transparent 100%),
+    radial-gradient(1px 1px at 28% 40%, rgba(255,255,255,0.6) 0%, transparent 100%),
+    radial-gradient(1px 1px at 35% 15%, rgba(123,47,255,0.6) 0%, transparent 100%),
+    radial-gradient(1px 1px at 42% 70%, rgba(255,255,255,0.4) 0%, transparent 100%),
+    radial-gradient(1px 1px at 50% 55%, rgba(0,212,255,0.5) 0%, transparent 100%),
+    radial-gradient(1px 1px at 58%  9%, rgba(255,255,255,0.7) 0%, transparent 100%),
+    radial-gradient(1px 1px at 65% 85%, rgba(0,255,136,0.4) 0%, transparent 100%),
+    radial-gradient(1px 1px at 72% 32%, rgba(255,255,255,0.5) 0%, transparent 100%),
+    radial-gradient(1px 1px at 80% 62%, rgba(0,212,255,0.6) 0%, transparent 100%),
+    radial-gradient(1px 1px at 88% 18%, rgba(123,47,255,0.5) 0%, transparent 100%),
+    radial-gradient(1px 1px at 93% 47%, rgba(255,255,255,0.4) 0%, transparent 100%),
+    radial-gradient(1px 1px at  3% 60%, rgba(0,255,136,0.5) 0%, transparent 100%),
+    radial-gradient(1px 1px at 18% 80%, rgba(255,255,255,0.6) 0%, transparent 100%),
+    radial-gradient(1px 1px at 47% 92%, rgba(0,212,255,0.4) 0%, transparent 100%),
+    radial-gradient(1px 1px at 75% 75%, rgba(255,255,255,0.5) 0%, transparent 100%),
+    radial-gradient(1px 1px at 90% 90%, rgba(123,47,255,0.4) 0%, transparent 100%),
+    radial-gradient(2px 2px at 33% 50%, rgba(0,212,255,0.3) 0%, transparent 100%),
+    radial-gradient(2px 2px at 62% 28%, rgba(0,255,136,0.3) 0%, transparent 100%),
+    radial-gradient(1px 1px at 55% 38%, rgba(255,255,255,0.4) 0%, transparent 100%);
+  background-size: 100% 200%;
+  animation: starfield 60s linear infinite;
+}
+
+/* All content sits above the star-field */
+body > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* ─── Animation utility classes ────────────────────────────── */
+.pulse      { animation: pulse    2s ease-in-out infinite; }
+.float      { animation: float    4s ease-in-out infinite; }
+.shimmer-anim { animation: shimmer  2s ease-in-out infinite; }
+
+/* ─── Navigation ────────────────────────────────────────────── */
+nav {
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  padding: 15px 30px;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  border-bottom: 1px solid var(--glass-border);
+}
+
+nav .container {
+  max-width: 1400px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+nav .logo {
+  font-size: 1.5em;
+  font-weight: 700;
+  background: linear-gradient(90deg, var(--cyan), var(--purple));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+nav ul {
+  display: flex;
+  list-style: none;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+nav a {
+  color: #e0e0e0;
+  text-decoration: none;
+  transition: color 0.3s, opacity 0.3s;
+  font-weight: 500;
+}
+
+nav a:hover {
+  color: var(--cyan);
+}
+
+/* ─── Wallet button ─────────────────────────────────────────── */
+.wallet-button {
+  background: linear-gradient(90deg, var(--cyan), var(--purple));
+  border: none;
+  color: white;
+  padding: 8px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.9em;
+  font-family: inherit;
+  font-weight: 600;
+  transition: transform 0.2s, opacity 0.2s;
+}
+
+.wallet-button:hover {
+  transform: scale(1.05);
+  opacity: 0.9;
+}
+
+/* ─── Layout ────────────────────────────────────────────────── */
+.container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 30px;
+}
+
+/* ─── Hero ──────────────────────────────────────────────────── */
+.hero {
+  text-align: center;
+  padding: 60px 20px;
+}
+
+.hero h1 {
+  font-size: 3.5em;
+  font-weight: 700;
+  background: linear-gradient(90deg, var(--cyan), var(--purple));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 20px;
+}
+
+.hero p {
+  font-size: 1.3em;
+  color: #888;
+  margin-bottom: 15px;
+}
+
+/* ─── Stats grid ────────────────────────────────────────────── */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+  margin: 40px 0;
+}
+
+/* ─── Stat card ─────────────────────────────────────────────── */
+.stat-card {
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  padding: 25px;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.stat-card h3 {
+  color: var(--cyan);
+  margin-bottom: 10px;
+  font-size: 1.1em;
+  font-weight: 600;
+}
+
+.stat-card .value {
+  font-size: 2em;
+  font-weight: 700;
+  margin-bottom: 5px;
+}
+
+.stat-card .label {
+  color: #888;
+  font-size: 0.9em;
+}
+
+/* ─── Card ──────────────────────────────────────────────────── */
+.card {
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  padding: 25px;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  margin-bottom: 20px;
+}
+
+.card h2 {
+  color: var(--cyan);
+  margin-bottom: 20px;
+  font-size: 1.5em;
+  font-weight: 600;
+}
+
+/* ─── Buttons ───────────────────────────────────────────────── */
+.button {
+  background: linear-gradient(90deg, var(--cyan), var(--purple));
+  border: none;
+  color: white;
+  padding: 12px 30px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1em;
+  font-family: inherit;
+  font-weight: 600;
+  transition: transform 0.2s, opacity 0.2s;
+  text-decoration: none;
+  display: inline-block;
+}
+
+.button:hover {
+  transform: scale(1.05);
+  opacity: 0.9;
+}
+
+/* ─── Form inputs ───────────────────────────────────────────── */
+.input-group {
+  margin-bottom: 20px;
+}
+
+.input-group label {
+  display: block;
+  margin-bottom: 8px;
+  color: #888;
+  font-weight: 500;
+}
+
+.input-group input,
+.input-group select {
+  width: 100%;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid var(--glass-border);
+  border-radius: 8px;
+  color: white;
+  font-size: 1em;
+  font-family: inherit;
+}
+
+.input-group input:focus,
+.input-group select:focus {
+  outline: none;
+  border-color: var(--cyan);
+}
+
+/* ─── Result / feedback ─────────────────────────────────────── */
+.result {
+  margin-top: 20px;
+  padding: 15px;
+  background: rgba(0, 212, 255, 0.07);
+  border-radius: 8px;
+  font-size: 0.95em;
+  line-height: 1.6;
+}
+
+.success { color: var(--green); }
+.error   { color: var(--red); }
+.loading { color: #ffa502; }
+
+/* ─── Pixel grid ─────────────────────────────────────────────── */
+.grid-container {
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  gap: 2px;
+  margin-top: 20px;
+}
+
+/* Pixelated — no border-radius */
+.grid-cell {
+  aspect-ratio: 1;
+  border-radius: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.6em;
+  cursor: pointer;
+  /* Only transform + opacity transitions — no layout triggers */
+  transition: transform 0.15s ease, opacity 0.15s ease;
+}
+
+.grid-cell:hover {
+  transform: scale(1.4);
+  z-index: 10;
+  box-shadow: 0 0 8px var(--cyan);
+  opacity: 0.95;
+}
+
+/* Available: dark teal */
+.grid-cell.available {
+  background: rgba(0, 30, 40, 0.8);
+  border: 1px solid rgba(0, 212, 255, 0.2);
+}
+
+/* Owned: neon green glow */
+.grid-cell.owned {
+  background: rgba(0, 60, 30, 0.9);
+  box-shadow: 0 0 6px rgba(0, 255, 136, 0.6);
+  border: 1px solid var(--green);
+}
+
+/* Treasury: purple glow */
+.grid-cell.treasury {
+  background: rgba(40, 0, 80, 0.9);
+  box-shadow: 0 0 6px rgba(123, 47, 255, 0.6);
+  border: 1px solid var(--purple);
+}
+
+/* Unavailable (legacy class kept) */
+.grid-cell.unavailable {
+  background: rgba(255, 255, 255, 0.03);
+  color: #444;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* ─── PnL colors ─────────────────────────────────────────────── */
+.pnl-positive {
+  color: var(--green);
+  text-shadow: 0 0 8px rgba(0, 255, 136, 0.6);
+}
+
+.pnl-negative {
+  color: var(--red);
+  text-shadow: 0 0 8px rgba(255, 71, 87, 0.6);
+}
+
+/* ─── Token card (wallet-style token row) ────────────────────── */
+.token-card {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 14px;
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  border-radius: 0; /* pixelated */
+  padding: 14px 18px;
+  margin-bottom: 8px;
+}
+
+.token-icon {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  border-radius: 0;
+  background: linear-gradient(135deg, var(--cyan), var(--purple));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75em;
+  font-weight: 700;
+  color: #fff;
+}
+
+.token-name {
+  font-weight: 600;
+  font-size: 1em;
+  color: #e0e0e0;
+}
+
+.token-sub {
+  font-size: 0.8em;
+  color: #888;
+  margin-top: 2px;
+}
+
+.token-spacer {
+  flex: 1;
+}
+
+.token-value {
+  text-align: right;
+}
+
+.token-balance {
+  font-weight: 700;
+  font-size: 1em;
+  color: #e0e0e0;
+}
+
+.token-usd {
+  font-size: 0.8em;
+  color: #888;
+  margin-top: 2px;
+}
+
+.token-pnl {
+  font-size: 0.8em;
+  font-weight: 600;
+  margin-top: 2px;
+}
+
+/* ─── Network item ───────────────────────────────────────────── */
+.network-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px;
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  border-radius: 8px;
+  margin-bottom: 10px;
+}
+
+.network-name {
+  font-weight: 600;
+}
+
+.network-id {
+  color: #888;
+  font-size: 0.9em;
+}
+
+/* Chain logo: 40×40 colored square */
+.chain-logo {
+  width: 40px;
+  height: 40px;
+  border-radius: 0;
+  background: linear-gradient(135deg, var(--cyan), var(--purple));
+  flex-shrink: 0;
+}
+
+/* ─── Identicon (8-col pixel grid, 64×64) ────────────────────── */
+.identicon {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  width: 64px;
+  height: 64px;
+}
+
+.identicon-cell {
+  width: 8px;
+  height: 8px;
+}
+
+/* ─── Tooltip ────────────────────────────────────────────────── */
+#tooltip {
+  position: fixed;
+  background: rgba(10, 10, 15, 0.95);
+  border: 1px solid var(--cyan);
+  color: #e0e0e0;
+  padding: 8px 12px;
+  font-size: 0.85em;
+  pointer-events: none;
+  display: none;
+  z-index: 9999;
+  border-radius: 4px;
+  line-height: 1.5;
+}
+
+/* ─── PnL bar chart ──────────────────────────────────────────── */
+.pnl-bar-chart {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.pnl-bar-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.pnl-bar-label {
+  width: 120px;
+  font-size: 0.85em;
+  color: #888;
+  flex-shrink: 0;
+}
+
+.pnl-bar-track {
+  flex: 1;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.07);
+  border-radius: 0;
+  overflow: hidden;
+}
+
+.pnl-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--cyan), var(--green));
+  border-radius: 0;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+/* ─── Tables ─────────────────────────────────────────────────── */
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 15px;
+}
+
+.table th,
+.table td {
+  padding: 12px;
+  text-align: left;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.table th {
+  color: var(--cyan);
+  font-weight: 600;
+}
+
+/* ─── Formula block ──────────────────────────────────────────── */
+.formula {
+  background: rgba(0, 0, 0, 0.4);
+  border-left: 3px solid var(--cyan);
+  padding: 15px;
+  border-radius: 4px;
+  font-family: 'Courier New', monospace;
+  margin: 15px 0;
+  color: var(--cyan);
+}
+
+/* ─── Mobile ─────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  nav ul {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  nav .container {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .hero h1 {
+    font-size: 2.2em;
+  }
+
+  .container {
+    padding: 16px;
+  }
+
+  .token-card {
+    flex-wrap: wrap;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Wallet Selection Modal
+   ═══════════════════════════════════════════════════════════════ */
+
+@keyframes wm-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes wm-slide-up {
+  from { opacity: 0; transform: translateY(24px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0)    scale(1);    }
+}
+
+/* Overlay */
+#wm-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  align-items: center;
+  justify-content: center;
+}
+
+#wm-overlay.wm-visible {
+  display: flex;
+  animation: wm-fade-in 0.2s ease;
+}
+
+/* Modal box */
+#wm-modal {
+  background: #0d0d18;
+  border: 1px solid rgba(0, 212, 255, 0.25);
+  border-radius: 16px;
+  width: 90%;
+  max-width: 440px;
+  padding: 28px 28px 24px;
+  box-shadow:
+    0 0 40px rgba(0, 212, 255, 0.12),
+    0 0 80px rgba(123, 47, 255, 0.08);
+  animation: wm-slide-up 0.25s cubic-bezier(0.34,1.56,0.64,1);
+  position: relative;
+}
+
+/* Header row */
+#wm-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+#wm-title {
+  font-size: 1.2em;
+  font-weight: 700;
+  background: linear-gradient(90deg, #00d4ff, #7b2fff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+#wm-close {
+  background: none;
+  border: none;
+  color: #666;
+  font-size: 1.2em;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: color 0.2s, background 0.2s;
+  line-height: 1;
+}
+
+#wm-close:hover {
+  color: #fff;
+  background: rgba(255,255,255,0.08);
+}
+
+/* Subtitle */
+#wm-subtitle {
+  font-size: 0.82em;
+  color: #666;
+  margin-bottom: 20px;
+}
+
+/* Wallet list */
+#wm-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 380px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+#wm-list::-webkit-scrollbar { width: 4px; }
+#wm-list::-webkit-scrollbar-track { background: transparent; }
+#wm-list::-webkit-scrollbar-thumb { background: rgba(0,212,255,0.3); border-radius: 2px; }
+
+/* Wallet row button */
+.wm-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 16px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  background: rgba(255,255,255,0.03);
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  color: #e0e0e0;
+  transition: background 0.15s, border-color 0.15s, transform 0.12s;
+  width: 100%;
+}
+
+.wm-row:hover {
+  background: rgba(0,212,255,0.07);
+  border-color: rgba(0,212,255,0.25);
+  transform: translateX(2px);
+}
+
+.wm-row:active {
+  transform: translateX(0) scale(0.99);
+}
+
+/* Detected wallet — slightly brighter */
+.wm-detected {
+  border-color: rgba(0,212,255,0.15);
+}
+
+.wm-detected:hover {
+  border-color: rgba(0,212,255,0.45);
+  box-shadow: 0 0 12px rgba(0,212,255,0.1);
+}
+
+/* Undetected (not installed) — dimmed */
+.wm-undetected {
+  opacity: 0.5;
+}
+
+.wm-undetected:hover {
+  opacity: 0.8;
+  border-color: rgba(123,47,255,0.3);
+}
+
+/* Wallet icon */
+.wm-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  flex-shrink: 0;
+  object-fit: cover;
+}
+
+/* Wallet name */
+.wm-name {
+  font-weight: 600;
+  font-size: 0.95em;
+  flex: 1;
+}
+
+/* EVM / SOLANA tag */
+.wm-type {
+  font-size: 0.68em;
+  font-weight: 600;
+  color: #555;
+  letter-spacing: 0.08em;
+}
+
+/* Detected / Install badge */
+.wm-badge {
+  font-size: 0.7em;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 20px;
+  letter-spacing: 0.04em;
+  flex-shrink: 0;
+}
+
+.wm-badge-detected {
+  background: rgba(0,255,136,0.12);
+  color: #00ff88;
+  border: 1px solid rgba(0,255,136,0.3);
+}
+
+.wm-badge-install {
+  background: rgba(255,255,255,0.05);
+  color: #555;
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+/* Status line */
+#wm-status {
+  margin-top: 16px;
+  min-height: 22px;
+  font-size: 0.88em;
+  text-align: center;
+  transition: opacity 0.2s;
+}
+
+.wm-loading { color: #ffa502; }
+.wm-success { color: #00ff88; }
+.wm-error   { color: #ff4757; }
