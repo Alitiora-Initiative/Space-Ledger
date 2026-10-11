@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Spatial Ledger Protocol — Network</title>
+  <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body><div class="stars-a"></div><div class="stars-b"></div>
+  <nav>
+    <div class="container">
+      <a href="/index.html" style="display:flex;align-items:center;gap:8px;text-decoration:none;">
+      <img src="/img/logo.jpg" alt="SLP" style="width:32px;height:32px;border-radius:7px;object-fit:cover;">
+      <span class="logo">Spatial Ledger Protocol</span>
+    </a>
+      <ul>
+        <li><a href="../index.html">Home</a></li>
+        <li><a href="purchase.html">Purchase</a></li>
+        <li><a href="grid.html">Grid View</a></li>
+        <li><a href="treasury.html">Treasury</a></li>
+        <li><a href="network.html">Network</a></li>
+        <li><a href="dashboard.html">Dashboard</a></li>
+        <li><a href="profile.html">Profile</a></li>
+        <li><a href="swap.html">Swap</a></li>
+        <li><button class="wallet-button" id="navWalletBtn" onclick="window.openWalletModal()">Connect Wallet</button></li>
+      </ul>
+    </div>
+  </nav>
+
+  <div class="container">
+    <h1 style="text-align: center; margin-bottom: 30px;">Multi-Chain Network Configuration</h1>
+
+    <div class="card">
+      <h2>About Multi-Chain Architecture</h2>
+      <p style="color: #888; line-height: 1.6; margin-bottom: 15px;">
+        Spice Ledger uses a multi-chain RPC routing architecture. When an end user or application
+        needs blockchain metadata, the request is sent to a service layer that identifies the target
+        network and forwards the request to the appropriate RPC endpoint.
+      </p>
+      <p style="color: #888; line-height: 1.6;">
+        This enables smoother cross-chain discovery and interaction, supporting Layer 3 applications,
+        app chains, modular rollups, and decentralized RPC nodes.
+      </p>
+    </div>
+
+    <div class="card">
+      <h2>Supported Networks</h2>
+      <div id="networksList"></div>
+    </div>
+
+    <div class="card">
+      <h2>RPC Request Tester</h2>
+      <div class="input-group">
+        <label>Network ID</label>
+        <select id="networkId">
+          <option value="1">Ethereum Mainnet (1)</option>
+          <option value="8453">Base Mainnet (8453)</option>
+          <option value="84532">Base Sepolia Testnet (84532)</option>
+          <option value="137">Polygon (137)</option>
+          <option value="10">Optimism (10)</option>
+          <option value="42161">Arbitrum One (42161)</option>
+        </select>
+      </div>
+      <div class="input-group">
+        <label>RPC Method</label>
+        <input type="text" id="rpcMethod" placeholder="e.g., eth_blockNumber, eth_getBalance" value="eth_blockNumber">
+      </div>
+      <div class="input-group">
+        <label>Parameters (JSON array)</label>
+        <input type="text" id="rpcParams" placeholder='["0x..."]' value="[]">
+      </div>
+      <button class="button" onclick="routeRpc()">Send Request</button>
+      <div class="result" id="rpcResult"></div>
+    </div>
+
+    <div class="card">
+      <h2>Common RPC Methods</h2>
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Method</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>eth_blockNumber</td>
+            <td>Get the number of the most recent block</td>
+          </tr>
+          <tr>
+            <td>eth_getBalance</td>
+            <td>Get balance of an address</td>
+          </tr>
+          <tr>
+            <td>eth_chainId</td>
+            <td>Get the chain ID</td>
+          </tr>
+          <tr>
+            <td>eth_gasPrice</td>
+            <td>Get current gas price</td>
+          </tr>
+          <tr>
+            <td>net_version</td>
+            <td>Get the network version</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <h2>Add Custom Network</h2>
+      <div class="input-group">
+        <label>Network ID</label>
+        <input type="number" id="customNetworkId" placeholder="Chain ID">
+      </div>
+      <div class="input-group">
+        <label>Network Name</label>
+        <input type="text" id="customNetworkName" placeholder="Network name">
+      </div>
+      <div class="input-group">
+        <label>RPC URL</label>
+        <input type="text" id="customRpcUrl" placeholder="https://...">
+      </div>
+      <button class="button" onclick="addCustomNetwork()">Add Network</button>
+      <div class="result" id="addNetworkResult"></div>
+    </div>
+  </div>
+
+  <script>
+    async function loadNetworks() {
+      try {
+        const response = await fetch('/api/networks');
+        const networks = await response.json();
+
+        const list = document.getElementById('networksList');
+        list.innerHTML = '';
+
+        networks.forEach(network => {
+          const div = document.createElement('div');
+          div.className = 'network-item';
+          div.innerHTML = `
+            <div>
+              <div class="network-name">${network.name}</div>
+              <div class="network-id">Chain ID: ${network.chainId}</div>
+            </div>
+            <div style="color: #888; font-size: 0.9em;">${network.rpcUrl}</div>
+          `;
+          list.appendChild(div);
+        });
+      } catch (error) {
+        document.getElementById('networksList').innerHTML = '<p style="color: #888;">Error loading networks</p>';
+      }
+    }
+
+    async function routeRpc() {
+      const networkId = parseInt(document.getElementById('networkId').value);
+      const method = document.getElementById('rpcMethod').value;
+      const paramsStr = document.getElementById('rpcParams').value;
+      const resultDiv = document.getElementById('rpcResult');
+
+      if (!networkId || !method) {
+        resultDiv.innerHTML = '<span class="error">Please fill all required fields</span>';
+        return;
+      }
+
+      let params = [];
+      try {
+        params = JSON.parse(paramsStr || '[]');
+      } catch (e) {
+        resultDiv.innerHTML = '<span class="error">Invalid JSON parameters</span>';
+        return;
+      }
+
+      resultDiv.innerHTML = '<span class="loading">Routing request...</span>';
+
+      try {
+        const response = await fetch('/api/rpc', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ networkId, method, params })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          resultDiv.innerHTML = `
+            <span class="success">
+              Network: ${data.network}<br>
+              Method: ${data.method}<br>
+              Result: ${JSON.stringify(data.result, null, 2)}
+            </span>
+          `;
+        } else {
+          resultDiv.innerHTML = `<span class="error">${data.error}</span>`;
+        }
+      } catch (error) {
+        resultDiv.innerHTML = `<span class="error">Error: ${error.message}</span>`;
+      }
+    }
+
+    async function addCustomNetwork() {
+      const networkId = parseInt(document.getElementById('customNetworkId').value);
+      const name = document.getElementById('customNetworkName').value;
+      const rpcUrl = document.getElementById('customRpcUrl').value;
+      const resultDiv = document.getElementById('addNetworkResult');
+
+      if (!networkId || !name || !rpcUrl) {
+        resultDiv.innerHTML = '<span class="error">Please fill all fields</span>';
+        return;
+      }
+
+      resultDiv.innerHTML = '<span class="loading">Adding network...</span>';
+
+      // Simulate adding network (in production, this would call an API)
+      setTimeout(() => {
+        resultDiv.innerHTML = '<span class="success">Network added successfully (Demo mode)</span>';
+        loadNetworks();
+      }, 1000);
+    }
+
+    // Initialize
+    loadNetworks();
+  </script>
+  <script src="../js/wallet.js"></script>
+  <script src="../js/walletModal.js?v=202610111259"></script>
+</body>
+</html>

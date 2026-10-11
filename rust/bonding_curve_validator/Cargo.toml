@@ -1,0 +1,12 @@
+[package]
+name    = "bonding-curve-validator"
+version = "0.1.0"
+edition = "2021"
+description = "Space Ledger bonding curve price validator"
+
+# No external dependencies — pure Rust stdlib only
+[dependencies]
+
+[[bin]]
+name = "bonding-curve-validator"
+path = "src/main.rs"

@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Spatial Ledger Protocol — Purchase</title>
+  <link rel="stylesheet" href="../css/styles.css">
+  <style>
+    .currency-selector {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 18px;
+    }
+    .currency-option {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 18px;
+      border: 1px solid rgba(0,212,255,0.2);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+      background: rgba(0,0,0,0.2);
+      user-select: none;
+    }
+    .currency-option:has(input:checked) {
+      border-color: #00d4ff;
+      background: rgba(0,212,255,0.08);
+    }
+    .currency-option input[type="radio"] {
+      accent-color: #00d4ff;
+      width: 16px;
+      height: 16px;
+    }
+    .currency-label {
+      font-weight: 600;
+      color: #e0e0e0;
+    }
+    .live-price-bar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      background: rgba(0,212,255,0.05);
+      border: 1px solid rgba(0,212,255,0.15);
+      border-radius: 8px;
+      font-size: 0.85em;
+      margin-bottom: 18px;
+    }
+    .live-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #00ff88;
+      box-shadow: 0 0 6px #00ff88;
+      flex-shrink: 0;
+      animation: livePulse 1.5s ease-in-out infinite;
+    }
+    @keyframes livePulse {
+      0%,100% { opacity: 1; }
+      50%      { opacity: 0.3; }
+    }
+    .spinner {
+      display: none;
+      text-align: center;
+      padding: 16px 0;
+      color: #00d4ff;
+      font-size: 0.9em;
+    }
+    .spinner::before {
+      content: '';
+      display: inline-block;
+      width: 18px;
+      height: 18px;
+      border: 2px solid rgba(0,212,255,0.3);
+      border-top-color: #00d4ff;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      margin-right: 10px;
+      vertical-align: middle;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .genesis-error {
+      display: none;
+      padding: 12px 16px;
+      background: rgba(255,60,60,0.08);
+      border: 1px solid rgba(255,60,60,0.35);
+      border-radius: 8px;
+      color: #ff6b6b;
+      font-size: 0.88em;
+      margin-top: 12px;
+    }
+    .tx-success {
+      display: none;
+      padding: 14px 16px;
+      background: rgba(0,255,136,0.08);
+      border: 1px solid rgba(0,255,136,0.3);
+      border-radius: 8px;
+      color: #00ff88;
+      font-size: 0.9em;
+      margin-top: 14px;
+      line-height: 1.6;
+    }
+    .tx-success a {
+      color: #00d4ff;
+      text-decoration: underline;
+    }
+    .tx-error {
+      display: none;
+      padding: 12px 16px;
+      background: rgba(255,60,60,0.08);
+      border: 1px solid rgba(255,60,60,0.3);
+      border-radius: 8px;
+      color: #ff6b6b;
+      font-size: 0.88em;
+      margin-top: 14px;
+    }
+    .post-warn {
+      display: none;
+      padding: 10px 14px;
+      background: rgba(255,170,0,0.08);
+      border: 1px solid rgba(255,170,0,0.3);
+      border-radius: 8px;
+      color: #ffaa00;
+      font-size: 0.82em;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body><div class="stars-a"></div><div class="stars-b"></div>
+
+  <nav>
+    <div class="container">
+      <a href="/index.html" style="display:flex;align-items:center;gap:8px;text-decoration:none;">
+        <img src="/img/logo.jpg" alt="SLP" style="width:32px;height:32px;border-radius:7px;object-fit:cover;">
+        <span class="logo">Spatial Ledger Protocol</span>
+      </a>
+      <ul>
+        <li><a href="../index.html">Home</a></li>
+        <li><a href="purchase.html" style="color:#00d4ff;">Purchase</a></li>
+        <li><a href="grid.html">Grid View</a></li>
+        <li><a href="treasury.html">Treasury</a></li>
+        <li><a href="network.html">Network</a></li>
+        <li><a href="dashboard.html">Dashboard</a></li>
+        <li><a href="profile.html">Profile</a></li>
+        <li><a href="swap.html">Swap</a></li>
+        <li><button class="wallet-button" id="navWalletBtn" onclick="window.openWalletModal()">Connect Wallet</button></li>
+      </ul>
+    </div>
+  </nav>
+
+  <div class="container">
+    <h1 style="text-align:center;margin-bottom:8px;">Purchase Pixel Blocks</h1>
+    <p style="text-align:center;color:#555;margin-bottom:30px;font-size:.9em;">
+      Fees are collected automatically on every transaction. Nothing to configure.
+    </p>
+
+    <!-- Wallet status bar — shows when not connected -->
+    <div id="walletBanner" class="card" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;padding:16px 20px;">
+      <span style="color:#888;font-size:.9em;">Connect your wallet to purchase blocks</span>
+      <button class="wallet-button" id="bannerConnectBtn">Connect Wallet</button>
+    </div>
+
+    <!-- Connected address strip — hidden until connected -->
+    <div id="connectedBanner" class="card" style="display:none;align-items:center;gap:14px;padding:14px 20px;border-color:rgba(0,255,136,.2);">
+      <div style="width:10px;height:10px;border-radius:50%;background:#00ff88;flex-shrink:0;box-shadow:0 0 8px #00ff88;"></div>
+      <span id="connectedLabel" style="font-weight:600;color:#00ff88;flex:1;"></span>
+      <button class="button" id="disconnectBtn" style="padding:6px 16px;font-size:.82em;">Disconnect</button>
+    </div>
+
+    <!-- Balance display — shows when connected -->
+    <div id="balanceBanner" class="card" style="display:none;align-items:center;gap:16px;padding:14px 20px;border-color:rgba(0,212,255,.2);">
+      <div style="flex:1;">
+        <div style="font-size:0.75em;color:#888;margin-bottom:4px;">WALLET BALANCE</div>
+        <div style="display:flex;gap:20px;flex-wrap:wrap;">
+          <div>
+            <span style="color:#888;font-size:0.8em;">SOL:</span>
+            <span id="balanceSOL" style="font-weight:600;color:#e0e0e0;margin-left:4px;">0</span>
+          </div>
+          <div>
+            <span style="color:#888;font-size:0.8em;">USDC:</span>
+            <span id="balanceUSDC" style="font-weight:600;color:#e0e0e0;margin-left:4px;">0</span>
+          </div>
+          <div>
+            <span style="color:#888;font-size:0.8em;">USDT:</span>
+            <span id="balanceUSDT" style="font-weight:600;color:#e0e0e0;margin-left:4px;">0</span>
+          </div>
+        </div>
+      </div>
+      <button class="button" id="refreshBalanceBtn" style="padding:6px 12px;font-size:.75em;">Refresh</button>
+    </div>
+
+    <!-- Step 1 — Pick blocks -->
+    <div class="card">
+      <h2>1 — Choose Blocks</h2>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <div class="input-group" style="margin-bottom:0;">
+          <label>Starting Block ID</label>
+          <input type="number" id="blockId" placeholder="1,000,000,000 +" min="0" max="9999999999" value="">
+        </div>
+        <div class="input-group" style="margin-bottom:0;">
+          <label>Number of Blocks</label>
+          <input type="number" id="blockCount" min="1" max="1000" value="1">
+        </div>
+      </div>
+
+      <!-- Inline genesis guard error — no alert() -->
+      <div class="genesis-error" id="genesisError">
+        ⚠️ Blocks 0–999,999,999 are Genesis Allocation (dev treasury). Public blocks start at 1,000,000,000.
+      </div>
+
+      <div style="margin-top:16px;">
+        <button class="button" onclick="calcPrice()">Calculate Price</button>
+      </div>
+      <div id="priceResult" style="margin-top:14px;"></div>
+    </div>
+
+    <!-- Step 2 — Buy -->
+    <div class="card">
+      <h2>2 — Buy</h2>
+
+      <!-- Live price feed via SSE -->
+      <div class="live-price-bar">
+        <div class="live-dot"></div>
+        <span id="livePrice" style="color:#888;font-size:0.95em;">Connecting to live feed…</span>
+      </div>
+
+      <!-- Currency selector -->
+      <div style="margin-bottom:12px;">
+        <div style="font-size:0.85em;color:#888;margin-bottom:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Pay with</div>
+        <div class="currency-selector">
+          <label class="currency-option">
+            <input type="radio" name="currency" value="SOL" id="currSOL" checked>
+            <span class="currency-label">SOL</span>
+          </label>
+          <label class="currency-option">
+            <input type="radio" name="currency" value="USDC" id="currUSDC">
+            <span class="currency-label">USDC</span>
+          </label>
+          <label class="currency-option">
+            <input type="radio" name="currency" value="USDT" id="currUSDT">
+            <span class="currency-label">USDT</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Price summary — populated after calcPrice() -->
+      <div id="priceSummary" style="display:none;background:rgba(0,0,0,.25);border:1px solid rgba(0,212,255,.15);border-radius:10px;padding:16px;margin-bottom:18px;">
+        <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+          <span style="color:#888;">Blocks</span>
+          <span id="sumBlocks" style="font-weight:600;"></span>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+          <span style="color:#888;">Pixels</span>
+          <span id="sumPixels" style="font-weight:600;"></span>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+          <span style="color:#888;">Block price range</span>
+          <span id="sumRange" style="font-weight:600;"></span>
+        </div>
+        <div style="border-top:1px solid rgba(255,255,255,.07);margin:10px 0;"></div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
+          <span style="color:#888;">Subtotal</span>
+          <span id="sumSubtotal" style="font-weight:600;"></span>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
+          <span style="color:#888;">Platform fee</span>
+          <span style="color:#00d4ff;font-weight:600;">$0.10 (auto-routed)</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
+          <span style="font-weight:700;">You pay</span>
+          <span id="sumTotal" style="font-weight:700;color:#00ff88;font-size:1.1em;"></span>
+        </div>
+      </div>
+
+      <div class="spinner" id="spinner">Awaiting Phantom confirmation…</div>
+
+      <button class="button" id="buyBtn" onclick="buyBlocks()" style="width:100%;padding:16px;font-size:1.05em;letter-spacing:.03em;">
+        Buy Blocks
+      </button>
+
+      <div class="tx-success" id="txSuccess"></div>
+      <div class="tx-error"   id="txError"></div>
+      <div class="post-warn"  id="postWarn"></div>
+    </div>
+
+    <!-- Pricing info card -->
+    <div class="card">
+      <h2>How Pricing Works</h2>
+      <div class="formula">P(x) = (9.99999999 × 10⁻⁸) × x + 0.001</div>
+      <p style="color:#888;margin-top:12px;line-height:1.7;font-size:.9em;">
+        Price starts at <strong style="color:#e0e0e0;">$0.001</strong> per block and rises linearly to
+        <strong style="color:#e0e0e0;">$1,000.00</strong> at block 9,999,999,999.
+        Early buyers get lower prices — as more blocks sell, the price increases automatically with massive upside potential.
+        A flat <strong style="color:#00d4ff;">$0.10 platform fee</strong> is added per transaction and routed automatically.
+      </p>
+      <div class="stats-grid" style="margin-top:20px;">
+        <div class="stat-card"><h3>Starting Price</h3><div class="value">$0.001</div><div class="label">Block 0</div></div>
+        <div class="stat-card"><h3>At Block 1B</h3><div class="value">$100.00</div><div class="label">10% sold</div></div>
+        <div class="stat-card"><h3>At Block 5B</h3><div class="value">$500.00</div><div class="label">50% sold</div></div>
+        <div class="stat-card"><h3>Final Price</h3><div class="value">$1,000.00</div><div class="label">Block 9,999,999,999</div></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="../js/wallet.js"></script>
+  <script src="../js/walletModal.js?v=202610111259"></script>
+
+  <script>
+    var connectedAddress = null;
+    var lastPrices       = [];   // [{blockId, price}] from last calcPrice()
+    var lastSubtotal     = 0;    // USD subtotal without fee
+
+    // ── Wallet events ────────────────────────────────────────────────────────
+    walletManager.on('connected', function(data) {
+      connectedAddress = data.address;
+      showConnected(data);
+    });
+
+    walletManager.on('disconnected', function() {
+      connectedAddress = null;
+      showDisconnected();
+    });
+
+    function showConnected(data) {
+      var short = data.address.slice(0,6) + '...' + data.address.slice(-4);
+      document.getElementById('walletBanner').style.display    = 'none';
+      document.getElementById('connectedBanner').style.display = 'flex';
+      document.getElementById('balanceBanner').style.display   = 'flex';
+      document.getElementById('connectedLabel').textContent    =
+        data.wallet.charAt(0).toUpperCase() + data.wallet.slice(1) + ' · ' + short;
+
+      // Fetch initial balances
+      updateBalances();
+    }
+
+    function showDisconnected() {
+      document.getElementById('walletBanner').style.display    = 'flex';
+      document.getElementById('connectedBanner').style.display = 'none';
+      document.getElementById('balanceBanner').style.display   = 'none';
+    }
+
+    // Update wallet balances
+    async function updateBalances() {
+      if (!walletManager.isConnected()) return;
+
+      try {
+        var balances = await walletManager.getAllBalances();
+        document.getElementById('balanceSOL').textContent  = balances.sol.toFixed(6);
+        document.getElementById('balanceUSDC').textContent = balances.usdc.toFixed(2);
+        document.getElementById('balanceUSDT').textContent = balances.usdt.toFixed(2);
+      } catch(e) {
+        console.error('Error updating balances:', e);
+      }
+    }
+
+    // Refresh balance button
+    document.getElementById('refreshBalanceBtn').addEventListener('click', updateBalances);
+
+    document.getElementById('disconnectBtn').addEventListener('click', function() {
+      walletManager.disconnect();
+    });
+
+    document.getElementById('bannerConnectBtn').addEventListener('click', function() {
+      window.openWalletModal();
+    });
+
+    // ── SSE live price feed ──────────────────────────────────────────────────
+    (function() {
+      try {
+        var es = new EventSource('/api/stream');
+        es.onmessage = function(e) {
+          try {
+            var d = JSON.parse(e.data);
+            var lp = document.getElementById('livePrice');
+            if (d.currentPrice != null) {
+              lp.textContent = 'Current block price: $' + Number(d.currentPrice).toFixed(6) +
+                '  ·  Blocks sold: ' + Number(d.currentSupply || 0).toLocaleString();
+              lp.style.color = '#e0e0e0';
+            }
+          } catch(err) {}
+        };
+        es.onerror = function() {
+          document.getElementById('livePrice').textContent = 'Live feed unavailable';
+        };
+      } catch(err) {
+        document.getElementById('livePrice').textContent = 'Live feed unavailable';
+      }
+    })();
+
+    // ── Price calculator ─────────────────────────────────────────────────────
+    async function calcPrice() {
+      var blockIdVal  = document.getElementById('blockId').value;
+      var blockId     = parseInt(blockIdVal);
+      var blockCount  = parseInt(document.getElementById('blockCount').value);
+      var result      = document.getElementById('priceResult');
+      var genesisErr  = document.getElementById('genesisError');
+
+      // Reset inline messages
+      genesisErr.style.display = 'none';
+      result.innerHTML = '';
+
+      if (isNaN(blockId) || blockId < 0 || blockId > 9999999999) {
+        result.innerHTML = '<span class="error">Enter a valid block ID (0 – 9,999,999,999)</span>';
+        return;
+      }
+      if (isNaN(blockCount) || blockCount < 1 || blockCount > 1000) {
+        result.innerHTML = '<span class="error">Enter 1 – 1,000 blocks</span>';
+        return;
+      }
+
+      // Genesis guard — inline, no alert()
+      if (blockId < 1000000000) {
+        genesisErr.style.display = 'block';
+        return;
+      }
+
+      result.innerHTML = '<span class="loading">Fetching prices…</span>';
+
+      try {
+        var prices = [];
+        var resp, d;
+        if (blockCount <= 100) {
+          resp   = await fetch('/api/price/range?start=' + blockId + '&count=' + blockCount);
+          d      = await resp.json();
+          prices = d;
+        } else {
+          for (var offset = 0; offset < blockCount; offset += 100) {
+            var chunk = Math.min(100, blockCount - offset);
+            resp   = await fetch('/api/price/range?start=' + (blockId + offset) + '&count=' + chunk);
+            d      = await resp.json();
+            prices = prices.concat(d);
+          }
+        }
+
+        lastPrices   = prices;
+        var subtotal = prices.reduce(function(s, p){ return s + p.price; }, 0);
+        lastSubtotal = subtotal;
+        var fee      = 0.10;
+        var grand    = subtotal + fee;
+
+        var selectedCurrency = document.querySelector('input[name="currency"]:checked').value;
+
+        document.getElementById('sumBlocks').textContent   = blockCount.toLocaleString();
+        document.getElementById('sumPixels').textContent   = (blockCount * 100).toLocaleString();
+        document.getElementById('sumRange').textContent    =
+          '$' + prices[0].price.toFixed(6) + (prices.length > 1 ? ' – $' + prices[prices.length-1].price.toFixed(6) : '');
+        document.getElementById('sumSubtotal').textContent = '$' + subtotal.toFixed(6);
+        document.getElementById('sumTotal').textContent    = '$' + grand.toFixed(6) + ' ' + selectedCurrency;
+        document.getElementById('priceSummary').style.display = 'block';
+
+        document.getElementById('buyBtn').textContent =
+          'Buy ' + blockCount.toLocaleString() + ' Block' + (blockCount > 1 ? 's' : '') +
+          ' — Pay $' + grand.toFixed(6) + ' ' + selectedCurrency;
+
+        result.innerHTML = '<span class="success">Price calculated ✓ — review the summary and click Buy.</span>';
+      } catch(e) {
+        result.innerHTML = '<span class="error">Error fetching price. Try again.</span>';
+      }
+    }
+
+    // Update buy button label when currency changes
+    document.querySelectorAll('input[name="currency"]').forEach(function(radio) {
+      radio.addEventListener('change', function() {
+        if (lastPrices.length > 0) {
+          var grand    = lastSubtotal + 0.10;
+          var blockCount = parseInt(document.getElementById('blockCount').value) || 1;
+          document.getElementById('sumTotal').textContent = '$' + grand.toFixed(6) + ' ' + this.value;
+          document.getElementById('buyBtn').textContent  =
+            'Buy ' + blockCount.toLocaleString() + ' Block' + (blockCount > 1 ? 's' : '') +
+            ' — Pay $' + grand.toFixed(6) + ' ' + this.value;
+        }
+      });
+    });
+  </script>
+
+  <!-- Solana payment — ESM module -->
+  <script type="module">
+    import { fetchJupiterPrices, executePayment } from '../js/solanaPayment.js';
+
+    // Expose executePayment to the global buyBlocks() function
+    window._executePayment    = executePayment;
+    window._fetchJupiterPrices = fetchJupiterPrices;
+
+    // Fetch network config
+    async function fetchConfig() {
+      try {
+        var res = await fetch('/api/config');
+        if (res.ok) {
+          var cfg = await res.json();
+          window.SOLANA_NETWORK = cfg.solanaNetwork;
+        }
+      } catch(e) {}
+    }
+    fetchConfig();
+
+    // ── Buy flow ─────────────────────────────────────────────────────────────
+    window.buyBlocks = async function() {
+      var blockId    = parseInt(document.getElementById('blockId').value);
+      var blockCount = parseInt(document.getElementById('blockCount').value);
+      var txSuccess  = document.getElementById('txSuccess');
+      var txError    = document.getElementById('txError');
+      var postWarn   = document.getElementById('postWarn');
+      var spinner    = document.getElementById('spinner');
+      var btn        = document.getElementById('buyBtn');
+
+      // Reset result panels
+      txSuccess.style.display = 'none';
+      txError.style.display   = 'none';
+      postWarn.style.display  = 'none';
+
+      if (!connectedAddress) {
+        window.openWalletModal();
+        return;
+      }
+
+      if (!lastPrices || !lastPrices.length) {
+        txError.textContent  = 'Calculate price first.';
+        txError.style.display = 'block';
+        return;
+      }
+
+      // Genesis guard (belt + suspenders)
+      if (isNaN(blockId) || blockId < 1000000000) {
+        document.getElementById('genesisError').style.display = 'block';
+        return;
+      }
+
+      var selectedCurrency = document.querySelector('input[name="currency"]:checked').value;
+      var totalUsd         = lastSubtotal + 0.10;
+
+      // Detect wallet object
+      var wallet = window.solana || (window.phantom && window.phantom.solana) || null;
+      if (!wallet || !wallet.publicKey) {
+        txError.textContent  = 'Solana wallet not found. Please connect a Phantom-compatible wallet.';
+        txError.style.display = 'block';
+        return;
+      }
+
+      btn.disabled    = true;
+      spinner.style.display = 'block';
+
+      var sig = null;
+      try {
+        var result = await window._executePayment(wallet, selectedCurrency, totalUsd);
+        sig = result.signature;
+      } catch (err) {
+        spinner.style.display = 'none';
+        btn.disabled           = false;
+        txError.textContent    = err.message || 'Transaction failed.';
+        txError.style.display  = 'block';
+        return;
+      }
+
+      spinner.style.display = 'none';
+      btn.disabled           = false;
+
+      // Calculate currency amount spent
+      var currencySpent = 0;
+      try {
+        var prices = await window._fetchJupiterPrices();
+        if (selectedCurrency === 'SOL' && prices && prices.SOL && prices.SOL.price) {
+          currencySpent = totalUsd / prices.SOL.price;
+        } else if (selectedCurrency === 'USDC' || selectedCurrency === 'USDT') {
+          currencySpent = totalUsd; // Stablecoins are 1:1 with USD
+        }
+      } catch(e) {}
+
+      // Record purchase in backend
+      try {
+        var purchaseRes = await fetch('/api/purchase', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            walletAddress: connectedAddress,
+            blockId: blockId,
+            blockCount: blockCount,
+            network: SOLANA_NETWORK,
+            txSignature: sig
+          })
+        });
+
+        if (purchaseRes.ok) {
+          var purchaseData = await purchaseRes.json();
+          console.log('Purchase recorded:', purchaseData);
+        }
+      } catch(e) {
+        console.error('Failed to record purchase:', e);
+      }
+
+      // Show inline success with details
+      txSuccess.innerHTML =
+        '✓ Transaction confirmed!<br>' +
+        '<span style="color:#888;font-size:0.9em;">' +
+        selectedCurrency + ' spent: ' + currencySpent.toFixed(6) + ' ' + selectedCurrency + '<br>' +
+        'Pixels purchased: ' + (blockCount * 100).toLocaleString() + '<br>' +
+        '</span><br>' +
+        '<a href="https://solscan.io/tx/' + sig + '" target="_blank" rel="noopener noreferrer">View on Solscan ↗</a>';
+      txSuccess.style.display = 'block';
+
+      // Refresh balances after purchase
+      updateBalances();
+
+      // Record purchase in backend (non-blocking — on-chain tx already done)
+      try {
+        var network = 'solana-' + (result.network || 'devnet');
+        var resp    = await fetch('/api/purchase', {
+          method:  'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body:    JSON.stringify({
+            walletAddress: connectedAddress,
+            blockId:       blockId,
+            blockCount:    blockCount,
+            network:       network,
+            txSignature:   sig
+          })
+        });
+        var data = await resp.json();
+        if (!data.success) throw new Error(data.error || 'Server rejected purchase');
+
+        // Persist to localStorage for PnL tracking
+        var key    = 'spice_ledger_' + connectedAddress;
+        var stored = localStorage.getItem(key);
+        var ud     = stored ? JSON.parse(stored) : { address: connectedAddress, blocks: [], activity: [] };
+        if (ud.blocks.length > 0 && typeof ud.blocks[0] === 'number') {
+          ud.blocks = ud.blocks.map(function(n){
+            return { blockId: n, purchasePrice: 9.999e-10 * n + 0.001, timestamp: Date.now() };
+          });
+        }
+        lastPrices.forEach(function(p){
+          ud.blocks.push({ blockId: p.blockId, purchasePrice: p.price, timestamp: Date.now() });
+        });
+        ud.activity.unshift({
+          date:    new Date().toISOString(),
+          action:  'Purchase',
+          details: blockCount + ' block' + (blockCount > 1 ? 's' : '') + ' from #' + blockId.toLocaleString()
+        });
+        localStorage.setItem(key, JSON.stringify(ud));
+
+      } catch(postErr) {
+        // On-chain succeeded — warn but do not throw
+        postWarn.textContent  = '⚠️ On-chain transaction succeeded but server record failed: ' + (postErr.message || 'unknown error');
+        postWarn.style.display = 'block';
+      }
+
+      // Reset calculator state
+      lastPrices = [];
+      lastSubtotal = 0;
+      document.getElementById('priceSummary').style.display = 'none';
+      document.getElementById('priceResult').innerHTML = '';
+    };
+  </script>
+</body>
+</html>

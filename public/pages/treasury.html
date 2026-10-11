@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Spatial Ledger Protocol — Treasury</title>
+  <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body><div class="stars-a"></div><div class="stars-b"></div>
+  <nav>
+    <div class="container">
+      <a href="/index.html" style="display:flex;align-items:center;gap:8px;text-decoration:none;">
+      <img src="/img/logo.jpg" alt="SLP" style="width:32px;height:32px;border-radius:7px;object-fit:cover;">
+      <span class="logo">Spatial Ledger Protocol</span>
+    </a>
+      <ul>
+        <li><a href="../index.html">Home</a></li>
+        <li><a href="purchase.html">Purchase</a></li>
+        <li><a href="grid.html">Grid View</a></li>
+        <li><a href="treasury.html">Treasury</a></li>
+        <li><a href="network.html">Network</a></li>
+        <li><a href="dashboard.html">Dashboard</a></li>
+        <li><a href="profile.html">Profile</a></li>
+        <li><a href="swap.html">Swap</a></li>
+        <li><button class="wallet-button" id="navWalletBtn" onclick="window.openWalletModal()">Connect Wallet</button></li>
+      </ul>
+    </div>
+  </nav>
+
+  <div class="container">
+    <h1 style="text-align: center; margin-bottom: 30px;">Treasury & Vesting</h1>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <h3>Total Allocation</h3>
+        <div class="value" id="totalAllocation">Loading...</div>
+        <div class="label">Dev treasury blocks</div>
+      </div>
+      <div class="stat-card">
+        <h3>Current Balance</h3>
+        <div class="value" id="treasuryBalance">Loading...</div>
+        <div class="label">Blocks remaining</div>
+      </div>
+      <div class="stat-card">
+        <h3>Collected Fees</h3>
+        <div class="value" id="collectedFees">Loading...</div>
+        <div class="label">USDC collected</div>
+      </div>
+      <div class="stat-card">
+        <h3>Cliff Period</h3>
+        <div class="value">12 Months</div>
+        <div class="label">No releases during cliff</div>
+      </div>
+      <div class="stat-card">
+        <h3>Vesting Duration</h3>
+        <div class="value">36 Months</div>
+        <div class="label">After cliff period</div>
+      </div>
+      <div class="stat-card">
+        <h3>Fee Rate</h3>
+        <div class="value">$0.10</div>
+        <div class="label">Flat fee per transaction</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Treasury Allocation</h2>
+      <p style="color: #888; line-height: 1.6; margin-bottom: 15px;">
+        1 billion blocks (10% of total supply) are allocated to the dev treasury at genesis.
+        These blocks are locked in a smart-contract vault with a structured release schedule
+        to prevent market dilution and build long-term trust.
+      </p>
+      <div style="background: rgba(0, 0, 0, 0.3); padding: 15px; border-radius: 8px;">
+        <p><strong>Total Supply:</strong> 10,000,000,000 blocks</p>
+        <p><strong>Treasury Allocation:</strong> 1,000,000,000 blocks (10%)</p>
+        <p><strong>Public Allocation:</strong> 9,000,000,000 blocks (90%)</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Vesting Schedule</h2>
+      <div style="margin: 20px 0;">
+        <p><strong>Phase 1 - Cliff Period (12 months):</strong></p>
+        <p style="color: #888; margin-bottom: 15px;">
+          Zero token liquidity is released during the initial dev and launch phases.
+          This prevents immediate selling and ensures long-term commitment.
+        </p>
+        <p><strong>Phase 2 - Linear Vesting (36 months):</strong></p>
+        <p style="color: #888;">
+          Following the cliff, blocks vest linearly over 36 months, protecting against
+          sudden token influxes and ensuring gradual, controlled release.
+        </p>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Automated Micro-Fee Collection</h2>
+      <p style="color: #888; line-height: 1.6; margin-bottom: 15px;">
+        The platform funds ongoing development through an automated micro-fee built directly
+        into smart contract logic. Every block transaction incurs a flat service fee of
+        $0.10 USD, processed in stablecoins (USDC or USDT).
+      </p>
+      <div style="background: rgba(0, 0, 0, 0.3); padding: 15px; border-radius: 8px;">
+        <p><strong>Fee per Transaction:</strong> $0.10 USD (flat fee)</p>
+        <p><strong>Fee Currency:</strong> USDC / USDT</p>
+        <p><strong>Destination:</strong> Smart-contract vault</p>
+        <p><strong>Purpose:</strong> Ongoing development funding</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Automatic Backend Processes</h2>
+      <p style="color: #888; line-height: 1.6; margin-bottom: 15px;">
+        All vesting, cliff period enforcement, and fee collection are handled automatically
+        by the backend smart contracts. No manual intervention is required.
+      </p>
+      <div style="background: rgba(0, 0, 0, 0.3); padding: 15px; border-radius: 8px;">
+        <p><strong>Vesting:</strong> Automatic linear release after 12-month cliff</p>
+        <p><strong>Fee Collection:</strong> Automatic $0.10 fee per transaction</p>
+        <p><strong>Execution:</strong> Smart contract runs in background</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Current Vesting Status</h2>
+      <div id="vestingStatus">
+        <p style="color: #888;">Loading vesting status...</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    async function loadTreasury() {
+      try {
+        const response = await fetch('/api/treasury');
+        const data = await response.json();
+        document.getElementById('totalAllocation').textContent = data.totalAllocation.toLocaleString();
+        document.getElementById('treasuryBalance').textContent = data.currentBalance.toLocaleString();
+        document.getElementById('collectedFees').textContent = data.collectedFees.toFixed(4);
+      } catch (error) {
+        document.getElementById('totalAllocation').textContent = '1,000,000,000';
+        document.getElementById('treasuryBalance').textContent = '1,000,000,000';
+        document.getElementById('collectedFees').textContent = '0.0000';
+      }
+    }
+
+    async function loadVestingStatus() {
+      try {
+        const response = await fetch('/api/vesting-status');
+        const data = await response.json();
+        
+        const statusDiv = document.getElementById('vestingStatus');
+        
+        if (data.phase === 'cliff') {
+          statusDiv.innerHTML = `
+            <div style="background: rgba(255, 71, 87, 0.1); padding: 15px; border-radius: 8px; border-left: 4px solid #ff4757;">
+              <p style="color: #ff4757; font-weight: bold; margin-bottom: 10px;">Cliff Period Active</p>
+              <p>Months elapsed: ${data.monthsElapsed}</p>
+              <p>Months until vesting begins: ${data.monthsRemaining}</p>
+              <p style="color: #888; margin-top: 10px;">${data.message}</p>
+            </div>
+          `;
+        } else {
+          statusDiv.innerHTML = `
+            <div style="background: rgba(0, 255, 136, 0.1); padding: 15px; border-radius: 8px; border-left: 4px solid #00ff88;">
+              <p style="color: #00ff88; font-weight: bold; margin-bottom: 10px;">Vesting Active</p>
+              <p>Months since launch: ${data.monthsElapsed}</p>
+              <p>Months after cliff: ${data.monthsAfterCliff}</p>
+              <p>Vesting progress: ${data.vestingProgress}</p>
+              <p>Max releasable: ${data.maxReleasable.toLocaleString()} blocks</p>
+              <p style="color: #888; margin-top: 10px;">${data.message}</p>
+            </div>
+          `;
+        }
+      } catch (error) {
+        document.getElementById('vestingStatus').innerHTML = '<p style="color: #888;">Error loading vesting status</p>';
+      }
+    }
+
+    // Initialize
+    loadTreasury();
+    loadVestingStatus();
+  </script>
+  <script src="../js/wallet.js"></script>
+  <script src="../js/walletModal.js?v=202610111259"></script>
+</body>
+</html>

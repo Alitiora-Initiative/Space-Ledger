@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <rect width="128" height="128" rx="16" fill="white"/>
+  <!-- Shield body -->
+  <polygon points="64,8 104,28 104,72 64,120 24,72 24,28" fill="#f0591c"/>
+  <!-- Inner face area -->
+  <polygon points="64,30 84,40 82,65 64,80 46,65 44,40" fill="white"/>
+  <!-- Mane / top decoration -->
+  <path d="M44,40 L36,24 L64,30 L92,24 L84,40 Z" fill="#b33f10"/>
+  <!-- Left eye -->
+  <circle cx="54" cy="52" r="4" fill="#f0591c"/>
+  <!-- Right eye -->
+  <circle cx="74" cy="52" r="4" fill="#f0591c"/>
+  <!-- Nose -->
+  <polygon points="64,58 60,65 68,65" fill="#f0591c"/>
+  <!-- Mouth -->
+  <path d="M55,68 Q64,74 73,68" stroke="#f0591c" stroke-width="2.5" fill="none"/>
+</svg>

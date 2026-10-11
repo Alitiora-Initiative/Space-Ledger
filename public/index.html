@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Spatial Ledger Protocol — Home</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <div class="stars-a"></div>
+  <div class="stars-b"></div>
+  <nav>
+    <div class="container">
+      <a href="/index.html" style="display:flex;align-items:center;gap:8px;text-decoration:none;">
+      <img src="/img/logo.jpg" alt="SLP" style="width:32px;height:32px;border-radius:7px;object-fit:cover;">
+      <span class="logo">Spatial Ledger Protocol</span>
+    </a>
+      <ul>
+        <li><a href="index.html">Home</a></li>
+        <li><a href="pages/purchase.html">Purchase</a></li>
+        <li><a href="pages/grid.html">Grid View</a></li>
+        <li><a href="pages/treasury.html">Treasury</a></li>
+        <li><a href="pages/network.html">Network</a></li>
+        <li><a href="pages/dashboard.html">Dashboard</a></li>
+        <li><a href="pages/profile.html">Profile</a></li>
+        <li><a href="pages/swap.html">Swap</a></li>
+        <li><button class="wallet-button" id="navWalletBtn" onclick="window.openWalletModal()">Connect Wallet</button></li>
+      </ul>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="hero">
+      <h1>Spatial Ledger Protocol</h1>
+      <p>1 Trillion Pixels · 10 Billion Blocks · Own a Piece of the Digital Universe</p>
+      <p>Like the Million Dollar Homepage — at trillion scale</p>
+      <br>
+      <a href="pages/purchase.html" class="button">Buy Your Pixels Now</a>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <h3>Total Pixels</h3>
+        <div class="value">1 Trillion</div>
+        <div class="label">1,000,000,000,000 pixels</div>
+      </div>
+      <div class="stat-card">
+        <h3>Total Blocks</h3>
+        <div class="value">10 Billion</div>
+        <div class="label">10,000,000,000 blocks</div>
+      </div>
+      <div class="stat-card">
+        <h3>Pixels per Block</h3>
+        <div class="value">100</div>
+        <div class="label">10 × 10 grid</div>
+      </div>
+      <div class="stat-card">
+        <h3>Starting Price</h3>
+        <div class="value">$0.001</div>
+        <div class="label">Per block</div>
+      </div>
+      <div class="stat-card">
+        <h3>Target Price</h3>
+        <div class="value">$1,000.00</div>
+        <div class="label">Final block price</div>
+      </div>
+      <div class="stat-card">
+        <h3>Available Blocks</h3>
+        <div class="value" id="availableBlocks">Loading...</div>
+        <div class="label">Remaining for purchase</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Own Your Pixels</h2>
+      <p style="color: #888; line-height: 1.6;">
+        Purchase pixel blocks on a massive 1 trillion pixel canvas. Each block contains 100 pixels (10×10 grid).
+        As more blocks are purchased, the price increases according to the bonding curve - rewarding early adopters.
+        Your pixels are permanently recorded on the blockchain.
+      </p>
+    </div>
+
+    <div class="card">
+      <h2>Bonding Curve Pricing</h2>
+      <div class="formula">
+        P(x) = (9.99999999 × 10⁻⁸)x + 0.001
+      </div>
+      <p style="color: #888; line-height: 1.6;">
+        The price of each block follows a linear bonding curve, starting at $0.001 and reaching $1,000.00 for the final block.
+        As more blocks are purchased, the price increases linearly, rewarding early adopters with massive upside potential.
+      </p>
+    </div>
+
+    <div class="card">
+      <h2>Quick Actions</h2>
+      <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+        <a href="pages/purchase.html" class="button">Purchase Blocks</a>
+        <a href="pages/grid.html" class="button">View Grid</a>
+        <a href="pages/treasury.html" class="button">Treasury Info</a>
+        <a href="pages/network.html" class="button">Network Config</a>
+        <a href="pages/profile.html" class="button">View Profile</a>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/wallet.js"></script>
+  <script src="js/walletModal.js?v=202610111259"></script>
+  <script>
+    async function connectWallet() {
+      window.openWalletModal();
+    }
+  </script>
+
+  <script>
+    async function loadStats() {
+      try {
+        const response = await fetch('/api/supply');
+        const data = await response.json();
+        const available = data.totalSupply - data.currentSupply;
+        document.getElementById('availableBlocks').textContent = available.toLocaleString();
+      } catch (error) {
+        document.getElementById('availableBlocks').textContent = '10,000,000,000';
+      }
+    }
+    loadStats();
+  </script>
+
+</body>
+</html>

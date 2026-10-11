@@ -1,0 +1,30 @@
+# Dependencies
+node_modules/
+
+# Environment — NEVER commit secrets
+.env
+
+# Build outputs
+dist/
+.next/
+out/
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Vercel
+.vercel/
+
+# Runtime state (auto-created by server — do not commit)
+data/state.json
+# Test artifacts
+.agents/
+
+# IDE
+.vscode/
+.idea/
