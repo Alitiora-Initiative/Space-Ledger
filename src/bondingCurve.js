@@ -8,6 +8,7 @@ const TOTAL_SUPPLY = 10000000000; // 10 billion units
 const STARTING_PRICE = 0.001; // Starting price in USD
 const TARGET_PRICE = 10.00; // Target final price in USD
 const SLOPE = (TARGET_PRICE - STARTING_PRICE) / TOTAL_SUPPLY;
+const GENESIS_END = 999_999_999; // blocks 0–999,999,999 are dev/genesis allocation
 
 let currentSupply = 0;
 
@@ -49,6 +50,7 @@ module.exports = {
   STARTING_PRICE,
   TARGET_PRICE,
   SLOPE,
+  GENESIS_END,
   calculatePrice,
   getCurrentSupply,
   updateSupply,
