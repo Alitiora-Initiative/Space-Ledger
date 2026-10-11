@@ -90,7 +90,7 @@
     <div class="card">
       <h2>10 × 10 Pixel Grid</h2>
       <p style="color:#888;margin-bottom:15px;">
-        Each block preview contains 100 cells in a 10×10 grid. Prices are model estimates; ownership is unverified until an ownership program and indexer are deployed.
+        Each block preview contains 100 cells in a 10×10 grid. Prices are model estimates; ownership status is checked against Devnet receipts.
       </p>
 
       <!-- Zoom controls -->
@@ -195,11 +195,18 @@
         if (!priceRes.ok) throw new Error(priceData.error || 'Could not load this estimate.');
 
         const blockPrice = priceData.price;
+        let ownership = { verified: false };
+        try {
+          const ownershipResponse = await fetch('/api/block-owner/' + encodeURIComponent(currentBlockId));
+          ownership = await ownershipResponse.json();
+          if (!ownershipResponse.ok) ownership = { verified: false };
+        } catch { ownership = { verified: false }; }
+        const ownershipLabel = ownership.verified ? (ownership.owner ? 'owned by ' + ownership.owner : 'available') : 'unverified';
 
         document.getElementById('currentBlockDisplay').textContent = blockLabel;
         document.getElementById('blockPriceDisplay').textContent   = '$' + blockPrice.toFixed(6);
 
-        blockInfo.textContent = 'Block ' + blockLabel + ' · estimated model price $' + blockPrice.toFixed(6) + ' · ownership unverified';
+        blockInfo.textContent = 'Block ' + blockLabel + ' · estimated model price $' + blockPrice.toFixed(6) + ' · ' + ownershipLabel;
 
         const tooltip = document.getElementById('tooltip');
 
@@ -211,10 +218,10 @@
 
             const cell = document.createElement('div');
 
-            cell.className = 'grid-cell unverified';
+            cell.className = 'grid-cell ' + (ownership.verified ? (ownership.owner ? 'owned' : 'available') : 'unverified');
             cell.textContent = pixelIndex;
 
-            cell.title = 'Ownership unverified · Pixel: ' + pixelIndex + ' · Global ID: ' + globalPixelId.toLocaleString();
+            cell.title = 'Ownership ' + ownershipLabel + ' · Pixel: ' + pixelIndex + ' · Global ID: ' + globalPixelId.toLocaleString();
 
             // Click handler
             cell.onclick = (function(px, gid, r, c, bp) {
@@ -234,7 +241,7 @@
                 'Pixel: ' + pixelIndex + '\n' +
                 'Global ID: ' + globalPixelId.toLocaleString() + '\n' +
                 'Estimated pixel price: $' + (blockPrice / 100).toFixed(8) + '\n' +
-                'Ownership: unverified';
+                'Ownership: ' + ownershipLabel;
             });
             cell.addEventListener('mouseleave', function() {
               tooltip.style.display = 'none';

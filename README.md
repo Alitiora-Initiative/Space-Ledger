@@ -1,17 +1,31 @@
 # Space Ledger
 
-Space Ledger is a visual prototype for a shared canvas of 1 trillion pixels, arranged as 10 billion blocks of 100 pixels. Its published linear price formula is available as a read-only estimate. Purchases, ownership, treasury vesting, and resales are deliberately disabled until a production ownership program and verified indexer are deployed.
+Space Ledger is a shared digital canvas made of 10 billion numbered blocks, each containing 100 pixels. Visitors can explore the grid, connect a Solana wallet, and test block purchases settled on Solana Devnet.
 
-The concept draws inspiration from [The Million Dollar Homepage](https://www.webdesignmuseum.org/web-design-history/million-dollar-homepage-2005), launched by Alex Tew in **2005**. Space Ledger is an independent project and is not affiliated with the original.
+The concept takes inspiration from [The Million Dollar Homepage](https://www.webdesignmuseum.org/web-design-history/million-dollar-homepage-2005), Alex Tew's pixel advertising page launched in **2005**. Space Ledger is an independent project and is not affiliated with it.
 
-## Current features
+## What is live on Devnet
 
-- Responsive static pages with a high-DPI animated galaxy canvas and a persistent navigation bar.
-- Phantom and MetaMask wallet identity connections. The app does not request signatures or send wallet transactions.
-- A read-only estimator for the proposed bonding curve and a grid preview whose ownership state is explicitly unverified.
-- Compact block labels: `000A`–`999A`, then `000B`–`999B`, continuing through `Z`, `AA`, and onward. Numeric IDs remain the canonical on-chain positions.
-- A fixed-list public EVM RPC explorer. It accepts allowlisted read-only methods and rejects transaction methods.
-- An Express server for static pages, estimate endpoints, and deployment-status responses.
+- Phantom wallet purchase approvals for Devnet SOL and the Devnet USDC mint.
+- An Anchor Solana program that accepts payment, records a purchase receipt, and advances the sold-block supply atomically.
+- SOL-to-USD conversion checked on-chain against Pyth's fully verified SOL/USD price feed. Quotes reject stale or low-confidence prices.
+- A fixed receiving wallet, `EDZjEbRAtqyC8z6ta6PYHX161Xynt13tWpd7orKERkbz`, for purchase proceeds.
+- Receipt-based ownership lookups, a live supply count, and wallet portfolio display.
+- Compact labels such as `000A`–`999A`, then `000B`–`999B`, continuing through `Z`, `AA`, and onward. Numeric block numbers are canonical.
+
+The program is deployed at `EbP7vsnMXPonTfriPUFynco69d69JiXpWbKnwVmz8sgG` on Devnet. Its upgrade authority is the receiving wallet above. The app is pinned to Devnet; changing an environment variable cannot switch it to mainnet.
+
+The displayed curve starts at $0.001 per block and rises linearly toward $1,000. A $0.10 protocol fee is added to each purchase. Network transaction fees and any rent for new on-chain accounts are separate. Devnet tokens have no real-world value.
+
+## Try a purchase
+
+1. Install Phantom and switch its network to **Devnet**.
+2. Fund the connected wallet with Devnet SOL using the [Solana faucet](https://faucet.solana.com/). For USDC purchases, obtain tokens for the Devnet USDC mint `4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU` from a Devnet token faucet.
+3. Open Pricing, select SOL or USDC, enter a budget, and request a quote.
+4. Review the network and payment amounts in Phantom, then approve the transaction. The app records ownership only after the confirmed on-chain receipt is found.
+5. Open Profile with the same wallet connected to see its verified purchase ranges.
+
+Block labels are a convenience for entering positions; the purchase screen's quote determines the contiguous range available at the current supply. A receipt records the original buyer and range. Transfer/resale support is not implemented, so do not treat receipts as transferable NFTs.
 
 ## Run locally
 
@@ -25,24 +39,26 @@ npm start
 
 Open [http://localhost:3000](http://localhost:3000). On macOS or Linux, use `cp .env.example .env` instead of `copy`.
 
-`FEE_WALLET_ADDRESS` is the public receiving address supplied by the project owner. It is configuration for future settlement work; the current app does not route payments to it. Never put private keys in the repository or browser.
+Set `SOLANA_PROGRAM_ID=EbP7vsnMXPonTfriPUFynco69d69JiXpWbKnwVmz8sgG` and the public `FEE_WALLET_ADDRESS` in `.env` to enable the on-chain API locally. The fee wallet is public configuration, never a private key. Never place seed phrases or private keys in this repository or in browser code.
 
 ## Checks
 
 ```sh
 npm test
-npm run compile
+cargo test --manifest-path programs/space-ledger/Cargo.toml
+cargo build-sbf --manifest-path programs/space-ledger/Cargo.toml
 ```
 
-The tests cover static pages, read-only API responses, and JavaScript syntax. `npm run compile` compiles the draft Solidity contract. A successful compile does not mean that the contract has been deployed, audited, or connected to the website.
+The JavaScript tests cover API responses, block-label conversion, quote math, Pyth account validation, and browser-script syntax. The Rust unit test covers fixed-point curve and SOL conversion math. A separate Devnet smoke transaction has verified deployment, payment, supply advancement, and a purchase receipt. These checks are not a security audit.
 
-## Not live yet
+## Not enabled
 
-- No ownership contract or Solana program is deployed. The Solidity source is an unconnected draft and does not implement a Solana program.
-- Purchase and resale APIs return HTTP 503. The app does not accept a payment transaction signature or claim ownership after a wallet transfer.
-- Holdings, activity, supply sold, fees collected, and vesting progress are not reported as live data.
-- The configured wallet address does not by itself enable payment collection or settlement.
-- Pricing and treasury parameters describe a model, not a quote, asset, or promise of returns.
+- Mainnet payments and any use of real funds.
+- Swaps, secondary-market transfers/resales, NFTs, vesting, and yield.
+- Other purchase tokens beyond Devnet SOL and the specified Devnet USDC mint.
+- An external archival indexer; current portfolio reads scan program receipts from Solana RPC.
+
+The Devnet flow is for testing wallet approvals and receipt settlement. It is not financial advice or a promise of investment returns.
 
 ## License
 

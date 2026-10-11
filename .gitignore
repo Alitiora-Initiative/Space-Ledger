@@ -10,6 +10,7 @@ dist/
 out/
 artifacts/
 cache/
+target/
 typechain-types/
 
 # Logs

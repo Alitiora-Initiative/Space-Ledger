@@ -28,7 +28,8 @@
     </section>
     <section class="card">
       <h2>Verified holdings</h2>
-      <p class="feature-status">Unavailable. No on-chain ownership program or verified indexer is deployed, so this profile does not show local or estimated holdings.</p>
+      <p class="feature-status" id="holdingsStatus">Connect your wallet to load verified Devnet purchases.</p>
+      <div id="holdingsList" aria-live="polite"></div>
     </section>
   </main>
   <script src="../js/wallet.js"></script>
@@ -37,14 +38,35 @@
     const profileAddress = document.getElementById('profileAddress');
     const copyButton = document.getElementById('copyAddress');
     const feedback = document.getElementById('profileFeedback');
-    function showWallet(data) {
+    async function showWallet(data) {
       profileAddress.textContent = `${data.wallet} · ${data.address}`;
       copyButton.hidden = false;
       document.getElementById('connectWallet').hidden = true;
+      await loadHoldings(data.address);
+    }
+    async function loadHoldings(address) {
+      const status = document.getElementById('holdingsStatus');
+      const list = document.getElementById('holdingsList');
+      status.textContent = 'Loading on-chain Devnet receipts…';
+      list.replaceChildren();
+      try {
+        const response = await fetch(`/api/portfolio/${encodeURIComponent(address)}`);
+        const data = await response.json();
+        if (!response.ok || !data.verified) throw new Error(data.error || 'Ownership is not verified yet.');
+        status.textContent = `${data.blocksOwned.toLocaleString()} blocks across ${data.purchaseCount.toLocaleString()} verified purchase(s) on Solana Devnet.`;
+        for (const range of data.ranges) {
+          const item = document.createElement('p');
+          item.textContent = `${range.startLabel}–${range.endLabel} · ${range.blockCount.toLocaleString()} blocks · ${range.asset.toUpperCase()} · receipt ${range.receipt}`;
+          list.appendChild(item);
+        }
+        if (!data.ranges.length) status.textContent = 'No verified Devnet purchases found for this wallet.';
+      } catch (error) { status.textContent = error.message || 'Could not load verified holdings.'; }
     }
     walletManager.on('connected', showWallet);
     walletManager.on('disconnected', () => {
       profileAddress.textContent = 'No wallet connected.';
+      document.getElementById('holdingsStatus').textContent = 'Connect your wallet to load verified Devnet purchases.';
+      document.getElementById('holdingsList').replaceChildren();
       copyButton.hidden = true;
       document.getElementById('connectWallet').hidden = false;
     });

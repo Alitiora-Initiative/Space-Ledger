@@ -16,21 +16,33 @@
     </ul>
   </div></nav>
   <main class="container">
-    <header class="hero"><h1>Treasury & Vesting</h1><p>Transparency page for the proposed treasury design.</p></header>
+    <header class="hero"><h1>Treasury & Vesting</h1><p>Devnet payment destination and on-chain balances. Vesting is not enabled.</p></header>
     <section class="card">
-      <h2 id="treasuryStatus">Not deployed</h2>
-      <p class="feature-status">The treasury allocation, vesting schedule, and fee routing shown in early drafts are proposals only. There is no deployed contract to lock funds, collect fees, or release tokens. No vesting progress or balance is reported as fact.</p>
+      <h2 id="treasuryStatus">Checking Devnet</h2>
+      <p class="feature-status" id="treasuryDescription" aria-live="polite">Loading the configured Devnet treasury and verified balances…</p>
     </section>
     <section class="card">
-      <h2>Proposed parameters</h2>
-      <p>Draft documents describe a 12-month cliff and linear vesting over 36 months. These values are not enforced on-chain and should not be treated as an active schedule.</p>
+      <h2>Vesting status</h2>
+      <p>No vesting contract or release schedule is active. Purchases transfer their payment to the fixed treasury wallet; Devnet SOL/USDC has no real-world value.</p>
     </section>
     <section class="card">
       <h2>Payment destination configuration</h2>
-      <p>The backend has a wallet destination configured for future use. It does not make purchases, fee collection, or withdrawals active. The app will not request a wallet transaction while ownership and settlement remain undeployed.</p>
+      <p id="treasuryBalance">Treasury balances are read from Solana Devnet.</p>
     </section>
   </main>
   <script src="../js/wallet.js"></script>
   <script src="../js/walletModal.js"></script>
+  <script>
+    fetch('/api/treasury').then(async response => {
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Treasury status unavailable.');
+      document.getElementById('treasuryStatus').textContent = data.verified ? 'Program live on Solana Devnet' : 'Devnet program deployed; awaiting initialization';
+      document.getElementById('treasuryDescription').textContent = `Fixed receiving wallet: ${data.walletAddress}. Program: ${data.contractAddress}.`;
+      document.getElementById('treasuryBalance').textContent = `Treasury balance: ${data.treasuryBalanceSol} Devnet SOL and ${data.treasuryBalanceUsdc} Devnet USDC.`;
+    }).catch(error => {
+      document.getElementById('treasuryStatus').textContent = 'Devnet status unavailable';
+      document.getElementById('treasuryDescription').textContent = error.message;
+    });
+  </script>
 </body>
 </html>

@@ -29,12 +29,13 @@
     </section>
     <section class="card">
       <h2>Holdings and activity</h2>
-      <p class="feature-status">No ownership contract or verified indexer is deployed. This dashboard will not invent block balances, portfolio values, profit/loss, or activity history.</p>
+      <p class="feature-status" id="dashboardHoldingsStatus">Connect your wallet to read its confirmed Devnet purchase receipts.</p>
+      <div id="dashboardHoldings"></div>
     </section>
     <section class="card">
       <h2>Available now</h2>
-      <p>Connect Phantom or MetaMask to identify your wallet. Explore the proposed pricing formula or browse a pixel grid preview. Wallet connection alone does not create ownership.</p>
-      <p style="margin-top:18px;"><a class="button" href="purchase.html">Open price estimator</a> <a class="button" href="grid.html">Browse the grid</a></p>
+      <p>Use Phantom on Solana Devnet to approve purchases. Resales and vesting are not enabled; wallet connection alone does not create ownership.</p>
+      <p style="margin-top:18px;"><a class="button" href="purchase.html">Buy on Devnet</a> <a class="button" href="grid.html">Browse the grid</a></p>
     </section>
   </main>
   <script src="../js/wallet.js"></script>
@@ -44,14 +45,33 @@
     const feedback = document.getElementById('walletFeedback');
     const disconnect = document.getElementById('disconnectWallet');
     const copy = document.getElementById('copyWallet');
-    walletManager.on('connected', ({ wallet, address: value }) => {
+    async function showDashboardWallet({ wallet, address: value }) {
       address.textContent = `${wallet} · ${value}`;
       disconnect.hidden = false;
       copy.hidden = false;
       document.getElementById('connectWallet').hidden = true;
-    });
+      const status = document.getElementById('dashboardHoldingsStatus');
+      const list = document.getElementById('dashboardHoldings');
+      status.textContent = 'Loading confirmed Devnet receipts…';
+      list.replaceChildren();
+      try {
+        const response = await fetch(`/api/portfolio/${encodeURIComponent(value)}`);
+        const data = await response.json();
+        if (!response.ok || !data.verified) throw new Error(data.error || 'Holdings are not available.');
+        status.textContent = `${data.blocksOwned.toLocaleString()} blocks in ${data.purchaseCount.toLocaleString()} confirmed purchase(s).`;
+        for (const range of data.ranges) {
+          const item = document.createElement('p');
+          item.textContent = `${range.startLabel}–${range.endLabel} · ${range.blockCount.toLocaleString()} blocks · ${range.asset.toUpperCase()}`;
+          list.appendChild(item);
+        }
+        if (!data.ranges.length) status.textContent = 'No confirmed Devnet purchases for this wallet.';
+      } catch (error) { status.textContent = error.message || 'Could not load wallet receipts.'; }
+    }
+    walletManager.on('connected', showDashboardWallet);
     walletManager.on('disconnected', () => {
       address.textContent = 'Not connected';
+      document.getElementById('dashboardHoldingsStatus').textContent = 'Connect your wallet to read its confirmed Devnet purchase receipts.';
+      document.getElementById('dashboardHoldings').replaceChildren();
       disconnect.hidden = true;
       copy.hidden = true;
       document.getElementById('connectWallet').hidden = false;
@@ -61,7 +81,7 @@
       try { await navigator.clipboard.writeText(walletManager.currentAddress); feedback.textContent = 'Address copied.'; }
       catch { feedback.textContent = 'Could not copy the address in this browser.'; }
     });
-    if (walletManager.isConnected()) walletManager.emit('connected', { wallet: walletManager.currentWallet, address: walletManager.currentAddress });
+    if (walletManager.isConnected()) showDashboardWallet({ wallet: walletManager.currentWallet, address: walletManager.currentAddress });
   </script>
 </body>
 </html>

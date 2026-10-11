@@ -1,5 +1,5 @@
-// Read-only wallet identity connection. This module never requests a signature
-// and never submits a transaction.
+// Wallet identity and provider lifecycle. The purchase flow separately requests
+// a signature only after the buyer chooses a quoted Devnet transaction.
 class WalletManager {
   constructor() {
     this.currentWallet = null;

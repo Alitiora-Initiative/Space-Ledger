@@ -30,13 +30,40 @@
 
   <main class="container">
     <header class="hero">
-      <h1>Block Pricing Preview</h1>
-      <p>Calculate an estimate from the published bonding curve.</p>
+      <h1>Block Pricing & Devnet Purchases</h1>
+      <p>See the live Devnet quote, then approve your purchase in Phantom.</p>
     </header>
 
     <section class="card" aria-labelledby="statusTitle">
-      <h2 id="statusTitle">Purchases are not live</h2>
-      <p class="feature-status">No ownership program or verified indexer is deployed. This page only calculates estimates. It does not request wallet approval or transfer funds.</p>
+      <h2 id="statusTitle">Devnet purchases are loading</h2>
+      <p class="feature-status" id="purchaseStatus">Checking whether the Devnet ownership program is deployed. No funds move until you review and approve a transaction in Phantom.</p>
+    </section>
+
+    <section class="card" id="devnetPurchase" aria-labelledby="devnetPurchaseTitle" hidden>
+      <h2 id="devnetPurchaseTitle">Buy blocks on Solana Devnet</h2>
+      <p>Use Devnet SOL or Devnet USDC from your own wallet. The $0.10 test platform fee is included in the quote. Solana network fees and any new token-account rent are additional and shown by Phantom. Devnet tokens have no real-world value.</p>
+      <form id="devnetPurchaseForm">
+        <div class="price-fields">
+          <div class="input-group">
+            <label for="paymentAsset">Payment token</label>
+            <select id="paymentAsset" name="asset">
+              <option value="SOL">Devnet SOL</option>
+              <option value="USDC">Devnet USDC</option>
+            </select>
+          </div>
+          <div class="input-group">
+            <label for="paymentAmount">Maximum amount to spend</label>
+            <input id="paymentAmount" name="amount" type="number" min="0.000001" step="0.000001" value="1" required>
+          </div>
+        </div>
+        <button class="button" id="quotePurchaseBtn" type="submit">Get Devnet quote</button>
+      </form>
+      <p id="walletBalanceStatus" class="feature-status" aria-live="polite">Connect Phantom to display your Devnet balance here.</p>
+      <div id="purchaseQuote" class="result" role="status" aria-live="polite">Connect Phantom and request a quote to see the block range and exact payment.</div>
+      <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:14px;">
+        <button class="button" id="buyBlocksBtn" type="button" disabled>Connect Phantom to buy</button>
+        <a id="purchaseExplorerLink" href="#" target="_blank" rel="noopener" hidden>View transaction on Solana Explorer</a>
+      </div>
     </section>
 
     <section class="card" aria-labelledby="calculatorTitle">
@@ -65,6 +92,8 @@
   <script src="../js/block-id.js"></script>
   <script src="../js/wallet.js"></script>
   <script src="../js/walletModal.js"></script>
+  <script src="../js/vendor/solana-web3.js" defer></script>
+  <script src="../js/solanaPayment.js" defer></script>
   <script>
     const form = document.getElementById('estimateForm');
     const result = document.getElementById('estimateResult');

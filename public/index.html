@@ -65,17 +65,16 @@
       </div>
       <div class="stat-card">
         <h3>Sale status</h3>
-        <div class="value" id="availableBlocks">Not live</div>
-        <div class="label">No on-chain ownership contract deployed</div>
+        <div class="value" id="availableBlocks">Checking Devnet…</div>
+        <div class="label" id="saleStatusLabel">Reading verified supply from Solana Devnet</div>
       </div>
     </div>
 
     <div class="card" id="about">
       <h2>About Space Ledger</h2>
       <p style="color: #888; line-height: 1.6;">
-        Space Ledger is a 10 billion block, 1 trillion pixel canvas concept inspired by The Million Dollar Homepage (launched in 2005).
-        The current site provides a live visual canvas, wallet connection, and a read-only estimate of its proposed pricing model.
-        Purchases, ownership, treasury vesting, and resales are not live because no ownership contract or indexer has been deployed.
+        Space Ledger is a shared canvas of 10 billion blocks and 1 trillion pixels, inspired by the Million Dollar Homepage's pixel-by-pixel format. The original launched in 2005. Space Ledger accepts test purchases on Solana Devnet and records block ranges in on-chain receipts.
+        Connect Phantom on Devnet to see the current quote, approve a purchase, and view confirmed holdings. Vesting, swaps, and resales are not enabled.
       </p>
     </div>
 
@@ -85,14 +84,14 @@
         P(x) = (9.99999999 × 10⁻⁸)x + 0.001
       </div>
       <p style="color: #888; line-height: 1.6;">
-        This proposed linear model ranges from $0.001 to $1,000.00. The estimator is not a sale quote; no blocks are currently offered for purchase.
+        The linear model ranges from $0.001 to $1,000.00. A live Devnet quote uses the current on-chain supply and a fresh Pyth SOL/USD price. Devnet tokens have no real-world value.
       </p>
     </div>
 
     <div class="card">
       <h2>Quick Actions</h2>
       <div style="display: flex; gap: 15px; flex-wrap: wrap;">
-        <a href="pages/purchase.html" class="button">Estimate Block Prices</a>
+        <a href="pages/purchase.html" class="button">Buy on Devnet</a>
         <a href="pages/grid.html" class="button">View Grid</a>
         <a href="pages/treasury.html" class="button">Treasury Info</a>
         <a href="pages/network.html" class="button">Network Config</a>
@@ -100,6 +99,17 @@
       </div>
     </div>
   </div>
+
+  <script>
+    fetch('/api/supply').then(response => response.json()).then(data => {
+      const sold = data.status === 'devnet_verified' ? BigInt(data.currentSupply) : null;
+      document.getElementById('availableBlocks').textContent = sold === null ? 'Devnet initializing' : (BigInt(data.totalSupply) - sold).toLocaleString();
+      document.getElementById('saleStatusLabel').textContent = sold === null ? 'Awaiting the first confirmed purchase' : `${sold.toLocaleString()} blocks sold on Devnet`;
+    }).catch(() => {
+      document.getElementById('availableBlocks').textContent = 'Temporarily unavailable';
+      document.getElementById('saleStatusLabel').textContent = 'Could not reach Solana Devnet';
+    });
+  </script>
 
   <script src="js/wallet.js"></script>
   <script src="js/walletModal.js?v=202610111259"></script>
