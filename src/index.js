@@ -11,8 +11,6 @@ const PORT = Number.parseInt(process.env.PORT, 10) || 3000;
 // This release is deliberately pinned to Devnet. Mainnet must be a separately
 // reviewed migration, not an environment-variable flip.
 const SOLANA_NETWORK = 'devnet';
-const SOLANA_RPC = process.env.SOLANA_RPC_DEVNET || 'https://solana-rpc.rpcfast.com/?api_key=q8Db0rk7W2n0OuDfCX1aCrma8SbbO9Mscbh2GZJpO42NdQTdQQoV5g6NOaPG0BDl';
-const SOLANA_WSS = process.env.SOLANA_WSS_DEVNET || 'wss://solana-rpc.rpcfast.com/?api_key=q8Db0rk7W2n0OuDfCX1aCrma8SbbO9Mscbh2GZJpO42NdQTdQQoV5g6NOaPG0BDl';
 const FEE_WALLET_ADDRESS = process.env.FEE_WALLET_ADDRESS || '';
 const NOT_DEPLOYED = 'The Solana Devnet program is not configured.';
 
@@ -25,7 +23,6 @@ app.get('/api/config', async (_req, res) => {
   const config = {
     status: process.env.SOLANA_PROGRAM_ID ? 'devnet_program_configured' : 'read_only',
     solanaNetwork: SOLANA_NETWORK,
-    solanaRpc: SOLANA_RPC,
     feeWallet: FEE_WALLET_ADDRESS,
     usdcMint: SOLANA_NETWORK === 'mainnet-beta'
       ? 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v'
@@ -224,10 +221,9 @@ app.get('/api/stream', (_req, res) => {
   res.status(503).json({ error: 'Live ledger events are unavailable until the on-chain program and indexer are deployed.' });
 });
 
-// GILGA PRIME Agent System API Routes
+// Read-only display records for the configured agent visualization roles.
 app.use('/api/agents', agentApi);
 
 app.listen(PORT, () => {
   console.log(`[startup] Space Ledger on port ${PORT}; network=${SOLANA_NETWORK}; program=${process.env.SOLANA_PROGRAM_ID || 'disabled'}`);
-  console.log(`[startup] GILGA PRIME Agent System initialized`);
 });

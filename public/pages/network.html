@@ -12,7 +12,7 @@
   <body><nav>
     <div class="container">
       <a href="/index.html" style="display:flex;align-items:center;gap:8px;text-decoration:none;">
-      <img src="/img/logo.jpg" alt="SLP" style="width:32px;height:32px;border-radius:7px;object-fit:cover;">
+      <img src="/img/logo.jpg" alt="" style="width:32px;height:32px;border-radius:7px;object-fit:cover;">
       <span class="logo">Spatial Ledger Protocol</span>
     </a>
       <ul>
@@ -50,7 +50,7 @@
     <div class="card">
       <h2>RPC Request Tester</h2>
       <div class="input-group">
-        <label>Network ID</label>
+        <label for="networkId">Network ID</label>
         <select id="networkId">
           <option value="1">Ethereum Mainnet (1)</option>
           <option value="8453">Base Mainnet (8453)</option>
@@ -61,7 +61,7 @@
         </select>
       </div>
       <div class="input-group">
-        <label>RPC Method</label>
+        <label for="rpcMethod">RPC Method</label>
         <select id="rpcMethod">
           <option value="eth_blockNumber">eth_blockNumber</option>
           <option value="eth_chainId">eth_chainId</option>
@@ -71,7 +71,7 @@
         </select>
       </div>
       <div class="input-group">
-        <label>Parameters (JSON array)</label>
+        <label for="rpcParams">Parameters (JSON array)</label>
         <input type="text" id="rpcParams" placeholder='["0x..."]' value="[]">
       </div>
       <button class="button" onclick="routeRpc()">Send Request</button>

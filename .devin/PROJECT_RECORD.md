@@ -260,12 +260,11 @@ See AGENT_REGISTRY.md for complete agent registry.
 
 ## Decisions and Their Evidence
 
-### Decision 1: Deploy GILGA PRIME Agent System
+### Decision 1: Display role registry only
 - **Date**: 2026-10-12
-- **Decision**: Deploy Gilga Prime, Survivor, Contradictor, and Judge agents
-- **Reasoning**: Project needs systematic approach to verification, risk assessment, and quality control
-- **Evidence**: Project is in Devnet testing phase, requires production readiness assessment
-- **Status**: Implemented
+- **Decision**: Keep four configured role records for the sphere visualization; do not represent them as running AI workers.
+- **Evidence**: `src/agents/index.js` is an immutable in-process registry and `src/agents/api.js` exposes read-only display data. No worker runner, scheduler, task queue, agent-spawning route, code-writing loop, or automatic deployment exists in the web application.
+- **Status**: Implemented as display-only; external role documents are inert unless a separate system is explicitly configured.
 
 ## Approved and Rejected Plans
 
@@ -273,7 +272,7 @@ No plans approved or rejected yet (initial deployment phase).
 
 ## Implemented Changes and Associated Tests
 
-No changes implemented yet (initial discovery phase).
+Recent changes: read-only agent registry, privacy/terms/cookie drafts, removal of unused wallet icons, accessible wallet/grid interactions, reduced-motion handling, and removal of a hardcoded RPC credential. See the current Git diff and README for scope; these edits still require test verification.
 
 ## Known Defects and Accepted Limitations
 
@@ -287,11 +286,11 @@ No changes implemented yet (initial discovery phase).
 - No live event streaming
 
 ### Unknown Defects
-- Test suite pass/fail status unknown
+- Test suite passes 12/12 on 2026-10-12; this does not cover every user journey or provider integration
 - Build success unknown
-- API endpoint functionality unknown
-- Frontend existence and functionality unknown
-- Devnet connectivity unknown
+- Selected API endpoints and page/script syntax are covered by the passing tests
+- The frontend exists; full manual screen-reader and live Vercel visual checks remain incomplete
+- Live Devnet connectivity and deployment state were not verified in this audit
 
 ## Security and Operational Risks
 

@@ -4,53 +4,33 @@ Space Ledger is a shared digital canvas made of 10 billion numbered blocks, each
 
 The concept takes inspiration from [The Million Dollar Homepage](https://www.webdesignmuseum.org/web-design-history/million-dollar-homepage-2005), Alex Tew's pixel advertising page launched in **2005**. Space Ledger is an independent project and is not affiliated with it.
 
-## 🤖 GILGA PRIME Agent System
+## Agent role registry
 
-Space Ledger now features the **GILGA PRIME Agent System** - an autonomous agent orchestration framework that works to prepare the application for mainnet deployment.
-
-### Core Agents
-- **Gilga Prime (001)**: Root Architect - Project orchestration and coordination
-- **Survivor (002)**: Implementation Agent - Fixes blockers and implements changes
-- **Contradictor (003)**: Risk Assessment Agent - Challenges assumptions and exposes risks
-- **Judge (004)**: Decision Agent - Enforces release criteria and quality gates
-
-### Features
-- Real-time agent monitoring via API endpoints
-- 10-stage decision protocol for all changes
-- Evidence-based decision making
-- Automatic security and legitimacy enforcement
-- Project record tracking and audit trail
-
-### Agent API
-- `GET /api/agents/registry` - View all agents
-- `POST /api/agents/first-mission` - Trigger Gilga Prime's initialization
-- `POST /api/agents/decision-protocol` - Execute full decision protocol
-- `POST /api/agents/challenge` - Have Contradictor challenge a proposal
-- See `.devin/agents/README.md` for full API documentation
+The backend exposes four configured role records for the site visualization. They are not AI workers: there is no model runner, task queue, child-process launcher, scheduler, code-writing loop, agent-spawning endpoint, or automatic deployment. The public API is read-only and returns each role's display name, type, parent, and configured status. Website changes are made, reviewed, and deployed through the repository workflow; opening the website does not upgrade it.
 
 ## 🌈 Visual Features
 
 ### Celestial Theme
-- Rainbow-colored celestial background with 200 animated stars
-- 7 rotating nebulas (one for each rainbow color)
-- Dynamic cosmic atmosphere across all pages
+- Canvas star field across the site, with reduced-motion support
+- Decorative background only; it does not represent users, activity, or network data
 
-### 3D Agent Visualization
-- 7 rainbow-colored 3D agents (Among Us style) moving in real-time
-- Agents display their state (idle, working, moving) through animations
-- Hand waving, visor blinking, and glow effects
-- Powered by Three.js for smooth 4K-quality rendering
+### Agent Visualization
+- Canvas-drawn spheres reflect the configured role registry.
+- Agent 001 stays visually prominent; other spheres become smaller as the registry grows.
+- All current records have `configured` status. Spheres drift slowly; faster motion is reserved for a future truthful activity source. This is not live work telemetry.
 
-## What is live on Devnet
+## Devnet implementation
+
+This repository contains a Devnet-only purchase and ownership implementation. Whether it is configured and currently functioning depends on deployment settings and live network state; this audit did not perform a Devnet transaction.
 
 - Phantom wallet purchase approvals for Devnet SOL and the Devnet USDC mint.
 - An Anchor Solana program that accepts payment, records a purchase receipt, and advances the sold-block supply atomically.
-- SOL-to-USD conversion checked on-chain against Pyth's fully verified SOL/USD price feed. Quotes reject stale or low-confidence prices.
+- SOL-to-USD conversion checked on-chain against a configured Pyth SOL/USD feed. The program checks feed identity, confidence, and freshness.
 - A fixed receiving wallet, `EDZjEbRAtqyC8z6ta6PYHX161Xynt13tWpd7orKERkbz`, for purchase proceeds.
 - Receipt-based ownership lookups, a live supply count, and wallet portfolio display.
 - Compact labels such as `000A`–`999A`, then `000B`–`999B`, continuing through `Z`, `AA`, and onward. Numeric block numbers are canonical.
 
-The program is deployed at `EbP7vsnMXPonTfriPUFynco69d69JiXpWbKnwVmz8sgG` on Devnet. Its upgrade authority is the receiving wallet above. The app is pinned to Devnet; changing an environment variable cannot switch it to mainnet.
+The configured program ID is `EbP7vsnMXPonTfriPUFynco69d69JiXpWbKnwVmz8sgG`; its current Devnet state and upgrade authority were not independently verified in this audit. The app is pinned to Devnet; changing an environment variable cannot switch it to mainnet.
 
 The displayed curve starts at $0.001 per block and rises linearly toward $1,000. A $0.10 protocol fee is added to each purchase. Network transaction fees and any rent for new on-chain accounts are separate. Devnet tokens have no real-world value.
 
@@ -78,7 +58,9 @@ Open [http://localhost:3000](http://localhost:3000). On macOS or Linux, use `cp 
 
 Set `SOLANA_PROGRAM_ID=EbP7vsnMXPonTfriPUFynco69d69JiXpWbKnwVmz8sgG` and the public `FEE_WALLET_ADDRESS` in `.env` to enable the on-chain API locally. The fee wallet is public configuration, never a private key. Never place seed phrases or private keys in this repository or in browser code.
 
-The application now uses RPCfast Devnet endpoints for improved performance and reliability.
+The default RPC endpoint is Solana's public Devnet endpoint. A deployment may configure a different Devnet RPC provider; provider requests can include public wallet and chain identifiers needed for the requested feature.
+
+Do not reuse any RPC credential that has appeared in a public commit. A previous provider credential was removed from the current source, but repository history is unchanged; rotate it with the provider if it was yours.
 
 ## Checks
 
@@ -88,14 +70,28 @@ cargo test --manifest-path programs/space-ledger/Cargo.toml
 cargo build-sbf --manifest-path programs/space-ledger/Cargo.toml
 ```
 
-The JavaScript tests cover API responses, block-label conversion, quote math, Pyth account validation, and browser-script syntax. The Rust unit test covers fixed-point curve and SOL conversion math. A separate Devnet smoke transaction has verified deployment, payment, supply advancement, and a purchase receipt. These checks are not a security audit.
+The JavaScript tests cover selected API responses, block-label conversion, quote math, Pyth account validation, and browser-script syntax. The Rust unit test covers fixed-point curve and SOL conversion math. Automated tests do not contact Devnet, and no live smoke transaction was performed during this audit. These checks are not a security audit.
 
 ## Not enabled
 
 - Mainnet payments and any use of real funds.
 - Swaps, secondary-market transfers/resales, NFTs, vesting, and yield.
+- Token creation/hosting/trading, regional leaderboards, and GPS-based features.
 - Other purchase tokens beyond Devnet SOL and the specified Devnet USDC mint.
 - An external archival indexer; current portfolio reads scan program receipts from Solana RPC.
+
+## Privacy, rights, and accessibility status
+
+- Privacy, terms, and cookie pages are available under `public/pages/`. They are drafts, not a global compliance certification. The operator still needs to provide a legal name, service address, privacy contact, and deployment-specific hosting/RPC retention details before public launch.
+- The current repository code does not set cookies, use browser storage, or load analytics/tracking scripts, and it contains no third-party iframe embeds. The deployed host and any later integrations must be checked separately. Add consent controls before enabling non-essential device storage/tracking where applicable law requires prior consent.
+- Logo authorship/licensing is not recorded and must be verified before redistribution. The bundled Solana web3 library carries its own MIT notice; the repository code uses the MIT license.
+- Accessibility improvements include keyboard focus visibility, a skip link, reduced-motion handling, accessible wallet dialog and grid controls, and higher-contrast muted text. This is not a WCAG conformance claim; see `ROADMAP.md` for remaining checks.
+
+## Planned work
+
+See [ROADMAP.md](ROADMAP.md) for the staged TODO list, including the requested block-detail views and the reviews required before regional or token-market features.
+
+Vercel can deploy an Express app from a connected Git repository. To publish a reviewed change, push it to the branch configured as the Vercel production branch; this workspace cannot verify that branch setting or trigger a deployment directly. Visiting the site never runs code upgrades.
 
 The Devnet flow is for testing wallet approvals and receipt settlement. It is not financial advice or a promise of investment returns.
 

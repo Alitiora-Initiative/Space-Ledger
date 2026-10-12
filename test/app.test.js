@@ -74,6 +74,9 @@ test('Express app serves its pages and read-only API endpoints', async t => {
     ['/pages/dashboard.html', 'text/html'],
     ['/pages/profile.html', 'text/html'],
     ['/pages/swap.html', 'text/html'],
+    ['/pages/privacy.html', 'text/html'],
+    ['/pages/terms.html', 'text/html'],
+    ['/pages/cookies.html', 'text/html'],
     ['/api/config', 'application/json'],
     ['/api/price/0', 'application/json'],
     ['/api/price/range?start=0&count=2', 'application/json'],
@@ -96,6 +99,11 @@ test('Express app serves its pages and read-only API endpoints', async t => {
 
   assert.match(responses.get('/'), /About Space Ledger/);
   assert.equal(responses.get('/api/config').totalBlocks, 10_000_000_000);
+  assert.equal('solanaRpc' in responses.get('/api/config'), false);
+  assert.doesNotMatch(JSON.stringify(responses.get('/api/config')), /api_key=/i);
+  assert.match(responses.get('/pages/privacy.html'), /Publication status: incomplete/);
+  assert.match(responses.get('/pages/terms.html'), /Terms and Conditions/);
+  assert.match(responses.get('/pages/cookies.html'), /does not currently need a cookie-consent banner/);
   assert.equal(responses.get('/api/price/0').price, 0.001);
   const labelResponse = await fetch(`${baseUrl}/api/price/000B`);
   assert.equal(labelResponse.status, 200);
@@ -113,6 +121,17 @@ test('Express app serves its pages and read-only API endpoints', async t => {
   assert.equal(namedGrid.blockId, 26_000);
   assert.equal(namedGrid.blockLabel, '000AA');
   assert.equal(responses.get('/api/genesis').verified, false);
+
+  const agentResponse = await fetch(`${baseUrl}/api/agents/registry`);
+  assert.equal(agentResponse.status, 200);
+  const agentData = await agentResponse.json();
+  assert.deepEqual(Object.keys(agentData.registry), ['001', '002', '003', '004']);
+  assert.deepEqual(Object.keys(agentData.registry['001']).sort(), ['id', 'name', 'parent', 'status', 'type']);
+  assert.equal(agentData.registry['001'].status, 'configured');
+  for (const route of ['/api/agents/create', '/api/agents/auto-scale', '/api/agents/dryrun', '/api/agents/first-mission']) {
+    const response = await fetch(`${baseUrl}${route}`, { method: 'POST', body: '{}' });
+    assert.equal(response.status, 404, `${route} is not an exposed action`);
+  }
 
   const ownerResponse = await fetch(`${baseUrl}/api/block-owner/0`);
   assert.equal(ownerResponse.status, 503);

@@ -1,431 +1,165 @@
-/**
- * GILGA PRIME 3D Agent Visualization
- *
- * Renders 3D rainbow-colored agent spheres with small hands (Among Us style)
- * that move around the webpage in real-time.
- */
+(() => {
+  const palette = ['#40d9ea', '#65d495', '#f3bd62', '#ff7c70', '#9ca8ff', '#73b9ff', '#d69bfa'];
+  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+  const stage = document.createElement('div');
+  const canvas = document.createElement('canvas');
+  const list = document.createElement('ul');
+  const context = canvas.getContext('2d');
+  let agents = [];
+  let width = 0;
+  let height = 0;
+  let ratio = 1;
+  let previousTime = 0;
+  let frame = 0;
 
-class Agent3D {
-  constructor(agentId, name, color, startPosition) {
-    this.agentId = agentId;
-    this.name = name;
-    this.color = color;
-    this.position = startPosition;
-    this.velocity = {
-      x: (Math.random() - 0.5) * 2,
-      y: (Math.random() - 0.5) * 2
-    };
-    this.targetPosition = null;
-    this.state = 'idle'; // idle, working, moving
-    this.rotation = 0;
-    this.bobOffset = Math.random() * Math.PI * 2;
+  if (!context) return;
+
+  stage.id = 'agent-visualization';
+  stage.style.cssText = 'position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;';
+  canvas.setAttribute('aria-hidden', 'true');
+  canvas.style.cssText = 'display:block;width:100%;height:100%;';
+  list.className = 'sr-only';
+  list.setAttribute('aria-label', 'Configured agent roles');
+  stage.append(canvas, list);
+  document.body.prepend(stage);
+
+  function resize() {
+    ratio = Math.min(window.devicePixelRatio || 1, 2);
+    width = window.innerWidth;
+    height = window.innerHeight;
+    canvas.width = Math.round(width * ratio);
+    canvas.height = Math.round(height * ratio);
+    context.setTransform(ratio, 0, 0, ratio, 0, 0);
+    agents.forEach(agent => {
+      agent.x = Math.min(width - agent.radius, Math.max(agent.radius, agent.x));
+      agent.y = Math.min(height - agent.radius, Math.max(agent.radius, agent.y));
+    });
+    draw(0);
   }
 
-  update(deltaTime, bounds) {
-    // Bobbing animation
-    this.bobOffset += deltaTime * 3;
+  function updateScales() {
+    const count = agents.length;
+    const supportingScale = Math.max(0.12, Math.pow(0.82, Math.max(0, count - 4)));
+    agents.forEach(agent => {
+      agent.scale = agent.id === '001' ? 1.65 : supportingScale;
+      agent.radius = (agent.id === '001' ? 20 : 18) * agent.scale;
+    });
+  }
 
-    // Movement towards target or random wandering
-    if (this.targetPosition) {
-      const dx = this.targetPosition.x - this.position.x;
-      const dy = this.targetPosition.y - this.position.y;
-      const dist = Math.sqrt(dx * dx + dy * dy);
+  function syncRegistry(registry) {
+    if (!registry || typeof registry !== 'object') return;
+    const entries = Object.values(registry);
+    const nextIds = new Set(entries.map(agent => String(agent.id)));
+    agents = agents.filter(agent => nextIds.has(agent.id));
 
-      if (dist > 5) {
-        this.position.x += (dx / dist) * 60 * deltaTime;
-        this.position.y += (dy / dist) * 60 * deltaTime;
-        this.rotation = Math.atan2(dy, dx);
+    entries.forEach(data => {
+      const id = String(data.id);
+      let agent = agents.find(item => item.id === id);
+      if (!agent) {
+        const angle = Math.random() * Math.PI * 2;
+        agent = {
+          id,
+          name: String(data.name || `Agent ${id}`),
+          type: String(data.type || 'Configured role'),
+          status: String(data.status || 'available'),
+          color: palette[agents.length % palette.length],
+          x: width * (0.2 + Math.random() * 0.6),
+          y: height * (0.2 + Math.random() * 0.6),
+          vx: Math.cos(angle),
+          vy: Math.sin(angle),
+          scale: 1,
+          radius: 18
+        };
+        agents.push(agent);
       } else {
-        this.targetPosition = null;
-        this.state = 'idle';
-      }
-    } else {
-      // Random wandering
-      this.position.x += this.velocity.x * 30 * deltaTime;
-      this.position.y += this.velocity.y * 30 * deltaTime;
-
-      // Bounce off bounds
-      if (this.position.x < bounds.minX || this.position.x > bounds.maxX) {
-        this.velocity.x *= -1;
-        this.position.x = Math.max(bounds.minX, Math.min(bounds.maxX, this.position.x));
-      }
-      if (this.position.y < bounds.minY || this.position.y > bounds.maxY) {
-        this.velocity.y *= -1;
-        this.position.y = Math.max(bounds.minY, Math.min(bounds.maxY, this.position.y));
-      }
-
-      // Slowly change direction
-      this.velocity.x += (Math.random() - 0.5) * 0.5;
-      this.velocity.y += (Math.random() - 0.5) * 0.5;
-
-      // Clamp velocity
-      const maxSpeed = 1.5;
-      const speed = Math.sqrt(this.velocity.x ** 2 + this.velocity.y ** 2);
-      if (speed > maxSpeed) {
-        this.velocity.x = (this.velocity.x / speed) * maxSpeed;
-        this.velocity.y = (this.velocity.y / speed) * maxSpeed;
-      }
-
-      this.rotation = Math.atan2(this.velocity.y, this.velocity.x);
-    }
-  }
-
-  setTarget(x, y) {
-    this.targetPosition = { x, y };
-    this.state = 'moving';
-  }
-
-  setState(newState) {
-    this.state = newState;
-  }
-}
-
-class AgentSystem3D {
-  constructor() {
-    this.agents = [];
-    this.container = null;
-    this.scene = null;
-    this.camera = null;
-    this.renderer = null;
-    this.agentMeshes = new Map();
-    this.lastTime = 0;
-    this.bounds = { minX: 0, maxX: window.innerWidth, minY: 0, maxY: window.innerHeight };
-
-    // Rainbow colors for 7 agents
-    this.rainbowColors = [
-      0xff0000, // Red
-      0xff7f00, // Orange
-      0xffff00, // Yellow
-      0x00ff00, // Green
-      0x0000ff, // Blue
-      0x4b0082, // Indigo
-      0x9400d3  // Violet
-    ];
-
-    this.init();
-  }
-
-  init() {
-    // Create container
-    this.container = document.createElement('div');
-    this.container.id = 'agent-3d-container';
-    this.container.style.cssText = `
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      pointer-events: none;
-      z-index: 1000;
-      overflow: hidden;
-    `;
-    document.body.appendChild(this.container);
-
-    // Initialize Three.js if available
-    if (typeof THREE !== 'undefined') {
-      this.initThreeJS();
-    } else {
-      // Load Three.js dynamically
-      this.loadThreeJS();
-    }
-
-    // Start update loop
-    this.startUpdateLoop();
-
-    // Connect to agent API
-    this.connectToAgentAPI();
-
-    // Handle resize
-    window.addEventListener('resize', () => this.handleResize());
-  }
-
-  loadThreeJS() {
-    const script = document.createElement('script');
-    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';
-    script.onload = () => this.initThreeJS();
-    document.head.appendChild(script);
-  }
-
-  initThreeJS() {
-    if (typeof THREE === 'undefined') return;
-
-    // Scene
-    this.scene = new THREE.Scene();
-
-    // Camera
-    this.camera = new THREE.PerspectiveCamera(
-      75,
-      window.innerWidth / window.innerHeight,
-      0.1,
-      1000
-    );
-    this.camera.position.z = 100;
-
-    // Renderer
-    this.renderer = new THREE.WebGLRenderer({
-      alpha: true,
-      antialias: true,
-      powerPreference: 'high-performance'
-    });
-    this.renderer.setSize(window.innerWidth, window.innerHeight);
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    this.container.appendChild(this.renderer.domElement);
-
-    // Lighting
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
-    this.scene.add(ambientLight);
-
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-    directionalLight.position.set(50, 50, 50);
-    this.scene.add(directionalLight);
-
-    const pointLight = new THREE.PointLight(0x00d4ff, 0.5, 200);
-    pointLight.position.set(0, 0, 50);
-    this.scene.add(pointLight);
-
-    // Create initial agents
-    this.createAgents();
-
-    // Start render loop
-    this.animate();
-  }
-
-  createAgents() {
-    const agentData = [
-      { id: '001', name: 'Gilga Prime', colorIndex: 0 },
-      { id: '002', name: 'Survivor', colorIndex: 1 },
-      { id: '003', name: 'Contradictor', colorIndex: 2 },
-      { id: '004', name: 'Judge', colorIndex: 3 },
-      { id: '005', name: 'Architect', colorIndex: 4 },
-      { id: '006', name: 'Security', colorIndex: 5 },
-      { id: '007', name: 'QA Engineer', colorIndex: 6 }
-    ];
-
-    agentData.forEach((data, index) => {
-      const color = this.rainbowColors[data.colorIndex];
-      const position = {
-        x: 100 + (index % 3) * 200,
-        y: 100 + Math.floor(index / 3) * 200
-      };
-
-      const agent = new Agent3D(data.id, data.name, color, position);
-      this.agents.push(agent);
-
-      // Create 3D mesh
-      this.createAgentMesh(agent);
-    });
-  }
-
-  createAgentMesh(agent) {
-    if (!this.scene) return;
-
-    const group = new THREE.Group();
-
-    // Main sphere body (Among Us style)
-    const bodyGeometry = new THREE.SphereGeometry(8, 32, 32);
-    const bodyMaterial = new THREE.MeshPhongMaterial({
-      color: agent.color,
-      shininess: 100,
-      specular: 0x444444
-    });
-    const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
-    group.add(body);
-
-    // Visor (faceplate)
-    const visorGeometry = new THREE.CapsuleGeometry(3, 4, 4, 8);
-    const visorMaterial = new THREE.MeshPhongMaterial({
-      color: 0x88ccff,
-      shininess: 150,
-      specular: 0xffffff,
-      transparent: true,
-      opacity: 0.8
-    });
-    const visor = new THREE.Mesh(visorGeometry, visorMaterial);
-    visor.position.set(3, 2, 0);
-    visor.rotation.z = -Math.PI / 6;
-    group.add(visor);
-
-    // Small left hand
-    const handGeometry = new THREE.SphereGeometry(2, 16, 16);
-    const handMaterial = new THREE.MeshPhongMaterial({
-      color: agent.color,
-      shininess: 100
-    });
-    const leftHand = new THREE.Mesh(handGeometry, handMaterial);
-    leftHand.position.set(-6, -4, 2);
-    group.add(leftHand);
-
-    // Small right hand
-    const rightHand = new THREE.Mesh(handGeometry, handMaterial);
-    rightHand.position.set(6, -4, 2);
-    group.add(rightHand);
-
-    // Backpack
-    const backpackGeometry = new THREE.BoxGeometry(3, 5, 2);
-    const backpackMaterial = new THREE.MeshPhongMaterial({
-      color: agent.color,
-      shininess: 80
-    });
-    const backpack = new THREE.Mesh(backpackGeometry, backpackMaterial);
-    backpack.position.set(-7, 0, 0);
-    group.add(backpack);
-
-    // Glow effect
-    const glowGeometry = new THREE.SphereGeometry(10, 32, 32);
-    const glowMaterial = new THREE.MeshBasicMaterial({
-      color: agent.color,
-      transparent: true,
-      opacity: 0.15
-    });
-    const glow = new THREE.Mesh(glowGeometry, glowMaterial);
-    group.add(glow);
-
-    // Position group
-    group.position.set(agent.position.x, agent.position.y, 0);
-
-    this.scene.add(group);
-    this.agentMeshes.set(agent.agentId, {
-      group,
-      body,
-      visor,
-      leftHand,
-      rightHand,
-      backpack,
-      glow
-    });
-  }
-
-  animate() {
-    requestAnimationFrame(() => this.animate());
-
-    const currentTime = performance.now();
-    const deltaTime = (currentTime - this.lastTime) / 1000;
-    this.lastTime = currentTime;
-
-    // Update agents
-    this.agents.forEach(agent => {
-      agent.update(deltaTime, this.bounds);
-
-      // Update 3D mesh
-      const mesh = this.agentMeshes.get(agent.agentId);
-      if (mesh) {
-        // Position with bobbing
-        mesh.group.position.x = agent.position.x;
-        mesh.group.position.y = agent.position.y + Math.sin(agent.bobOffset) * 2;
-
-        // Rotation based on movement direction
-        mesh.group.rotation.z = agent.rotation;
-
-        // Animate hands (wave animation)
-        const handWave = Math.sin(currentTime * 0.005 + agent.bobOffset) * 0.3;
-        mesh.leftHand.rotation.z = handWave;
-        mesh.rightHand.rotation.z = -handWave;
-
-        // Animate visor (blink occasionally)
-        if (Math.random() < 0.01) {
-          mesh.visor.scale.y = 0.1;
-          setTimeout(() => {
-            if (mesh.visor) mesh.visor.scale.y = 1;
-          }, 100);
-        }
-
-        // State-based animations
-        if (agent.state === 'working') {
-          mesh.body.scale.set(1.1, 0.9, 1.1);
-          mesh.glow.material.opacity = 0.3;
-        } else if (agent.state === 'moving') {
-          mesh.body.scale.set(1, 1, 1);
-          mesh.glow.material.opacity = 0.2;
-        } else {
-          mesh.body.scale.set(1, 1, 1);
-          mesh.glow.material.opacity = 0.15;
-        }
+        agent.name = String(data.name || agent.name);
+        agent.type = String(data.type || agent.type);
+        agent.status = String(data.status || 'available');
       }
     });
 
-    // Render
-    if (this.renderer && this.scene && this.camera) {
-      this.renderer.render(this.scene, this.camera);
-    }
+    updateScales();
+    list.replaceChildren(...agents.map(agent => {
+      const item = document.createElement('li');
+      item.textContent = `${agent.name}, agent ${agent.id}, ${agent.type}, status ${agent.status}`;
+      return item;
+    }));
+    draw(0);
   }
 
-  startUpdateLoop() {
-    // Update agent states from API
-    setInterval(() => this.updateAgentStates(), 2000);
+  function rgb(hex) {
+    const value = Number.parseInt(hex.slice(1), 16);
+    return [(value >> 16) & 255, (value >> 8) & 255, value & 255];
   }
 
-  async connectToAgentAPI() {
+  function draw(time) {
+    context.clearRect(0, 0, width, height);
+    const delta = Math.min((time - previousTime) / 1000 || 0, 0.05);
+    previousTime = time;
+
+    agents.forEach(agent => {
+      const active = agent.status === 'active' || agent.status === 'working';
+      const speed = reducedMotion.matches ? 0 : (active ? 54 : 5);
+      agent.x += agent.vx * speed * delta;
+      agent.y += agent.vy * speed * delta;
+      if (agent.x < agent.radius || agent.x > width - agent.radius) agent.vx *= -1;
+      if (agent.y < agent.radius || agent.y > height - agent.radius) agent.vy *= -1;
+      agent.x = Math.min(width - agent.radius, Math.max(agent.radius, agent.x));
+      agent.y = Math.min(height - agent.radius, Math.max(agent.radius, agent.y));
+
+      const [red, green, blue] = rgb(agent.color);
+      const radius = agent.radius;
+      const glow = context.createRadialGradient(agent.x, agent.y, radius * 0.2, agent.x, agent.y, radius * 2.6);
+      glow.addColorStop(0, `rgba(${red}, ${green}, ${blue}, ${active ? 0.2 : 0.07})`);
+      glow.addColorStop(1, `rgba(${red}, ${green}, ${blue}, 0)`);
+      context.fillStyle = glow;
+      context.beginPath();
+      context.arc(agent.x, agent.y, radius * 2.6, 0, Math.PI * 2);
+      context.fill();
+
+      const sphere = context.createRadialGradient(
+        agent.x - radius * 0.36, agent.y - radius * 0.42, radius * 0.05,
+        agent.x, agent.y, radius
+      );
+      sphere.addColorStop(0, 'rgba(255, 255, 255, 0.98)');
+      sphere.addColorStop(0.18, `rgba(${red}, ${green}, ${blue}, 0.96)`);
+      sphere.addColorStop(0.72, `rgba(${red}, ${green}, ${blue}, ${agent.scale < 0.25 ? 0.42 : 0.8})`);
+      sphere.addColorStop(1, 'rgba(4, 12, 24, 0.78)');
+      context.fillStyle = sphere;
+      context.beginPath();
+      context.arc(agent.x, agent.y, radius, 0, Math.PI * 2);
+      context.fill();
+      context.strokeStyle = `rgba(225, 249, 255, ${agent.id === '001' ? 0.65 : 0.25})`;
+      context.lineWidth = agent.id === '001' ? 1.5 : 0.8;
+      context.stroke();
+    });
+
+    if (!reducedMotion.matches && !document.hidden) frame = requestAnimationFrame(draw);
+  }
+
+  async function loadRegistry() {
     try {
-      const response = await fetch('/api/agents/registry');
+      const response = await fetch('/api/agents/registry', { cache: 'no-store' });
+      if (!response.ok) return;
       const data = await response.json();
-
-      if (data.status === 'success' && data.registry) {
-        this.syncAgentsWithRegistry(data.registry);
-      }
-    } catch (error) {
-      console.error('Failed to connect to agent API:', error);
+      if (data.status === 'success') syncRegistry(data.registry);
+    } catch {
+      // Keep the background quiet when the registry is unavailable.
     }
   }
 
-  syncAgentsWithRegistry(registry) {
-    Object.values(registry).forEach(agentData => {
-      const existingAgent = this.agents.find(a => a.agentId === agentData.id);
-      if (existingAgent) {
-        existingAgent.name = agentData.name;
-        existingAgent.state = agentData.status === 'active' ? 'working' : 'idle';
-      }
-    });
+  function resume() {
+    cancelAnimationFrame(frame);
+    previousTime = 0;
+    draw(performance.now());
   }
 
-  async updateAgentStates() {
-    try {
-      const response = await fetch('/api/agents/registry');
-      const data = await response.json();
-
-      if (data.status === 'success' && data.registry) {
-        this.syncAgentsWithRegistry(data.registry);
-      }
-    } catch (error) {
-      // Silently fail on network errors
-    }
-  }
-
-  handleResize() {
-    this.bounds = {
-      minX: 0,
-      maxX: window.innerWidth,
-      minY: 80, // Account for nav
-      maxY: window.innerHeight
-    };
-
-    if (this.camera && this.renderer) {
-      this.camera.aspect = window.innerWidth / window.innerHeight;
-      this.camera.updateProjectionMatrix();
-      this.renderer.setSize(window.innerWidth, window.innerHeight);
-    }
-  }
-
-  // Public API for controlling agents
-  moveAgentTo(agentId, x, y) {
-    const agent = this.agents.find(a => a.agentId === agentId);
-    if (agent) {
-      agent.setTarget(x, y);
-    }
-  }
-
-  setAgentState(agentId, state) {
-    const agent = this.agents.find(a => a.agentId === agentId);
-    if (agent) {
-      agent.setState(state);
-    }
-  }
-}
-
-// Initialize when DOM is ready
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', () => {
-    window.agentSystem3D = new AgentSystem3D();
+  window.addEventListener('resize', resize, { passive: true });
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) cancelAnimationFrame(frame);
+    else resume();
   });
-} else {
-  window.agentSystem3D = new AgentSystem3D();
-}
+  reducedMotion.addEventListener?.('change', resume);
+  resize();
+  loadRegistry();
+})();
