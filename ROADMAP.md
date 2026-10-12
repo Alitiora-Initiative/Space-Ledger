@@ -10,11 +10,12 @@ This is a human-maintained checklist. The website does not create agents, edit i
 - [x] Remove disconnected EVM vesting/ownership code and old $10/PnL demos that contradicted the active $1,000 curve.
 - [x] Remove the unconnected Supabase schema, which was not used by the app and advertised public access to wallet records.
 - [x] Remove placeholder release artifacts and unused config, vesting, genesis, and stream routes.
-- [x] Refresh README/API documentation and prepare a detailed GitHub Wiki guide.
+- [x] Refresh README/API documentation and publish and verify the detailed GitHub Wiki guide.
 
 ## Beta Release Gates
 
-- [ ] Verify the GitHub Wiki page, production deployment, configured environment variables, and live API responses after publishing.
+- [x] Publish and verify the GitHub Wiki page at `Space-Ledger/wiki/Devnet-Beta-Guide`.
+- [ ] Verify the Vercel production deployment, configured environment variables, and live API responses after publishing.
 - [ ] Complete an explicitly approved test purchase on Solana Devnet, then verify the transaction and receipt in Solana Explorer. Never request or send a wallet transaction without the user's explicit approval.
 - [ ] Add transaction signatures to receipts or build a verified indexer that joins signatures to program receipts.
 - [ ] Review the official MetaMask Connect Solana package license and obtain any needed commercial permission before deciding whether to bundle it; then test the SDK and mobile flow. Do not claim MetaMask support before then.
