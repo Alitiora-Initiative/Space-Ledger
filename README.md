@@ -4,6 +4,43 @@ Space Ledger is a shared digital canvas made of 10 billion numbered blocks, each
 
 The concept takes inspiration from [The Million Dollar Homepage](https://www.webdesignmuseum.org/web-design-history/million-dollar-homepage-2005), Alex Tew's pixel advertising page launched in **2005**. Space Ledger is an independent project and is not affiliated with it.
 
+## 🤖 GILGA PRIME Agent System
+
+Space Ledger now features the **GILGA PRIME Agent System** - an autonomous agent orchestration framework that works to prepare the application for mainnet deployment.
+
+### Core Agents
+- **Gilga Prime (001)**: Root Architect - Project orchestration and coordination
+- **Survivor (002)**: Implementation Agent - Fixes blockers and implements changes
+- **Contradictor (003)**: Risk Assessment Agent - Challenges assumptions and exposes risks
+- **Judge (004)**: Decision Agent - Enforces release criteria and quality gates
+
+### Features
+- Real-time agent monitoring via API endpoints
+- 10-stage decision protocol for all changes
+- Evidence-based decision making
+- Automatic security and legitimacy enforcement
+- Project record tracking and audit trail
+
+### Agent API
+- `GET /api/agents/registry` - View all agents
+- `POST /api/agents/first-mission` - Trigger Gilga Prime's initialization
+- `POST /api/agents/decision-protocol` - Execute full decision protocol
+- `POST /api/agents/challenge` - Have Contradictor challenge a proposal
+- See `.devin/agents/README.md` for full API documentation
+
+## 🌈 Visual Features
+
+### Celestial Theme
+- Rainbow-colored celestial background with 200 animated stars
+- 7 rotating nebulas (one for each rainbow color)
+- Dynamic cosmic atmosphere across all pages
+
+### 3D Agent Visualization
+- 7 rainbow-colored 3D agents (Among Us style) moving in real-time
+- Agents display their state (idle, working, moving) through animations
+- Hand waving, visor blinking, and glow effects
+- Powered by Three.js for smooth 4K-quality rendering
+
 ## What is live on Devnet
 
 - Phantom wallet purchase approvals for Devnet SOL and the Devnet USDC mint.
@@ -40,6 +77,8 @@ npm start
 Open [http://localhost:3000](http://localhost:3000). On macOS or Linux, use `cp .env.example .env` instead of `copy`.
 
 Set `SOLANA_PROGRAM_ID=EbP7vsnMXPonTfriPUFynco69d69JiXpWbKnwVmz8sgG` and the public `FEE_WALLET_ADDRESS` in `.env` to enable the on-chain API locally. The fee wallet is public configuration, never a private key. Never place seed phrases or private keys in this repository or in browser code.
+
+The application now uses RPCfast Devnet endpoints for improved performance and reliability.
 
 ## Checks
 
