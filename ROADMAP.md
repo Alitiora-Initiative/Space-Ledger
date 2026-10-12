@@ -29,12 +29,6 @@ This is a planning document, not a promise that work runs automatically. The web
 - [ ] Evaluate whether a third-party chart integration is necessary; document its data sharing and licensing before embedding anything.
 - [ ] If ever approved, start with read-only data on Devnet and clearly label it. Do not display simulated prices, owners, trades, or activity as real.
 
-## Agent system
-
-- [ ] Keep the current registry explicitly labeled as configured roles until real, observable workers exist.
-- [ ] If a worker system is designed, define narrow job permissions, an isolated runner, credential handling, audit logs, quotas, human approval for code changes, tests, rollback, and a kill switch.
-- [ ] Never let a page visit trigger secret code edits or unreviewed production deployment. Show accurate worker status from real job records only.
-
 ## Delivery
 
 - [ ] Run `npm test` for every change and add focused browser/accessibility checks for interactive UI.

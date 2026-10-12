@@ -5,7 +5,6 @@ const bondingCurve = require('./bondingCurve');
 const rpcRouter = require('./rpcRouter');
 const blockIds = require('./blockId');
 const solanaService = require('./solanaService');
-const agentApi = require('./agents/api');
 
 const PORT = Number.parseInt(process.env.PORT, 10) || 3000;
 // This release is deliberately pinned to Devnet. Mainnet must be a separately
@@ -230,9 +229,6 @@ app.post('/api/swap', (_req, res) => {
 app.get('/api/stream', (_req, res) => {
   res.status(503).json({ error: 'Live ledger events are unavailable until the on-chain program and indexer are deployed.' });
 });
-
-// Read-only display records for the configured agent visualization roles.
-app.use('/api/agents', agentApi);
 
 app.listen(PORT, () => {
   console.log(`[startup] Space Ledger on port ${PORT}; network=${SOLANA_NETWORK}; program=${process.env.SOLANA_PROGRAM_ID || 'disabled'}`);

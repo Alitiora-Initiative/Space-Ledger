@@ -142,17 +142,6 @@ test('Express app serves its pages and read-only API endpoints', async t => {
   assert.equal(namedGrid.blockLabel, '000AA');
   assert.equal(responses.get('/api/genesis').verified, false);
 
-  const agentResponse = await fetch(`${baseUrl}/api/agents/registry`);
-  assert.equal(agentResponse.status, 200);
-  const agentData = await agentResponse.json();
-  assert.deepEqual(Object.keys(agentData.registry), ['001', '002', '003', '004']);
-  assert.deepEqual(Object.keys(agentData.registry['001']).sort(), ['id', 'name', 'parent', 'status', 'type']);
-  assert.equal(agentData.registry['001'].status, 'configured');
-  for (const route of ['/api/agents/create', '/api/agents/auto-scale', '/api/agents/dryrun', '/api/agents/first-mission']) {
-    const response = await fetch(`${baseUrl}${route}`, { method: 'POST', body: '{}' });
-    assert.equal(response.status, 404, `${route} is not an exposed action`);
-  }
-
   const ownerResponse = await fetch(`${baseUrl}/api/block-owner/0`);
   assert.equal(ownerResponse.status, 503);
   assert.equal((await ownerResponse.json()).error.includes('cannot be verified'), true);

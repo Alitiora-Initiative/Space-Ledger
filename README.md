@@ -4,21 +4,6 @@ Space Ledger is a shared digital canvas made of 10 billion numbered blocks, each
 
 The concept takes inspiration from [The Million Dollar Homepage](https://www.webdesignmuseum.org/web-design-history/million-dollar-homepage-2005), Alex Tew's pixel advertising page launched in **2005**. Space Ledger is an independent project and is not affiliated with it.
 
-## Agent role registry
-
-The backend exposes four configured role records for the site visualization. They are not AI workers: there is no model runner, task queue, child-process launcher, scheduler, code-writing loop, agent-spawning endpoint, or automatic deployment. The public API is read-only and returns each role's display name, type, parent, and configured status. Website changes are made, reviewed, and deployed through the repository workflow; opening the website does not upgrade it.
-
-## 🌈 Visual Features
-
-### Celestial Theme
-- Canvas star field across the site, with reduced-motion support
-- Decorative background only; it does not represent users, activity, or network data
-
-### Agent Visualization
-- Canvas-drawn spheres reflect the configured role registry.
-- Agent 001 stays visually prominent; other spheres become smaller as the registry grows.
-- All current records have `configured` status. Spheres drift slowly; faster motion is reserved for a future truthful activity source. This is not live work telemetry.
-
 ## Devnet implementation
 
 This repository contains a Devnet-only purchase and ownership implementation. Whether it is configured and currently functioning depends on deployment settings and live network state; this audit did not perform a Devnet transaction.
