@@ -1,27 +1,22 @@
 {
   "name": "spatial-ledger-protocol",
   "version": "1.0.0",
-  "description": "An experimental blockchain-inspired pixel canvas with block pricing, wallet integrations, and an Express API.",
+  "description": "A Solana Devnet pixel-canvas prototype with an Express API and on-chain purchase receipts.",
   "main": "src/index.js",
   "type": "module",
   "scripts": {
     "start": "node src/index.js",
     "dev": "node src/index.js",
     "test": "node --test",
-    "compile": "hardhat compile"
+    "compile": "cargo build-sbf --manifest-path programs/space-ledger/Cargo.toml"
   },
   "keywords": [],
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "@openzeppelin/contracts": "^5.6.1",
     "@solana/web3.js": "^1.99.0",
     "dotenv": "^18.0.7",
-    "ethers": "^6.17.0",
     "express": "^5.3.0"
-  },
-  "devDependencies": {
-    "hardhat": "^3.19.0"
   },
   "overrides": {
     "rpc-websockets": {

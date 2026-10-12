@@ -41,17 +41,20 @@
   const setBusy = value => {
     busy = value;
     quoteButton.disabled = value;
-    buyButton.disabled = value || !activeQuote || window.walletManager?.getWalletInfo().wallet !== 'phantom';
+    buyButton.disabled = value || !activeQuote || !window.walletManager?.canSignDevnet();
     quoteButton.textContent = value ? 'Please wait…' : 'Get Devnet quote';
-    buyButton.textContent = value ? 'Waiting for Phantom…' : (activeQuote ? 'Review and buy in Phantom' : 'Connect Phantom to buy');
+    buyButton.textContent = value ? 'Waiting for wallet…' : (activeQuote ? 'Review and buy in wallet' : 'Connect wallet to buy');
   };
 
   function quoteSummary(quote) {
+    const unitScale = quote.asset === 'SOL' ? 1_000_000_000 : 1_000_000;
+    const unitDigits = quote.asset === 'SOL' ? 9 : 6;
+    const enteredBudget = (Number(quote.budgetUnits) / unitScale).toFixed(unitDigits);
     const lines = [
       `${quote.blockCount.toLocaleString()} blocks: ${quote.firstLabel}–${quote.lastLabel}`,
       `Block price: $${(Number(quote.priceMicroUsd) / 1_000_000).toFixed(6)}`,
       `Test platform fee: $${(Number(quote.feeMicroUsd) / 1_000_000).toFixed(2)}`,
-      `Charged by the program: ${quote.paymentAmount}; your selected budget is the maximum spend`,
+      `Maximum charged by the program: ${quote.paymentAmount}; your entered budget limit is ${enteredBudget} ${quote.asset}`,
       quote.asset === 'SOL' ? `Pyth SOL/USD: $${quote.solUsd.toFixed(2)}` : `Devnet USDC mint: ${appConfig.usdcMint}`,
       `Recipient: ${appConfig.treasury}`,
       'Plus Solana network fee and, if needed, token-account rent. Devnet tokens have no real-world value.'
@@ -63,24 +66,27 @@
     const wallet = window.walletManager?.getWalletInfo();
     if (!wallet?.connected) {
       buyButton.disabled = busy || !activeQuote;
+      buyButton.textContent = activeQuote ? 'Connect wallet to buy' : 'Connect wallet to buy';
+      balanceStatus.textContent = 'Connect a compatible Solana Devnet wallet to display its balance.';
       return;
     }
-    if (wallet.wallet === 'phantom') {
+    if (window.walletManager.canSignDevnet()) {
       buyButton.disabled = busy || !activeQuote;
-      setStatus(`Devnet program ready. Phantom connected: ${wallet.address}. Review every amount in Phantom before approving.`);
+      buyButton.textContent = activeQuote ? 'Review and buy in wallet' : 'Connect wallet to buy';
+      setStatus(`Devnet program ready. ${wallet.wallet} connected: ${wallet.address}. Review every amount in your wallet before approving.`);
       if (appConfig && window.solanaWeb3?.Connection) {
         try {
           const connection = new window.solanaWeb3.Connection(appConfig.rpc, 'confirmed');
           const balance = await solBalance(connection, wallet.address);
-          balanceStatus.textContent = `Connected wallet Devnet SOL balance: ${lamportsText(balance)}. This is the buyer wallet; payments go to ${appConfig.treasury}.`;
+          balanceStatus.textContent = `${wallet.wallet} Devnet SOL balance: ${lamportsText(balance)}. This is the buyer wallet; payments go to ${appConfig.treasury}.`;
         } catch (_) {
           balanceStatus.textContent = 'Could not load the connected wallet’s Devnet balance. Check the RPC connection.';
         }
       }
     } else {
       buyButton.disabled = true;
-      setStatus('Solana block purchases require Phantom. Your currently connected wallet is for another network.');
-      balanceStatus.textContent = 'Connect Phantom to display your Devnet balance.';
+      setStatus('The connected wallet cannot sign Solana Devnet legacy transactions. Choose a compatible wallet to purchase blocks.');
+      balanceStatus.textContent = 'Connect a compatible Solana Devnet wallet to display its balance.';
     }
   }
 
@@ -128,19 +134,16 @@
 
   buyButton.addEventListener('click', async () => {
     if (busy || !activeQuote || !appConfig) return;
-    if (!window.walletManager?.isConnected() || window.walletManager.getWalletInfo().wallet !== 'phantom') {
-      try {
-        await window.walletManager.connectPhantom();
-      } catch (error) {
-        setQuoteText(error.message);
-        return;
-      }
+    if (!window.walletManager?.canSignDevnet()) {
+      window.openWalletModal?.();
+      setStatus('Connect a compatible Solana Devnet wallet, then select Review and buy.');
+      return;
     }
 
     setBusy(true);
     try {
-      if (!window.solanaWeb3?.Transaction || !window.walletManager?.provider?.signAndSendTransaction) {
-        throw new Error('Phantom transaction support is required for a Devnet purchase.');
+      if (!window.solanaWeb3?.Transaction || !window.walletManager?.canSignDevnet()) {
+        throw new Error('A compatible Solana Devnet wallet is required for a purchase.');
       }
       const wallet = window.walletManager.getWalletInfo();
       const response = await fetch('/api/purchase', {
@@ -150,11 +153,16 @@
           buyer: wallet.address,
           asset: activeQuote.asset,
           blockCount: activeQuote.blockCount,
-          budget: activeQuote.budgetUnits
+          budget: activeQuote.paymentUnits
         })
       });
       const transactionData = await response.json();
       if (!response.ok) throw new Error(transactionData.error || 'Could not prepare the Devnet transaction. Request a fresh quote.');
+      if (transactionData.startBlock !== activeQuote.startBlock
+        || transactionData.blockCount !== activeQuote.blockCount
+        || transactionData.priceMicroUsd !== activeQuote.priceMicroUsd) {
+        throw new Error('Devnet supply changed after this quote. Request a fresh quote before proceeding.');
+      }
       const binary = Uint8Array.from(atob(transactionData.transaction), character => character.charCodeAt(0));
       const transaction = window.solanaWeb3.Transaction.from(binary);
       const connection = new window.solanaWeb3.Connection(appConfig.rpc, 'confirmed');
@@ -164,14 +172,11 @@
       const simulation = await connection.simulateTransaction(transaction, [], false);
       if (simulation.value.err) throw new Error('Devnet simulation failed. The transaction was not sent; request a fresh quote and try again.');
       const computeUnits = Number.isFinite(simulation.value.unitsConsumed) ? ` Estimated compute: ${simulation.value.unitsConsumed.toLocaleString()} units.` : '';
-      setQuoteText(`${quoteSummary(activeQuote)}\n\nDevnet simulation succeeded.${computeUnits} Phantom will now show the transaction for your review. Approve only if the network, recipient, block count, and spend are correct.`);
-      const responseFromWallet = await window.walletManager.provider.signAndSendTransaction(transaction, {
+      setQuoteText(`${quoteSummary(activeQuote)}\n\nDevnet simulation succeeded.${computeUnits} Your wallet will now show the transaction for review. Approve only if the network, recipient, block count, and spend are correct.`);
+      const signature = await window.walletManager.signAndSendTransaction(transaction, {
         preflightCommitment: 'confirmed'
       });
-      const signature = typeof responseFromWallet === 'string'
-        ? responseFromWallet
-        : responseFromWallet?.signature;
-      if (!signature) throw new Error('Phantom did not return a transaction signature.');
+      if (!signature) throw new Error('The wallet did not return a transaction signature.');
       setQuoteText('Transaction submitted to Solana Devnet. Waiting for confirmation…');
 
       const confirmation = await connection.confirmTransaction({

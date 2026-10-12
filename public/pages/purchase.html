@@ -31,17 +31,17 @@
   <main class="container">
     <header class="hero">
       <h1>Block Pricing & Devnet Purchases</h1>
-      <p>See the live Devnet quote, then approve your purchase in Phantom.</p>
+      <p>Request a live Devnet quote, then review the unsigned transaction in a compatible Solana wallet.</p>
     </header>
 
     <section class="card" aria-labelledby="statusTitle">
       <h2 id="statusTitle">Devnet purchases are loading</h2>
-      <p class="feature-status" id="purchaseStatus">Checking whether the Devnet ownership program is deployed. No funds move until you review and approve a transaction in Phantom.</p>
+      <p class="feature-status" id="purchaseStatus">Checking whether the Devnet ownership program is available. No transaction is sent until you review and approve it in your wallet.</p>
     </section>
 
     <section class="card" id="devnetPurchase" aria-labelledby="devnetPurchaseTitle" hidden>
       <h2 id="devnetPurchaseTitle">Buy blocks on Solana Devnet</h2>
-      <p>Use Devnet SOL or Devnet USDC from your own wallet. The $0.10 test platform fee is included in the quote. Solana network fees and any new token-account rent are additional and shown by Phantom. Devnet tokens have no real-world value.</p>
+      <p>Use Devnet SOL or Devnet USDC from your own wallet. The $0.10 test platform fee is included in the quote. Solana network fees and any new token-account rent are additional and shown by your wallet. Devnet tokens have no real-world value.</p>
       <form id="devnetPurchaseForm">
         <div class="price-fields">
           <div class="input-group">
@@ -58,10 +58,10 @@
         </div>
         <button class="button" id="quotePurchaseBtn" type="submit">Get Devnet quote</button>
       </form>
-      <p id="walletBalanceStatus" class="feature-status" aria-live="polite">Connect Phantom to display your Devnet balance here.</p>
-      <div id="purchaseQuote" class="result" role="status" aria-live="polite">Connect Phantom and request a quote to see the block range and exact payment.</div>
+      <p id="walletBalanceStatus" class="feature-status" aria-live="polite">Connect a compatible Solana Devnet wallet to display its balance here.</p>
+      <div id="purchaseQuote" class="result" role="status" aria-live="polite">Connect a wallet and request a quote to see the block range and exact payment.</div>
       <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:14px;">
-        <button class="button" id="buyBlocksBtn" type="button" disabled>Connect Phantom to buy</button>
+        <button class="button" id="buyBlocksBtn" type="button" disabled>Connect wallet to buy</button>
         <a id="purchaseExplorerLink" href="#" target="_blank" rel="noopener" hidden>View transaction on Solana Explorer</a>
       </div>
     </section>

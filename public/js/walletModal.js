@@ -1,13 +1,8 @@
 (() => {
   let dialog;
   let status;
-  let connectButton;
-  let installLink;
+  let walletList;
   let disconnectButton;
-
-  function phantomProvider() {
-    return window.phantom?.solana || (window.solana?.isPhantom ? window.solana : null);
-  }
 
   function buildDialog() {
     if (dialog) return;
@@ -21,7 +16,7 @@
 
     const heading = document.createElement('h2');
     heading.id = 'wallet-dialog-title';
-    heading.textContent = 'Connect Phantom';
+    heading.textContent = 'Connect a Solana wallet';
 
     const close = document.createElement('button');
     close.type = 'button';
@@ -32,36 +27,27 @@
 
     const description = document.createElement('p');
     description.id = 'wallet-dialog-description';
-    description.textContent = 'Phantom is the supported wallet for this Solana Devnet prototype. Your recovery phrase is never requested.';
+    description.textContent = 'Choose a detected wallet that supports Solana Devnet and legacy transactions. Your recovery phrase is never requested.';
 
-    const connect = document.createElement('button');
-    connect.type = 'button';
-    connect.className = 'button wallet-dialog-action';
-    connect.textContent = 'Connect Phantom';
-    connect.addEventListener('click', connectPhantom);
+    walletList = document.createElement('div');
+    walletList.className = 'wallet-dialog-list';
+    walletList.setAttribute('aria-label', 'Detected Solana wallets');
 
-    const install = document.createElement('a');
-    install.className = 'button wallet-dialog-action';
-    install.href = 'https://phantom.app/';
-    install.target = '_blank';
-    install.rel = 'noopener noreferrer';
-    install.textContent = 'Open Phantom website';
-
-    const disconnect = document.createElement('button');
-    disconnect.type = 'button';
-    disconnect.className = 'button wallet-dialog-action';
-    disconnect.textContent = 'Disconnect wallet';
-    disconnect.addEventListener('click', () => window.walletManager.disconnect());
+    disconnectButton = document.createElement('button');
+    disconnectButton.type = 'button';
+    disconnectButton.className = 'button wallet-dialog-action';
+    disconnectButton.textContent = 'Disconnect wallet';
+    disconnectButton.addEventListener('click', async () => {
+      await window.walletManager.disconnect();
+      renderState();
+    });
 
     status = document.createElement('p');
     status.className = 'wallet-dialog-status';
     status.setAttribute('role', 'status');
     status.setAttribute('aria-live', 'polite');
-    connectButton = connect;
-    installLink = install;
-    disconnectButton = disconnect;
 
-    panel.append(close, heading, description, connect, install, disconnect, status);
+    panel.append(close, heading, description, walletList, disconnectButton, status);
     dialog.append(panel);
     dialog.addEventListener('click', event => {
       if (event.target === dialog) dialog.close();
@@ -74,35 +60,62 @@
   }
 
   function renderState() {
-    if (!dialog) return;
-    const connected = window.walletManager?.isConnected();
-    const detected = Boolean(phantomProvider());
-    connectButton.hidden = !detected || connected;
-    installLink.hidden = detected || connected;
+    if (!dialog || !window.walletManager) return;
+    const manager = window.walletManager;
+    const connected = manager.isConnected();
+    const wallets = manager.getAvailableWallets();
+    walletList.replaceChildren();
     disconnectButton.hidden = !connected;
-    if (connected) status.textContent = `Connected to ${window.walletManager.shortenAddress(window.walletManager.currentAddress)}.`;
+
+    if (connected) {
+      status.textContent = `Connected to ${manager.currentWallet} (${manager.shortenAddress(manager.currentAddress)}).`;
+      return;
+    }
+
+    if (!wallets.length) {
+      const empty = document.createElement('p');
+      empty.className = 'wallet-dialog-empty';
+      empty.textContent = 'No compatible Solana wallet was detected. Open this page in a Solana wallet browser or install a wallet that supports Wallet Standard on Devnet.';
+      walletList.append(empty);
+      status.textContent = '';
+      return;
+    }
+
+    wallets.forEach(wallet => {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'button wallet-dialog-action';
+      button.textContent = `Connect ${wallet.name}`;
+      button.addEventListener('click', () => connectWallet(wallet, button));
+      walletList.append(button);
+    });
+    status.textContent = '';
   }
 
-  async function connectPhantom() {
-    connectButton.disabled = true;
-    status.textContent = 'Waiting for Phantom approval.';
+  async function connectWallet(wallet, button) {
+    walletList.querySelectorAll('button').forEach(item => { item.disabled = true; });
+    status.textContent = `Waiting for ${wallet.name} approval.`;
+    let failed = false;
     try {
-      await window.walletManager.connectPhantom();
-      renderState();
+      const result = await window.walletManager.connect(wallet);
+      status.textContent = `Connected to ${result.wallet} (${window.walletManager.shortenAddress(result.address)}).`;
       dialog.close();
     } catch (error) {
       status.textContent = error.message || 'Wallet connection was not completed.';
+      failed = true;
     } finally {
-      connectButton.disabled = false;
+      if (button.isConnected) button.disabled = false;
+      if (failed) walletList.querySelectorAll('button').forEach(item => { item.disabled = false; });
+      else renderState();
     }
   }
 
-  function updateNavButtons(address) {
+  function updateNavButtons({ wallet, address }) {
     const shortAddress = window.walletManager.shortenAddress(address);
     document.querySelectorAll('.wallet-button, #navWalletBtn').forEach(button => {
       button.textContent = `Wallet · ${shortAddress}`;
-      button.setAttribute('aria-label', `Connected wallet ${shortAddress}`);
-      button.title = `Connected wallet ${shortAddress}`;
+      button.setAttribute('aria-label', `Connected to ${wallet}: ${address}`);
+      button.title = `Connected to ${wallet}: ${address}`;
       button.setAttribute('data-wallet-connected', 'true');
     });
     renderState();
@@ -111,8 +124,8 @@
   function clearNavButtons() {
     document.querySelectorAll('.wallet-button, #navWalletBtn').forEach(button => {
       button.textContent = 'Connect wallet';
-      button.setAttribute('aria-label', 'Connect wallet');
-      button.title = 'Connect wallet';
+      button.setAttribute('aria-label', 'Connect Solana wallet');
+      button.title = 'Connect Solana wallet';
       button.removeAttribute('data-wallet-connected');
     });
     renderState();
@@ -132,7 +145,8 @@
     openModal();
   }, true);
 
-  window.walletManager?.on('connected', ({ address }) => updateNavButtons(address));
+  window.walletManager?.on('walletsChanged', renderState);
+  window.walletManager?.on('connected', updateNavButtons);
   window.walletManager?.on('disconnected', clearNavButtons);
   window.openWalletModal = openModal;
   window.closeWalletModal = () => dialog?.close();

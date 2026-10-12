@@ -32,10 +32,10 @@
 
     <div class="card">
       <h2>About Multi-Chain Architecture</h2>
-      <p style="color: #888; line-height: 1.6; margin-bottom: 15px;">
+      <p style="color: #c4d0d7; line-height: 1.6; margin-bottom: 15px;">
         Query public Ethereum-compatible RPC networks using a fixed allowlist of read-only methods. These requests display public chain data and do not connect to your wallet.
       </p>
-      <p style="color: #888; line-height: 1.6;">
+      <p style="color: #c4d0d7; line-height: 1.6;">
         Transactions, contract writes, and custom RPC destinations are not accepted by this explorer.
       </p>
     </div>
@@ -138,7 +138,7 @@
           list.appendChild(div);
         });
       } catch (error) {
-        document.getElementById('networksList').innerHTML = '<p style="color: #888;">Error loading networks</p>';
+        document.getElementById('networksList').textContent = 'Error loading networks.';
       }
     }
 
@@ -187,6 +187,6 @@
     loadNetworks();
   </script>
   <script src="../js/wallet.js"></script>
-  <script src="../js/walletModal.js?v=202610111259"></script>
+  <script src="../js/walletModal.js?v=20261012"></script>
 </body>
 </html>

@@ -10,14 +10,13 @@ const PORT = Number.parseInt(process.env.PORT, 10) || 3000;
 // This release is deliberately pinned to Devnet. Mainnet must be a separately
 // reviewed migration, not an environment-variable flip.
 const SOLANA_NETWORK = 'devnet';
-const FEE_WALLET_ADDRESS = process.env.FEE_WALLET_ADDRESS || '';
 const NOT_DEPLOYED = 'The Solana Devnet program is not configured.';
 
 const app = express();
 app.disable('x-powered-by');
 app.use((_req, res, next) => {
   res.set({
-    'Content-Security-Policy': "frame-ancestors 'none'",
+    'Content-Security-Policy': "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; img-src 'self' data:; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; font-src 'self' data:; connect-src 'self' https://api.devnet.solana.com wss://api.devnet.solana.com",
     'Permissions-Policy': 'camera=(), geolocation=(), microphone=()',
     'Referrer-Policy': 'strict-origin-when-cross-origin',
     'X-Content-Type-Options': 'nosniff',
@@ -27,32 +26,6 @@ app.use((_req, res, next) => {
 });
 app.use(express.json({ limit: '16kb' }));
 app.use(express.static(path.join(__dirname, '../public')));
-
-app.get('/api/config', async (_req, res) => {
-  const config = {
-    status: process.env.SOLANA_PROGRAM_ID ? 'devnet_program_configured' : 'read_only',
-    solanaNetwork: SOLANA_NETWORK,
-    feeWallet: FEE_WALLET_ADDRESS,
-    usdcMint: SOLANA_NETWORK === 'mainnet-beta'
-      ? 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v'
-      : '4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU',
-    totalBlocks: bondingCurve.TOTAL_SUPPLY,
-    contractAddress: process.env.SOLANA_PROGRAM_ID || null,
-    ownershipVerified: false,
-    message: process.env.SOLANA_PROGRAM_ID ? 'Devnet program configured; connect a Solana wallet to inspect live state.' : NOT_DEPLOYED
-  };
-  if (process.env.SOLANA_PROGRAM_ID) {
-    try {
-      const live = await solanaService.publicConfig();
-      config.status = live.initialized ? 'devnet_verified' : 'awaiting_initialization';
-      config.ownershipVerified = live.ownershipVerified;
-      config.currentSupply = live.currentSupply;
-    } catch (error) {
-      return res.status(503).json({ ...config, error: error.message });
-    }
-  }
-  res.json(config);
-});
 
 app.get('/api/solana/config', async (_req, res) => {
   try {
@@ -114,10 +87,6 @@ app.get('/api/treasury', async (_req, res) => {
   }
 });
 
-app.get('/api/vesting-status', (_req, res) => {
-  res.json({ status: 'not_deployed', canRelease: false, verified: false, message: NOT_DEPLOYED });
-});
-
 app.post('/api/rpc', async (req, res) => {
   const { networkId, method, params } = req.body || {};
   try {
@@ -153,10 +122,6 @@ app.get('/api/grid', async (req, res) => {
   } catch (error) {
     res.status(503).json({ error: error.message });
   }
-});
-
-app.get('/api/genesis', (_req, res) => {
-  res.json({ status: 'sequential_devnet_sales', verified: Boolean(process.env.SOLANA_PROGRAM_ID), startBlock: 0, startBlockLabel: blockIds.format(0), totalBlocks: bondingCurve.TOTAL_SUPPLY, message: 'Blocks are allocated sequentially to confirmed Devnet purchase receipts.' });
 });
 
 app.get('/api/stats', async (_req, res) => {
@@ -263,14 +228,6 @@ app.post('/api/purchase', async (req, res) => {
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
-});
-
-app.post('/api/swap', (_req, res) => {
-  res.status(503).json({ error: 'Resales are disabled until on-chain ownership and settlement are deployed.' });
-});
-
-app.get('/api/stream', (_req, res) => {
-  res.status(503).json({ error: 'Live ledger events are unavailable until the on-chain program and indexer are deployed.' });
 });
 
 app.listen(PORT, () => {

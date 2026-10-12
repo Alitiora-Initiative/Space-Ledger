@@ -1,100 +1,119 @@
 # Space Ledger
 
-Space Ledger is a shared digital canvas made of 10 billion numbered blocks, each containing a 10 × 10 grid (100 pixels). The combined address space is 1 trillion pixel positions. Visitors can explore the grid, connect Phantom, and test primary block purchases settled on Solana Devnet.
+Space Ledger is a shared digital-canvas prototype with 10 billion numbered blocks and 100 pixel positions per block. It has a real Express API and an Anchor program for **test-only purchases on Solana Devnet**. It is not a mainnet marketplace, investment product, or self-updating agent system.
 
-The concept takes inspiration from [The Million Dollar Homepage](https://www.webdesignmuseum.org/web-design-history/million-dollar-homepage-2005), Alex Tew's pixel advertising page launched in **2005**. Space Ledger is an independent project and is not affiliated with it.
+The project is independently inspired by the pixel-by-pixel format of [The Million Dollar Homepage](https://www.webdesignmuseum.org/web-design-history/million-dollar-homepage-2005), launched in 2005. Space Ledger is not affiliated with that project.
 
-## App pages
+## Current Features
 
-- **Home** (`/`): project overview, supply and pricing summary, and links to the main tools.
-- **Pricing** (`/pages/purchase.html`): quotes and wallet-approved Devnet purchase flow.
-- **Grid** (`/pages/grid.html`): browse numbered blocks.
-- **Sale activity** (`/pages/market.html`): live Devnet supply, confirmed purchase receipts, and the primary-sale model estimate.
-- **Leaderboard** (`/pages/leaderboard.html`): top wallets ranked by blocks in confirmed purchase receipts.
-- **Treasury**, **Network**, **Dashboard**, and **Profile**: project status, network configuration, wallet holdings, and purchase history.
-- **Privacy**, **Terms**, and **Cookies**: notices under `/pages/`; these remain drafts until the operator identity and contact details are confirmed.
+- Static HTML pages in `public/`, served locally by Express and as Vercel static assets.
+- Server routes in `src/index.js` for model estimates, Devnet state, quotes, unsigned purchase transactions, receipts, grid ownership, portfolio history, and holder rankings.
+- Anchor program in `programs/space-ledger/` which accepts Devnet SOL or the configured Devnet USDC mint, checks the SOL/USD feed for SOL payments, and atomically updates supply with a purchase receipt.
+- On-chain receipts are the persistence layer for purchases. This build does not use a separate database or store wallet activity in an application account system.
+- Wallet Standard discovery for wallets exposed by the current browser. A wallet must advertise Solana Devnet and legacy `signAndSendTransaction` support to appear. Phantom, Solflare, or Trust Wallet may be discovered when their installed extension or in-app browser exposes those capabilities. Mobile wallet discovery outside an injected wallet browser is not yet implemented.
+- The attached MetaMask instructions describe `@metamask/connect-solana`; this repository does not bundle that client, so MetaMask Connect is **not claimed as supported** by this build. Its [published package license](https://raw.githubusercontent.com/MetaMask/connect-monorepo/main/packages/connect-solana/LICENSE) limits use to non-commercial purposes; obtain appropriate permission before considering it for this project.
+- A read-only EVM RPC explorer with an allowlist of public read methods. It is separate from the Solana purchase flow and does not connect to EVM wallets.
+- Privacy, Terms, and Cookie Policy pages that document current code behavior. These are incomplete drafts, not a global legal compliance claim.
 
-The product name shown in the interface is **Space Ledger**. The app does not run autonomous agents or upgrade itself when visited.
+The site does not create or run autonomous agents, upgrade itself when opened, store tracking cookies, load analytics, or embed third-party frames. A normal Devnet transaction simulation is performed before requesting a signature; it is an RPC preflight, not simulated UI activity.
 
-## Devnet implementation
+## Architecture
 
-This repository contains a Devnet-only primary-purchase and ownership implementation. The production deployment is configured for Solana Devnet; live availability still depends on RPC and deployment health. A Devnet transaction was not signed or sent during this code update.
+```text
+Browser pages (public/)
+  ├── Wallet Standard discovery and user-approved signing (public/js/wallet.js)
+  └── Fetch requests
+       └── Express API (src/index.js)
+            ├── Solana RPC and receipt validation (src/solanaService.js)
+            ├── Read-only EVM RPC allowlist (src/rpcRouter.js)
+            └── Anchor program state and receipts (programs/space-ledger/)
+```
 
-Backend Solana reads use the server-side `SOLANA_RPC_DEVNET` endpoint when configured, with the official Devnet RPC as a fallback. Keep provider credentials in server environment variables; the browser-facing wallet configuration does not expose the private endpoint. Mainnet configuration is not used by this Devnet-only app.
+Confirmed purchases are read from Solana program accounts. The current portfolio, activity, and leaderboard routes scan receipt accounts through RPC; this is suitable only for a small Devnet beta. A production-scale indexer and pagination are not included. Vercel deployment can run the Express entry point and serves files from `public/`, but the current production deployment and its environment settings must be verified independently.
 
-- Phantom wallet purchase approvals for Devnet SOL and the Devnet USDC mint. Wallet addresses are public chain data; the application does not request recovery phrases or private keys.
-- An Anchor Solana program that accepts payment, records a purchase receipt, and advances the sold-block supply atomically.
-- An unsigned purchase is simulated against Devnet before the browser requests wallet approval. A successful simulation is not a guarantee of later confirmation; users must review the transaction in their wallet.
-- SOL-to-USD conversion checked on-chain against a configured Pyth SOL/USD feed. The program checks feed identity, confidence, and freshness.
-- A fixed receiving wallet, `EDZjEbRAtqyC8z6ta6PYHX161Xynt13tWpd7orKERkbz`, for purchase proceeds.
-- Validated receipt-based ownership lookups, live supply and purchase statistics, a top-holder ranking, and a wallet portfolio with confirmed purchase history.
-- Compact labels such as `000A`–`999A`, then `000B`–`999B`, continuing through `Z`, `AA`, and onward. Numeric block numbers are canonical.
+## Wallet Purchase Flow
 
-The configured Devnet program ID is `EbP7vsnMXPonTfriPUFynco69d69JiXpWbKnwVmz8sgG`. The app is pinned to Devnet; changing an environment variable cannot switch it to mainnet. The program's upgrade authority and security have not been independently audited.
+1. The app discovers wallets through Wallet Standard; it does not keep a hardcoded adapter list.
+2. A visitor requests a quote based on current Devnet supply. The backend validates the amount, asset, supply, fixed treasury, and (for SOL) current Pyth feed data.
+3. The server returns an **unsigned** transaction. The browser simulates it against Devnet.
+4. If simulation succeeds, the selected wallet receives the transaction. The user must review and approve it; the app never requests seed phrases or private keys.
+5. The app waits for Devnet confirmation and verifies the receipt account before showing the purchase as confirmed.
 
-The displayed curve starts at $0.001 per block and rises linearly toward $1,000. A $0.10 protocol fee is added to each purchase. Network transaction fees and any rent for new on-chain accounts are separate. Devnet tokens have no real-world value.
+Devnet SOL and Devnet USDC have no real-world value. The program pins the network, treasury, Devnet mint, and program ID in code. The current program ID is `EbP7vsnMXPonTfriPUFynco69d69JiXpWbKnwVmz8sgG`; the fixed test-payment recipient is `EDZjEbRAtqyC8z6ta6PYHX161Xynt13tWpd7orKERkbz`. No purchase was signed or sent as part of this update.
 
-## Try a purchase
+The published model begins at $0.001 per block and ends at $1,000 per block across the 10-billion-block range. The test protocol fee is $0.10 per purchase. Quotes can change with on-chain supply and, for SOL, the Pyth price. A model estimate is not a market price or promise of return.
 
-1. Install Phantom and switch its network to **Devnet**.
-2. Fund the connected wallet with Devnet SOL using the [Solana faucet](https://faucet.solana.com/). For USDC purchases, obtain tokens for the Devnet USDC mint `4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU` from a Devnet token faucet.
-3. Open Pricing, select SOL or USDC, enter a budget, and request a quote.
-4. The app simulates the unsigned transaction, then Phantom opens for review. Check the network and payment details in Phantom and approve only if they match. The app records ownership only after the confirmed on-chain receipt is found.
-5. Open Profile with the same wallet connected to see its verified purchase ranges.
+## Pages
 
-Block labels are a convenience for entering positions; the purchase screen's quote determines the contiguous range available at the current supply. A receipt records the original buyer and range. The profile history links to receipt accounts; the current receipt format does not store transaction signatures. Transfer/resale support is not implemented, so do not treat receipts as transferable NFTs.
+- `/` - project, supply, and model overview.
+- `/pages/purchase.html` - estimates, Devnet quotes, and wallet-approved purchase flow.
+- `/pages/grid.html` - browse block and pixel positions with verified ownership when available.
+- `/pages/market.html` - confirmed Devnet receipts and the primary-sale model; not an exchange or candlestick chart.
+- `/pages/leaderboard.html` - ranking of original buyers from confirmed receipts; there are no transfers.
+- `/pages/profile.html` and `/pages/dashboard.html` - public receipt history and wallet holdings.
+- `/pages/treasury.html` - fixed Devnet destination and on-chain balances.
+- `/pages/network.html` - read-only EVM RPC explorer.
+- `/pages/swap.html` - explanatory page only; transfers and resales are not implemented.
+- `/pages/privacy.html`, `/pages/terms.html`, `/pages/cookies.html` - draft notices.
 
-## Run locally
+## API
 
-Requirements: Node.js 22 or later.
+| Route | Purpose |
+| --- | --- |
+| `GET /api/solana/config` | Devnet program, treasury, supply, and public wallet RPC configuration |
+| `GET /api/solana/quote?asset=SOL&amount=1` | Quote using live Devnet state and the selected test asset |
+| `POST /api/purchase` | Build an unsigned purchase transaction; never submits it |
+| `GET /api/supply`, `/api/stats`, `/api/treasury` | Devnet supply, receipt counts, and treasury balances |
+| `GET /api/grid?block=0`, `/api/block-owner/:blockId` | Grid data and receipt-backed ownership lookup |
+| `GET /api/blocks/:address`, `/api/portfolio/:address` | Receipt-backed wallet holdings and history |
+| `GET /api/market`, `/api/leaderboard` | Confirmed receipt data and original-buyer ranking |
+| `GET /api/price/:blockId`, `/api/price/range` | Published curve estimates, not a live market quote |
+| `GET /api/networks`, `POST /api/rpc` | Supported EVM networks and allowlisted read-only queries |
+
+The app deliberately does not expose pretend `/api/stream`, vesting, swap, or generic config routes. Unsupported write RPC calls are rejected.
+
+## Run Locally
+
+Requirements: Node.js 22 or later. A Solana CLI with `cargo build-sbf` is additionally required to compile the on-chain program.
 
 ```sh
-npm install
-copy .env.example .env
+npm ci
+cp .env.example .env
 npm start
 ```
 
-Open [http://localhost:3000](http://localhost:3000). On macOS or Linux, use `cp .env.example .env` instead of `copy`.
+Open [http://localhost:3000](http://localhost:3000). In PowerShell, copy `.env.example` to `.env` with `Copy-Item .env.example .env`.
 
-Set `SOLANA_PROGRAM_ID=EbP7vsnMXPonTfriPUFynco69d69JiXpWbKnwVmz8sgG` and the public `FEE_WALLET_ADDRESS` in `.env` to enable the on-chain API locally. The fee wallet is public configuration, never a private key. Never place seed phrases or private keys in this repository or in browser code.
+Set `SOLANA_PROGRAM_ID` to the intended Devnet program ID to enable chain-backed endpoints. `SOLANA_RPC_DEVNET` is optional; if unset, the server uses Solana's public Devnet endpoint. Keep any RPC credential on the server. Never commit private keys, seed phrases, or RPC credentials.
 
-The default RPC endpoint is Solana's public Devnet endpoint. A deployment may configure a different Devnet RPC provider; provider requests can include public wallet and chain identifiers needed for the requested feature.
-
-Do not reuse any RPC credential that has appeared in a public commit. A previous provider credential was removed from the current source, but repository history is unchanged; rotate it with the provider if it was yours.
-
-## Checks
+## Verification
 
 ```sh
 npm test
 cargo test --manifest-path programs/space-ledger/Cargo.toml
-cargo build-sbf --manifest-path programs/space-ledger/Cargo.toml
+npm run compile
 ```
 
-The JavaScript tests cover API responses, block-label conversion, quote math, Pyth account validation, receipt owner/discriminator/PDA validation, and browser-script syntax. The Rust unit test covers fixed-point curve and SOL conversion math. Automated tests do not contact Devnet and do not sign or send transactions. These checks are not a security audit.
+The automated JavaScript tests cover API behavior, request validation, block IDs, curve math, Pyth feed validation, receipt validation, security headers, and Wallet Standard discovery/signing. They use a mocked wallet object for deterministic unit tests; they do not simulate successful product purchases. The browser purchase flow separately simulates its real unsigned Devnet transaction before the wallet prompt. Rust tests cover program math. Tests do not prove a successful live purchase, full accessibility conformance, or contract security.
 
-## Not enabled
+## Not Implemented
 
-- Mainnet payments and any use of real funds.
-- Swaps, secondary-market transfers/resales, NFTs, vesting, and yield. There is no sell instruction, order book, liquidity pool, or Jupiter route.
-- TradingView candlesticks or other secondary-market price charts. The sale-activity page shows the primary-sale model and real confirmed receipts instead; it does not treat model estimates as traded prices.
-- Token creation/hosting/trading, regional leaderboards, and GPS-based features.
-- Other purchase tokens beyond Devnet SOL and the specified Devnet USDC mint.
-- An external archival indexer; current portfolio reads scan program receipts from Solana RPC.
+- Mainnet transactions or real-money activity.
+- MetaMask Connect Solana bridge (pending license review/permission), mobile QR/WalletConnect flow, or wallets that do not expose the required Wallet Standard Devnet features.
+- Block transfers, resales, swap routes, liquidity, token creation, or Jupiter integration.
+- TradingView candles, executed-trade data, GPS, regional rankings, or token hosting.
+- An independent database, receipt indexer, streaming service, or signature archive. Current reads use on-chain receipts and RPC scans; receipts do not include the originating transaction signature.
+- Autonomous agents or code that modifies the project at page-load time.
 
-## Privacy, rights, and accessibility status
+## Privacy, Rights, and Deployment
 
-- Privacy, terms, and cookie pages are available under `public/pages/`. They are drafts, not a global compliance certification. The operator still needs to provide a legal name, service address, privacy contact, and deployment-specific hosting/RPC retention details before public launch.
-- The current repository code does not set cookies, use browser storage, or load analytics/tracking scripts, and it contains no third-party iframe embeds. The deployed host and any later integrations must be checked separately. Add consent controls before enabling non-essential device storage/tracking where applicable law requires prior consent.
-- Logo authorship/licensing is not recorded and must be verified before redistribution. The bundled Solana web3 library carries its own MIT notice; the repository code uses the MIT license.
-- Accessibility improvements include visible keyboard focus, reduced-motion handling, accessible wallet dialog and grid controls, responsive navigation, and improved contrast. This is not a WCAG conformance claim; comprehensive screen-reader, zoom/reflow, device, and contrast testing remains on the roadmap.
+The current page code does not set cookies or browser storage, run analytics/tracking scripts, or embed third-party frames. A cookie-consent banner is not needed for the site's own current code on that basis; the deployed host, RPC provider, and any later integrations must be checked independently. Wallet actions and chain queries contact external wallet/RPC services when requested.
 
-## Planned work
+The legal pages are not ready for public launch: the operator still needs to provide a legal name, postal contact, privacy contact, and hosting/RPC provider details. The logo's authorship and redistribution permission are not documented. Review applicable Kenya and target-country requirements with qualified counsel before offering a global service. The repository's code license is MIT; the bundled Solana web3 library has its own license notice.
 
-See [ROADMAP.md](ROADMAP.md) for the staged TODO list, including the requested block-detail views and the reviews required before regional or token-market features.
+The Vercel configuration applies response-security headers. Vercel's Express support can run the `src/index.js` app, with static assets served from `public/`; an authenticated deployment and live production verification are still required. Pushing code does not prove Vercel has deployed it.
 
-Vercel deploys from the connected Git repository when its production branch is updated. Confirm the production deployment and run the read-only API checks after publishing; visiting the site never runs code upgrades.
-
-The Devnet flow is for testing wallet approvals and receipt settlement. It is not financial advice or a promise of investment returns.
+See [ROADMAP.md](ROADMAP.md) for the current TODO list and [the detailed beta guide](docs/Space-Ledger-Devnet-Beta-Guide.md). GitHub Wikis are currently unavailable for the target repository; the guide is ready in this repository until a maintainer enables the Wiki.
 
 ## License
 

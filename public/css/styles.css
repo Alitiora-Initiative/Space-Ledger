@@ -520,7 +520,10 @@ nav .container { max-width: 1500px; }
 .wallet-dialog-panel p { color: #d4e0e8; line-height: 1.55; }
 .wallet-dialog-close { justify-self: end; min-height: 40px; padding: 6px 12px; color: #f0f5f8; background: #273642; border: 1px solid #708494; cursor: pointer; }
 .wallet-dialog-action { width: 100%; text-align: center; text-decoration: none; }
+.wallet-dialog-list { display: grid; gap: 10px; }
+.wallet-dialog-empty { margin: 0; padding: 12px; border: 1px solid #526a76; background: #101c25; }
 .wallet-dialog-status { min-height: 1.5em; overflow-wrap: anywhere; }
+.wallet-dialog button:disabled { cursor: wait; opacity: .7; }
 .wallet-dialog [hidden] { display: none; }
 .block-id-help {
   position: relative;

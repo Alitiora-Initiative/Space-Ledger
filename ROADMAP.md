@@ -1,54 +1,44 @@
-# Space Ledger TODO
+# Space Ledger Roadmap
 
-This is a planning document, not a promise that work runs automatically. The website does not improve itself when visited. Changes need an owner, review, tests, and an intentional deployment.
+This is a human-maintained checklist. The website does not create agents, edit its source, or deploy upgrades when someone visits. Each release requires a reviewed change and a deliberate deployment.
 
-## Beta work completed
+## Done in This Update
 
-- [x] Read-only Devnet supply and purchase statistics.
-- [x] Top-holder ranking derived from validated purchase receipts; ranks original buyers because transfers are not implemented.
-- [x] Profile purchase history from confirmed on-chain receipts.
-- [x] Simulate unsigned purchase transactions before requesting a wallet signature.
-- [x] Persistent legal footer, responsive navigation, local system typography, and site icon.
-- [x] Market activity view that separates the primary-sale model from unavailable secondary-market trading data.
+- [x] Connect the app's wallet chooser and purchase path to dynamic Wallet Standard discovery; require Solana Devnet and legacy `signAndSendTransaction` support.
+- [x] Use generic wallet labels and user-controlled approval; retain Devnet transaction simulation before signing.
+- [x] Add deterministic wallet-registry/connect/sign tests.
+- [x] Remove disconnected EVM vesting/ownership code and old $10/PnL demos that contradicted the active $1,000 curve.
+- [x] Remove the unconnected Supabase schema, which was not used by the app and advertised public access to wallet records.
+- [x] Remove placeholder release artifacts and unused config, vesting, genesis, and stream routes.
+- [x] Refresh README/API documentation and prepare a detailed GitHub Wiki guide.
 
-## Remaining beta gates
+## Beta Release Gates
 
-- [ ] Test signed purchases on Devnet with an explicitly approved wallet transaction and record the transaction receipt.
-- [ ] Add Wallet Standard discovery and mobile wallet support; the current purchase flow supports Phantom's injected Solana provider.
-- [ ] Preserve transaction signatures in receipts or add a verified indexer if a true transaction history is needed.
-- [ ] Resolve operator identity/contact fields and provider retention details in the privacy, terms, and cookie notices.
-- [ ] Complete responsive visual, keyboard, screen-reader, and WCAG contrast checks on real mobile and desktop browsers.
-- [ ] Obtain an independent program/security review before any public beta beyond test-only Devnet use.
+- [ ] Verify the GitHub Wiki page, production deployment, configured environment variables, and live API responses after publishing.
+- [ ] Complete an explicitly approved test purchase on Solana Devnet, then verify the transaction and receipt in Solana Explorer. Never request or send a wallet transaction without the user's explicit approval.
+- [ ] Add transaction signatures to receipts or build a verified indexer that joins signatures to program receipts.
+- [ ] Review the official MetaMask Connect Solana package license and obtain any needed commercial permission before deciding whether to bundle it; then test the SDK and mobile flow. Do not claim MetaMask support before then.
+- [ ] Test mobile wallet support. Wallet Standard discovery currently sees wallets exposed in the active browser; it does not implement QR, WalletConnect, or app handoff.
+- [ ] Complete responsive browser testing, keyboard-only use, screen-reader checks, zoom/reflow, forced-colors, reduced-motion, image-alt review, and measured contrast testing.
+- [ ] Review the Solana program, transaction construction, rate limits, RPC behavior, dependency health, and recovery process with independent reviewers before any public beta.
 
-## Before public launch
+## Privacy, Rights, and Legal Readiness
 
-- [ ] Add the operator's verified legal name, service address, and privacy contact to the notices.
-- [ ] Identify the Vercel hosting, RPC, wallet, and security providers; document their processing, logs, retention, and any cross-border transfers.
-- [ ] Confirm the creator and redistribution rights for `public/img/logo.jpg`; record attribution and third-party notices.
-- [ ] Review applicable Kenya and target-country privacy, consumer, accessibility, financial, and online-service requirements with qualified counsel.
-- [ ] Audit the deployed site, response headers, dependencies, external requests, and any platform-added cookies/storage before launch.
-- [ ] Complete keyboard, screen-reader, zoom/reflow, reduced-motion, forced-colors, and contrast testing against WCAG 2.2; fix any remaining issues and record results.
+- [ ] Add the operator's verified legal name, postal contact, and privacy contact to the legal pages.
+- [ ] Document the actual Vercel, RPC, and wallet-provider processing, log retention, service regions, and cross-border transfers.
+- [ ] Recheck the deployed domain for cookies, storage, embeds, and network requests; add consent controls before introducing any non-essential tracking or device storage where required.
+- [ ] Confirm the creator and redistribution rights for `public/img/logo.jpg`; retain third-party license notices for dependencies.
+- [ ] Obtain qualified review for Kenya and every intended target country before marketing or enabling real-value features. Current legal pages are drafts, not compliance certification.
 
-## Block exploration
+## Scale and Product Features
 
-- [ ] Define a clear, keyboard-accessible block detail interaction: a block/cube overview plus a pixel-cluster view, with one activation path that also works for touch and assistive technology.
-- [ ] Show ownership only from verified on-chain receipts. For large owners, paginate or aggregate results and avoid exposing unnecessary personal data.
-- [ ] Add tests for block selection, view changes, ownership loading/error/unknown states, and responsive layout before enabling the UI.
+- [ ] Build a receipt indexer with pagination and consistency checks before the on-chain account scan becomes a bottleneck.
+- [ ] Define block-detail and pixel-cluster interactions with keyboard, touch, and assistive-technology paths. Show ownership only when it is verifiable from receipts.
+- [ ] Keep trading, token issuance, transfers, region/GPS features, and third-party chart embeds disabled until their security, data, privacy, and legal requirements are reviewed.
+- [ ] If a real secondary market is ever approved, display only executed, sourced trades. Never present the primary-sale model or fabricated candles as market activity.
 
-## Regional discovery
+## Delivery Checks
 
-- [ ] Define what “region” means and whether users can choose it manually; do not request precise GPS by default.
-- [ ] Complete a privacy impact and abuse review before showing regional rankings or connecting location to wallet addresses.
-- [ ] Use transparent aggregation, minimum group sizes, opt-in controls, deletion/retention rules, and an accessible non-map alternative.
-
-## Token-market concept (not enabled)
-
-- [ ] Do not launch tokens or enable trading in this prototype. First obtain legal and security review for each supported jurisdiction and define age/eligibility, issuer identity, disclosures, custody, market-abuse, tax, sanctions, consumer-protection, and incident-handling requirements.
-- [ ] Evaluate whether a third-party chart integration is necessary; document its data sharing and licensing before embedding anything.
-- [ ] If ever approved, start with read-only data on Devnet and clearly label it. Do not display simulated prices, owners, trades, or activity as real.
-
-## Delivery
-
-- [ ] Run `npm test` for every change and add focused browser/accessibility checks for interactive UI.
-- [ ] Review the diff and deployment preview before merging or publishing.
-- [ ] Verify the target repository and Vercel deployment after delivery; never force-push over remote work.
+- [ ] Run `npm test`, `cargo test --manifest-path programs/space-ledger/Cargo.toml`, and `npm run compile` for relevant changes.
+- [ ] Review the full diff and verify the target GitHub branch before pushing; never force-push.
+- [ ] Confirm the Vercel deployment reaches Ready and test production pages and API routes after the Git push.

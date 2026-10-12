@@ -30,7 +30,9 @@ test('Vercel applies security headers to static assets and functions', () => {
   const config = JSON.parse(fs.readFileSync(path.join(root, 'vercel.json'), 'utf8'));
   const wildcard = config.headers.find(rule => rule.source === '/(.*)');
   const headers = Object.fromEntries(wildcard.headers.map(({ key, value }) => [key.toLowerCase(), value]));
-  assert.equal(headers['content-security-policy'], "frame-ancestors 'none'");
+  assert.match(headers['content-security-policy'], /default-src 'self'/);
+  assert.match(headers['content-security-policy'], /frame-ancestors 'none'/);
+  assert.match(headers['content-security-policy'], /connect-src 'self' https:\/\/api\.devnet\.solana\.com wss:\/\/api\.devnet\.solana\.com/);
   assert.equal(headers['permissions-policy'], 'camera=(), geolocation=(), microphone=()');
   assert.equal(headers['referrer-policy'], 'strict-origin-when-cross-origin');
   assert.equal(headers['x-content-type-options'], 'nosniff');
@@ -54,7 +56,7 @@ async function waitForServer(baseUrl, child) {
   while (Date.now() < deadline) {
     if (child.exitCode !== null) throw new Error(`App server exited with code ${child.exitCode}`);
     try {
-      const response = await fetch(`${baseUrl}/api/config`);
+      const response = await fetch(`${baseUrl}/api/supply`);
       if (response.ok) return;
     } catch (error) {
       lastError = error;
@@ -64,7 +66,7 @@ async function waitForServer(baseUrl, child) {
   throw new Error(`App server did not start: ${lastError?.message || 'timeout'} (${lastError?.cause?.message || 'no cause'})`);
 }
 
-test('Express app serves its pages and read-only API endpoints', async t => {
+test('Express app serves pages and live API endpoints while rejecting removed features', async t => {
   const port = await findFreePort();
   const baseUrl = `http://127.0.0.1:${port}`;
   const child = spawn(process.execPath, [path.join(root, 'src', 'index.js')], {
@@ -73,9 +75,7 @@ test('Express app serves its pages and read-only API endpoints', async t => {
       ...process.env,
       PORT: String(port),
       NODE_ENV: 'test',
-      SUPABASE_URL: '',
-      SUPABASE_SERVICE_KEY: '',
-      FEE_WALLET_ADDRESS: ''
+      SOLANA_PROGRAM_ID: ''
     },
     stdio: ['ignore', 'pipe', 'pipe']
   });
@@ -110,15 +110,12 @@ test('Express app serves its pages and read-only API endpoints', async t => {
     ['/pages/privacy.html', 'text/html'],
     ['/pages/terms.html', 'text/html'],
     ['/pages/cookies.html', 'text/html'],
-    ['/api/config', 'application/json'],
     ['/api/price/0', 'application/json'],
     ['/api/price/range?start=0&count=2', 'application/json'],
     ['/api/supply', 'application/json'],
     ['/api/treasury', 'application/json'],
-    ['/api/vesting-status', 'application/json'],
     ['/api/networks', 'application/json'],
     ['/api/grid?block=1', 'application/json'],
-    ['/api/genesis', 'application/json'],
     ['/api/stats', 'application/json'],
     ['/api/market', 'application/json']
   ];
@@ -128,7 +125,7 @@ test('Express app serves its pages and read-only API endpoints', async t => {
     const response = await fetch(`${baseUrl}${route}`);
     assert.equal(response.status, 200, `${route} should return HTTP 200`);
     assert.match(response.headers.get('content-type') || '', new RegExp(contentType));
-    assert.equal(response.headers.get('content-security-policy'), "frame-ancestors 'none'");
+    assert.match(response.headers.get('content-security-policy') || '', /default-src 'self'/);
     assert.equal(response.headers.get('permissions-policy'), 'camera=(), geolocation=(), microphone=()');
     assert.equal(response.headers.get('referrer-policy'), 'strict-origin-when-cross-origin');
     assert.equal(response.headers.get('x-content-type-options'), 'nosniff');
@@ -140,9 +137,6 @@ test('Express app serves its pages and read-only API endpoints', async t => {
   assert.match(responses.get('/'), /About Space Ledger/);
   assert.match(responses.get('/'), /<h1>Space Ledger<\/h1>/);
   assert.doesNotMatch(responses.get('/'), /Spatial Ledger Protocol/);
-  assert.equal(responses.get('/api/config').totalBlocks, 10_000_000_000);
-  assert.equal('solanaRpc' in responses.get('/api/config'), false);
-  assert.doesNotMatch(JSON.stringify(responses.get('/api/config')), /api_key=/i);
   assert.match(responses.get('/pages/privacy.html'), /Publication status: incomplete/);
   assert.match(responses.get('/pages/terms.html'), /Terms and Conditions/);
   assert.match(responses.get('/pages/cookies.html'), /does not currently need a cookie-consent banner/);
@@ -167,11 +161,12 @@ test('Express app serves its pages and read-only API endpoints', async t => {
   const namedGrid = await namedGridResponse.json();
   assert.equal(namedGrid.blockId, 26_000);
   assert.equal(namedGrid.blockLabel, '000AA');
-  assert.equal(responses.get('/api/genesis').verified, false);
   assert.equal(responses.get('/api/market').verified, false);
   assert.deepEqual(responses.get('/api/market').latestReceipts, []);
   const paymentScript = fs.readFileSync(path.join(root, 'public', 'js', 'solanaPayment.js'), 'utf8');
   assert.ok(paymentScript.indexOf('simulateTransaction(transaction') < paymentScript.indexOf('signAndSendTransaction(transaction'));
+  assert.match(paymentScript, /budget: activeQuote\.paymentUnits/);
+  assert.match(paymentScript, /transactionData\.startBlock !== activeQuote\.startBlock/);
   const leaderboardResponse = await fetch(`${baseUrl}/api/leaderboard`);
   assert.equal(leaderboardResponse.status, 503);
   assert.equal((await leaderboardResponse.json()).verified, false);
@@ -180,14 +175,15 @@ test('Express app serves its pages and read-only API endpoints', async t => {
   assert.equal(ownerResponse.status, 503);
   assert.equal((await ownerResponse.json()).error.includes('cannot be verified'), true);
 
-  for (const route of ['/api/purchase', '/api/swap']) {
-    const response = await fetch(`${baseUrl}${route}`, {
+  const purchaseResponse = await fetch(`${baseUrl}/api/purchase`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ walletAddress: 'wallet', blockId: 1, blockCount: 1, txSignature: 'fake' })
+      body: JSON.stringify({ buyer: 'not-a-valid-wallet', asset: 'SOL', blockCount: 1, budget: '1000' })
     });
-    assert.equal(response.status, 503, `${route} must refuse unverified transactions`);
-  }
+  assert.equal(purchaseResponse.status, 503, 'purchase preparation must refuse an unconfigured program');
+  const retiredRoutes = ['/api/config', '/api/genesis', '/api/stream', '/api/vesting-status'];
+  for (const route of retiredRoutes) assert.equal((await fetch(`${baseUrl}${route}`)).status, 404, `${route} must not expose stale placeholder data`);
+  assert.equal((await fetch(`${baseUrl}/api/swap`, { method: 'POST' })).status, 404, 'unsupported swap endpoint must not pretend to exist');
 
   const writeRpcResponse = await fetch(`${baseUrl}/api/rpc`, {
     method: 'POST',
@@ -195,4 +191,19 @@ test('Express app serves its pages and read-only API endpoints', async t => {
     body: JSON.stringify({ networkId: 1, method: 'eth_sendTransaction', params: [] })
   });
   assert.equal(writeRpcResponse.status, 400);
+});
+
+test('pages have image alternatives and do not load remote scripts or iframe embeds', () => {
+  const pageDirectory = path.join(root, 'public', 'pages');
+  const pages = [path.join(root, 'public', 'index.html'), ...fs.readdirSync(pageDirectory)
+    .filter(file => file.endsWith('.html'))
+    .map(file => path.join(pageDirectory, file))];
+  for (const file of pages) {
+    const html = fs.readFileSync(file, 'utf8');
+    for (const match of html.matchAll(/<img\b([^>]*)>/gi)) {
+      assert.match(match[1], /\balt\s*=/i, `${path.relative(root, file)} image must declare alt text`);
+    }
+    assert.doesNotMatch(html, /<iframe\b/i, `${path.relative(root, file)} must not embed third-party frames`);
+    assert.doesNotMatch(html, /<script\b[^>]*\bsrc\s*=\s*["']https?:\/\//i, `${path.relative(root, file)} must not load remote scripts`);
+  }
 });

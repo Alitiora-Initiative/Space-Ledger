@@ -35,7 +35,7 @@
 
     <h2>Information the site handles</h2>
     <ul>
-      <li><strong>Wallet details:</strong> if you choose to connect Phantom, the browser receives the public wallet address from the wallet extension. The site does not request a recovery phrase or private key. Addresses and transactions written to a public blockchain can be visible permanently and may be linkable to a person.</li>
+      <li><strong>Wallet details:</strong> if you choose a detected, compatible Solana wallet, it provides a public address to the page for the requested feature. The site does not request a recovery phrase or private key. Addresses and transactions written to a public blockchain can be visible permanently and may be linkable to a person.</li>
       <li><strong>Feature requests:</strong> the site sends the wallet address, selected asset, amount, block range, or public chain query needed to provide a feature you request. A Devnet purchase flow, when configured, asks your wallet to review and sign a transaction; it does not move mainnet funds.</li>
       <li><strong>Network metadata:</strong> the web host and network security services may process an IP address, requested URL, time, browser details, and error information to deliver and protect the site. The hosting provider and its retention period are not configured in this repository.</li>
     </ul>
@@ -44,7 +44,7 @@
     <p>Requests are processed to show public chain data, calculate estimates, prepare a Devnet transaction when available, respond to a wallet connection you initiate, and maintain the service. The operator must document the applicable lawful basis for each purpose and any security-log retention before public launch; this code review cannot choose a lawful basis for an unidentified controller.</p>
 
     <h2>Blockchain and service providers</h2>
-    <p>Solana requests use the public Devnet endpoint by default. The network explorer sends requested, read-only EVM queries through the server to the RPC endpoints shown on that page. These services receive the query data needed to answer the request and may process their own connection metadata under their own terms. A wallet extension is contacted only when you choose a wallet action. Solana Explorer is opened only when you follow a transaction link.</p>
+    <p>Solana requests use the public Devnet endpoint by default. The network explorer sends requested, read-only EVM queries through the server to the RPC endpoints shown on that page. These services receive the query data needed to answer the request and may process their own connection metadata under their own terms. A wallet extension or wallet app is contacted only when you choose a wallet action. Solana Explorer is opened only when you follow a transaction link.</p>
     <p>Public blockchain records are controlled by the network, not by this website. The site cannot remove or change a confirmed public transaction. Provider locations, transfer safeguards, and retention periods must be checked against the provider selected by the live deployment.</p>
 
     <h2>Storage and analytics</h2>
