@@ -480,8 +480,11 @@ body > *:not(.galaxy-canvas) { position: relative; z-index: 1; }
 nav {
   position: sticky !important;
   top: 0;
+  z-index: 1000 !important;
   width: 100%;
-  background: rgba(5, 6, 20, 0.78);
+  background: linear-gradient(135deg, #050514 0%, #0a0a23 100%);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
   border-top: 0;
 }
 nav .container { max-width: 1500px; }

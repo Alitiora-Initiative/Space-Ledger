@@ -7,6 +7,16 @@ const test = require('node:test');
 
 const root = path.resolve(__dirname, '..');
 
+test('shared sticky navigation stays above scrolling content', () => {
+  const styles = fs.readFileSync(path.join(root, 'public', 'css', 'styles.css'), 'utf8');
+  const navStart = styles.lastIndexOf('\nnav {');
+  const navRule = styles.slice(navStart, styles.indexOf('}', navStart));
+  assert.match(navRule, /position:\s*sticky !important/);
+  assert.match(navRule, /z-index:\s*1000 !important/);
+  assert.match(navRule, /background:\s*linear-gradient\([^;]*#050514[^;]*#0a0a23/);
+  assert.match(navRule, /backdrop-filter:\s*none/);
+});
+
 test('Vercel applies security headers to static assets and functions', () => {
   const config = JSON.parse(fs.readFileSync(path.join(root, 'vercel.json'), 'utf8'));
   const wildcard = config.headers.find(rule => rule.source === '/(.*)');

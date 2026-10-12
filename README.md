@@ -18,6 +18,8 @@ The product name shown in the interface is **Space Ledger**. The app does not ru
 
 This repository contains a Devnet-only purchase and ownership implementation. Whether it is configured and currently functioning depends on deployment settings and live network state; this audit did not perform a Devnet transaction.
 
+Backend Solana reads use the server-side `SOLANA_RPC_DEVNET` endpoint when configured, with the official Devnet RPC as a fallback. Keep provider credentials in server environment variables; the browser-facing wallet configuration does not expose the private endpoint. Mainnet configuration is not used by this Devnet-only app.
+
 - Phantom wallet purchase approvals for Devnet SOL and the Devnet USDC mint.
 - An Anchor Solana program that accepts payment, records a purchase receipt, and advances the sold-block supply atomically.
 - SOL-to-USD conversion checked on-chain against a configured Pyth SOL/USD feed. The program checks feed identity, confidence, and freshness.
