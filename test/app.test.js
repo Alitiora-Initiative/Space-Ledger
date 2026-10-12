@@ -1,10 +1,32 @@
 const assert = require('node:assert/strict');
 const { spawn } = require('node:child_process');
+const fs = require('node:fs');
 const net = require('node:net');
 const path = require('node:path');
 const test = require('node:test');
 
 const root = path.resolve(__dirname, '..');
+
+test('shared sticky navigation stays above scrolling content', () => {
+  const styles = fs.readFileSync(path.join(root, 'public', 'css', 'styles.css'), 'utf8');
+  const navStart = styles.lastIndexOf('\nnav {');
+  const navRule = styles.slice(navStart, styles.indexOf('}', navStart));
+  assert.match(navRule, /position:\s*sticky !important/);
+  assert.match(navRule, /z-index:\s*1000 !important/);
+  assert.match(navRule, /background:\s*linear-gradient\([^;]*#050514[^;]*#0a0a23/);
+  assert.match(navRule, /backdrop-filter:\s*none/);
+});
+
+test('Vercel applies security headers to static assets and functions', () => {
+  const config = JSON.parse(fs.readFileSync(path.join(root, 'vercel.json'), 'utf8'));
+  const wildcard = config.headers.find(rule => rule.source === '/(.*)');
+  const headers = Object.fromEntries(wildcard.headers.map(({ key, value }) => [key.toLowerCase(), value]));
+  assert.equal(headers['content-security-policy'], "frame-ancestors 'none'");
+  assert.equal(headers['permissions-policy'], 'camera=(), geolocation=(), microphone=()');
+  assert.equal(headers['referrer-policy'], 'strict-origin-when-cross-origin');
+  assert.equal(headers['x-content-type-options'], 'nosniff');
+  assert.equal(headers['x-frame-options'], 'DENY');
+});
 
 async function findFreePort() {
   const probe = net.createServer();
@@ -74,6 +96,9 @@ test('Express app serves its pages and read-only API endpoints', async t => {
     ['/pages/dashboard.html', 'text/html'],
     ['/pages/profile.html', 'text/html'],
     ['/pages/swap.html', 'text/html'],
+    ['/pages/privacy.html', 'text/html'],
+    ['/pages/terms.html', 'text/html'],
+    ['/pages/cookies.html', 'text/html'],
     ['/api/config', 'application/json'],
     ['/api/price/0', 'application/json'],
     ['/api/price/range?start=0&count=2', 'application/json'],
@@ -91,11 +116,26 @@ test('Express app serves its pages and read-only API endpoints', async t => {
     const response = await fetch(`${baseUrl}${route}`);
     assert.equal(response.status, 200, `${route} should return HTTP 200`);
     assert.match(response.headers.get('content-type') || '', new RegExp(contentType));
+    assert.equal(response.headers.get('content-security-policy'), "frame-ancestors 'none'");
+    assert.equal(response.headers.get('permissions-policy'), 'camera=(), geolocation=(), microphone=()');
+    assert.equal(response.headers.get('referrer-policy'), 'strict-origin-when-cross-origin');
+    assert.equal(response.headers.get('x-content-type-options'), 'nosniff');
+    assert.equal(response.headers.get('x-frame-options'), 'DENY');
+    assert.equal(response.headers.has('x-powered-by'), false);
     responses.set(route, contentType === 'application/json' ? await response.json() : await response.text());
   }
 
   assert.match(responses.get('/'), /About Space Ledger/);
+  assert.match(responses.get('/'), /<h1>Space Ledger<\/h1>/);
+  assert.doesNotMatch(responses.get('/'), /Spatial Ledger Protocol/);
   assert.equal(responses.get('/api/config').totalBlocks, 10_000_000_000);
+  assert.equal('solanaRpc' in responses.get('/api/config'), false);
+  assert.doesNotMatch(JSON.stringify(responses.get('/api/config')), /api_key=/i);
+  assert.match(responses.get('/pages/privacy.html'), /Publication status: incomplete/);
+  assert.match(responses.get('/pages/terms.html'), /Terms and Conditions/);
+  assert.match(responses.get('/pages/cookies.html'), /does not currently need a cookie-consent banner/);
+  assert.doesNotMatch(responses.get('/pages/grid.html'), /id="main-content"|id="minimap"|minimapCanvas/);
+  assert.doesNotMatch(responses.get('/pages/network.html'), /id="main-content"/);
   assert.equal(responses.get('/api/price/0').price, 0.001);
   const labelResponse = await fetch(`${baseUrl}/api/price/000B`);
   assert.equal(labelResponse.status, 200);

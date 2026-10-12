@@ -3,10 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Spatial Ledger Protocol — Grid</title>
+  <title>Space Ledger — Grid</title>
   <link rel="stylesheet" href="../css/styles.css">
-  <script src="/js/celestial-bg.js" defer></script>
-  <script src="/js/agents-3d.js" defer></script>
   <style>
     /* ── Pixelated grid cells ─────────────────────────────────────────────── */
     .grid-cell {
@@ -20,8 +18,8 @@
       align-items: center;
       justify-content: center;
       font-size: 0.5em;
-      color: rgba(255,255,255,0.3);
-      transition: transform 0.1s ease, opacity 0.1s ease;
+      color: #e8edf4;
+      transition: opacity 0.1s ease;
     }
 
     /* Flash on click */
@@ -52,8 +50,8 @@
 <body><nav>
     <div class="container">
       <a href="/index.html" style="display:flex;align-items:center;gap:8px;text-decoration:none;">
-        <img src="/img/logo.jpg" alt="SLP" style="width:32px;height:32px;border-radius:7px;object-fit:cover;">
-        <span class="logo">Spatial Ledger Protocol</span>
+        <img src="/img/logo.jpg" alt="" style="width:32px;height:32px;border-radius:7px;object-fit:cover;">
+        <span class="logo">Space Ledger</span>
       </a>
       <ul>
         <li><a href="../index.html">Home</a></li>
@@ -68,7 +66,7 @@
     </div>
   </nav>
 
-  <div class="container">
+  <main class="container">
     <h1 style="text-align:center;margin-bottom:30px;">Block Grid Viewer</h1>
 
     <div class="card">
@@ -86,7 +84,7 @@
         <button class="button" onclick="previousBlock()">Previous Block</button>
         <button class="button" onclick="nextBlock()">Next Block</button>
       </div>
-      <div class="result" id="blockInfo"></div>
+      <div class="result" id="blockInfo" role="status" aria-live="polite"></div>
     </div>
 
     <div class="card">
@@ -97,19 +95,19 @@
 
       <!-- Zoom controls -->
       <div style="display:flex;gap:8px;margin-bottom:10px;">
-        <button class="button" onclick="setZoom(1)">1×</button>
-        <button class="button" onclick="setZoom(2)">2×</button>
-        <button class="button" onclick="setZoom(4)">4×</button>
+        <button class="button" type="button" aria-label="Set grid zoom to 1×" aria-pressed="true" onclick="setZoom(1)">1×</button>
+        <button class="button" type="button" aria-label="Set grid zoom to 2×" aria-pressed="false" onclick="setZoom(2)">2×</button>
+        <button class="button" type="button" aria-label="Set grid zoom to 4×" aria-pressed="false" onclick="setZoom(4)">4×</button>
       </div>
 
-      <div style="overflow:hidden;">
-        <div class="grid-container" id="pixelGrid"></div>
+      <div style="overflow-x:auto;" tabindex="0" aria-label="Scrollable pixel grid">
+        <div class="grid-container" id="pixelGrid" role="group" aria-label="Pixels in selected block"></div>
       </div>
     </div>
 
     <div class="card">
       <h2>Pixel Details</h2>
-      <div id="pixelDetails">
+      <div id="pixelDetails" aria-live="polite">
         <p style="color:#888;">Click on a pixel to see details</p>
       </div>
     </div>
@@ -135,16 +133,10 @@
         </div>
       </div>
     </div>
-  </div>
-
-  <!-- Mini-map -->
-  <div id="minimap" style="position:fixed;bottom:20px;right:20px;width:200px;height:120px;background:rgba(10,10,15,0.9);border:1px solid rgba(0,212,255,0.3);z-index:500;overflow:hidden;padding:4px;">
-    <div style="font-size:0.65em;color:#888;margin-bottom:2px;">Position</div>
-    <canvas id="minimapCanvas" width="192" height="100" style="display:block;image-rendering:pixelated;"></canvas>
-  </div>
+  </main>
 
   <!-- Hover tooltip -->
-  <div id="tooltip"></div>
+  <div id="tooltip" aria-hidden="true"></div>
 
   <script src="../js/block-id.js"></script>
   <script>
@@ -155,21 +147,9 @@
       const g = document.getElementById('pixelGrid');
       g.style.transform       = 'scale(' + level + ')';
       g.style.transformOrigin = 'top left';
-    }
-
-    // ── Mini-map ──────────────────────────────────────────────────────────────
-    function updateMinimap(blockId) {
-      const canvas = document.getElementById('minimapCanvas');
-      const ctx    = canvas.getContext('2d');
-      ctx.clearRect(0, 0, 192, 100);
-      ctx.fillStyle = 'rgba(0,212,255,0.1)';
-      ctx.fillRect(0, 0, 192, 100);
-      const x = Math.floor((blockId / 9999999999) * 188);
-      ctx.fillStyle = '#00d4ff';
-      ctx.fillRect(x, 46, 4, 8);
-      ctx.fillStyle = '#fff';
-      ctx.font = '9px monospace';
-      ctx.fillText('Block ' + BlockId.format(blockId), 4, 92);
+      document.querySelectorAll('[aria-label^="Set grid zoom"]').forEach(button => {
+        button.setAttribute('aria-pressed', String(button.textContent.trim() === `${level}×`));
+      });
     }
 
     // ── Navigation ────────────────────────────────────────────────────────────
@@ -218,21 +198,15 @@
             const pixelIndex   = row * 10 + col;
             const globalPixelId = currentBlockId * 100 + pixelIndex;
 
-            const cell = document.createElement('div');
+            const cell = document.createElement('button');
+            cell.type = 'button';
+            cell.dataset.pixelIndex = String(pixelIndex);
+            cell.tabIndex = pixelIndex === 0 ? 0 : -1;
 
             cell.className = 'grid-cell ' + (ownership.verified ? (ownership.owner ? 'owned' : 'available') : 'unverified');
             cell.textContent = pixelIndex;
-
-            cell.title = 'Ownership ' + ownershipLabel + ' · Pixel: ' + pixelIndex + ' · Global ID: ' + globalPixelId.toLocaleString();
-
-            // Click handler
-            cell.onclick = (function(px, gid, r, c, bp) {
-              return function() {
-                cell.style.animation = 'flash 0.2s ease';
-                setTimeout(function() { cell.style.animation = ''; }, 220);
-                showPixelDetails(px, gid, r, c, bp);
-              };
-            })(pixelIndex, globalPixelId, row, col, blockPrice);
+            cell.setAttribute('aria-label', `Block ${blockLabel}, pixel ${pixelIndex + 1}, ${ownershipLabel}, global pixel ${globalPixelId.toLocaleString()}`);
+            cell.addEventListener('click', () => showPixelDetails(pixelIndex, globalPixelId, row, col, blockPrice));
 
             // Hover tooltip
             cell.addEventListener('mousemove', function(e) {
@@ -253,12 +227,33 @@
           }
         }
 
-        updateMinimap(currentBlockId);
-
       } catch (error) {
         blockInfo.textContent = 'Error loading grid: ' + (error.message || 'unknown');
       }
     }
+
+    document.getElementById('pixelGrid').addEventListener('keydown', event => {
+      const cell = event.target.closest('.grid-cell');
+      if (!cell) return;
+      const index = Number(cell.dataset.pixelIndex);
+      const rowStart = Math.floor(index / 10) * 10;
+      const keyTargets = {
+        ArrowLeft: index % 10 > 0 ? index - 1 : index,
+        ArrowRight: index % 10 < 9 ? index + 1 : index,
+        ArrowUp: index >= 10 ? index - 10 : index,
+        ArrowDown: index < 90 ? index + 10 : index,
+        Home: rowStart,
+        End: rowStart + 9
+      };
+      if (!(event.key in keyTargets)) return;
+      event.preventDefault();
+      const next = document.querySelector(`[data-pixel-index="${keyTargets[event.key]}"]`);
+      if (next) {
+        cell.tabIndex = -1;
+        next.tabIndex = 0;
+        next.focus();
+      }
+    });
 
     function showPixelDetails(pixelIndex, globalPixelId, row, col, blockPrice) {
       const pixelPrice = blockPrice / 100;

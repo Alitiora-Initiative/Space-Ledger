@@ -11,6 +11,7 @@ const SOL_USD_FEED_ID = Buffer.from('ef0d8b6fda2ceba41da15d4095d1da392a0d2f8ed0c
 const TOKEN_PROGRAM = 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA';
 const ASSOCIATED_TOKEN_PROGRAM = 'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL';
 const SYSTEM_PROGRAM = '11111111111111111111111111111111';
+let devnetConnection;
 const TOTAL_BLOCKS = 10_000_000_000n;
 const START_PRICE_MICRO_USD = 1_000n;
 const TARGET_PRICE_MICRO_USD = 1_000_000_000n;
@@ -29,7 +30,8 @@ function configuredProgramId() {
 }
 
 function connection() {
-  return new (web3().Connection)(DEVNET_RPC, 'confirmed');
+  if (!devnetConnection) devnetConnection = new (web3().Connection)(DEVNET_RPC, 'confirmed');
+  return devnetConnection;
 }
 
 function discriminator(name) {
@@ -328,7 +330,8 @@ async function publicConfig() {
     : '0';
   return {
     network: 'devnet',
-    rpc: DEVNET_RPC,
+    // Browser requests use the public endpoint; server RPC credentials stay private.
+    rpc: 'https://api.devnet.solana.com',
     programId: programId.toBase58(),
     treasury: TREASURY,
     usdcMint: USDC_MINT,

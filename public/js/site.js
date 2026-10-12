@@ -106,19 +106,43 @@
     toggle.className = 'nav-toggle';
     toggle.type = 'button';
     toggle.setAttribute('aria-label', 'Open navigation');
+    toggle.title = 'Open navigation';
     toggle.setAttribute('aria-expanded', 'false');
     toggle.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>';
     toggle.addEventListener('click', () => {
       const open = list.classList.toggle('nav-open');
       toggle.setAttribute('aria-expanded', String(open));
       toggle.setAttribute('aria-label', open ? 'Close navigation' : 'Open navigation');
+      toggle.title = open ? 'Close navigation' : 'Open navigation';
     });
     nav.querySelector('.container').insertBefore(toggle, list);
+    nav.setAttribute('aria-label', 'Main navigation');
+    document.addEventListener('keydown', event => {
+      if (event.key === 'Escape' && list.classList.contains('nav-open')) {
+        list.classList.remove('nav-open');
+        toggle.setAttribute('aria-expanded', 'false');
+        toggle.setAttribute('aria-label', 'Open navigation');
+        toggle.title = 'Open navigation';
+        toggle.focus();
+      }
+    });
     list.addEventListener('click', event => {
       if (event.target.closest('a')) {
         list.classList.remove('nav-open');
         toggle.setAttribute('aria-expanded', 'false');
+        toggle.setAttribute('aria-label', 'Open navigation');
+        toggle.title = 'Open navigation';
       }
     });
   }
+
+  if (window.location.hash === '#main-content') {
+    window.history.replaceState(window.history.state, '', `${window.location.pathname}${window.location.search}`);
+    window.scrollTo(0, 0);
+  }
+
+  const footer = document.createElement('footer');
+  footer.className = 'site-footer';
+  footer.innerHTML = '<div class="site-footer-inner"><span>Space Ledger</span><nav aria-label="Legal"><a href="/pages/privacy.html">Privacy</a><a href="/pages/terms.html">Terms</a><a href="/pages/cookies.html">Cookies</a></nav></div>';
+  document.body.append(footer);
 })();

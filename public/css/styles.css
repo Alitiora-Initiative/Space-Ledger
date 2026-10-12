@@ -1,5 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
-
 /* ─── Reset ──────────────────────────────────────────────────── */
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -12,26 +10,11 @@
   --bg:           #03030a;
   --glass:        rgba(255,255,255,0.028);
   --glass-border: rgba(0,212,255,0.13);
-  /* Rainbow colors for celestial theme */
-  --rainbow-red:    #ff0000;
-  --rainbow-orange: #ff7f00;
-  --rainbow-yellow: #ffff00;
-  --rainbow-green:  #00ff00;
-  --rainbow-blue:   #0000ff;
-  --rainbow-indigo: #4b0082;
-  --rainbow-violet: #9400d3;
 }
 
 body {
   font-family: 'Space Grotesk', 'Segoe UI', sans-serif;
-  background: linear-gradient(135deg,
-    rgba(75, 0, 130, 0.3) 0%,
-    rgba(0, 0, 255, 0.2) 20%,
-    rgba(0, 255, 0, 0.15) 40%,
-    rgba(255, 255, 0, 0.15) 60%,
-    rgba(255, 127, 0, 0.2) 80%,
-    rgba(255, 0, 0, 0.3) 100%
-  ), #03030a;
+  background: #03030a;
   color: #e0e0e0;
   min-height: 100vh;
   position: relative;
@@ -59,41 +42,6 @@ body {
 @keyframes borderGlow {
   0%, 100% { border-color: rgba(0,212,255,0.13); }
   50%       { border-color: rgba(0,212,255,0.30); }
-}
-
-/* ─── Celestial background animation ───────────────────────────── */
-@keyframes celestialRotate {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-@keyframes celestialPulse {
-  0%, 100% { opacity: 0.3; transform: scale(1); }
-  50% { opacity: 0.6; transform: scale(1.1); }
-}
-
-.celestial-bg {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  z-index: 0;
-  overflow: hidden;
-}
-
-.celestial-star {
-  position: absolute;
-  border-radius: 50%;
-  animation: celestialPulse 4s ease-in-out infinite;
-}
-
-.celestial-nebula {
-  position: absolute;
-  border-radius: 50%;
-  filter: blur(60px);
-  animation: celestialRotate 120s linear infinite;
 }
 
 .pulse        { animation: pulse   2s ease-in-out infinite; }
@@ -128,11 +76,8 @@ nav .container {
 nav .logo {
   font-size: 1.5em;
   font-weight: 800;
-  background: linear-gradient(135deg, #00d4ff 0%, #7b2fff 50%, #00ff88 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  letter-spacing: 0.02em;
+  color: #a8f0ff;
+  letter-spacing: 0;
   text-transform: uppercase;
 }
 
@@ -149,7 +94,7 @@ nav a {
   text-decoration: none;
   font-weight: 600;
   font-size: 0.92em;
-  letter-spacing: 0.03em;
+  letter-spacing: 0;
   text-transform: uppercase;
   position: relative;
   padding: 8px 0;
@@ -185,21 +130,20 @@ nav a.active::after {
 
 /* ─── Wallet button ──────────────────────────────────────────── */
 .wallet-button {
-  background: linear-gradient(90deg, var(--cyan), var(--purple));
-  border: none;
-  color: white;
+  background: #075862;
+  border: 1px solid #3ba9b3;
+  color: #ffffff;
   padding: 8px 18px;
   border-radius: 8px;
   cursor: pointer;
   font-size: 0.85em;
   font-family: inherit;
   font-weight: 600;
-  letter-spacing: 0.02em;
+  letter-spacing: 0;
   transition: transform 0.2s, box-shadow 0.2s;
   box-shadow: 0 0 16px rgba(0,212,255,0.2);
 }
 .wallet-button:hover {
-  transform: scale(1.05);
   box-shadow: 0 0 24px rgba(0,212,255,0.4), 0 0 48px rgba(123,47,255,0.2);
 }
 
@@ -218,15 +162,10 @@ nav a.active::after {
 .hero h1 {
   font-size: 3.6em;
   font-weight: 700;
-  background: linear-gradient(120deg, #00d4ff 0%, #7b2fff 50%, #00ff88 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: #a8f0ff;
   margin-bottom: 20px;
   text-shadow: none;
-  /* Liquid shimmer on the gradient text */
-  background-size: 200%;
-  animation: heroShimmer 6s ease-in-out infinite;
+  animation: none;
 }
 @keyframes heroShimmer {
   0%, 100% { background-position: 0% 50%;   }
@@ -267,7 +206,7 @@ nav a.active::after {
   margin-bottom: 8px;
   font-size: 0.85em;
   font-weight: 600;
-  letter-spacing: 0.08em;
+  letter-spacing: 0;
   text-transform: uppercase;
   opacity: 0.8;
 }
@@ -275,10 +214,10 @@ nav a.active::after {
   font-size: 1.9em;
   font-weight: 700;
   margin-bottom: 4px;
-  letter-spacing: -0.01em;
+  letter-spacing: 0;
 }
 .stat-card .label {
-  color: rgba(136,136,136,0.8);
+  color: #b2bdc8;
   font-size: 0.82em;
 }
 
@@ -305,36 +244,37 @@ nav a.active::after {
 
 /* ─── Buttons ────────────────────────────────────────────────── */
 .button {
-  background: linear-gradient(90deg, var(--cyan), var(--purple));
-  border: none;
-  color: white;
+  background: #075862;
+  border: 1px solid #3ba9b3;
+  color: #ffffff;
   padding: 11px 28px;
   border-radius: 8px;
   cursor: pointer;
   font-size: 0.95em;
   font-family: inherit;
   font-weight: 600;
-  letter-spacing: 0.02em;
+  letter-spacing: 0;
   text-decoration: none;
   display: inline-block;
   transition: transform 0.2s, box-shadow 0.2s;
   box-shadow: 0 0 0 0 rgba(0,212,255,0);
 }
 .button:hover {
-  transform: translateY(-1px) scale(1.03);
+  background: #0b6a73;
   box-shadow: 0 0 20px rgba(0,212,255,0.35), 0 0 40px rgba(123,47,255,0.2);
 }
-.button:active { transform: scale(0.98); }
+.button:active { background: #06464d; }
+.button:disabled { color: #eef4f7; background: #29343e; border-color: #657483; cursor: not-allowed; box-shadow: none; }
 
 /* ─── Inputs ─────────────────────────────────────────────────── */
 .input-group { margin-bottom: 18px; }
 .input-group label {
   display: block;
   margin-bottom: 6px;
-  color: rgba(160,160,180,0.8);
+  color: #b2bdc8;
   font-weight: 500;
   font-size: 0.88em;
-  letter-spacing: 0.02em;
+  letter-spacing: 0;
 }
 .input-group input,
 .input-group select {
@@ -383,14 +323,18 @@ nav a.active::after {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.55em;
+  min-width: 32px;
+  min-height: 32px;
+  padding: 0;
+  font: inherit;
+  font-size: 0.75rem;
+  color: #e5edf3;
   cursor: pointer;
-  transition: transform 0.12s ease, opacity 0.12s ease;
+  appearance: none;
 }
 .grid-cell:hover {
-  transform: scale(1.5);
-  z-index: 10;
-  box-shadow: 0 0 10px var(--cyan);
+  border-color: #b4f3fa;
+  box-shadow: inset 0 0 0 1px #b4f3fa;
 }
 .grid-cell.available {
   background: rgba(0,25,40,0.85);
@@ -408,7 +352,7 @@ nav a.active::after {
 }
 .grid-cell.unavailable {
   background: rgba(255,255,255,0.02);
-  color: #333;
+  color: #b2bdc8;
   border: 1px solid rgba(255,255,255,0.04);
 }
 
@@ -439,11 +383,11 @@ nav a.active::after {
   font-size: 0.75em; font-weight: 700; color: #fff;
 }
 .token-name    { font-weight: 600; font-size: 0.95em; color: #e0e0e0; }
-.token-sub     { font-size: 0.78em; color: #666; margin-top: 2px; }
+.token-sub     { font-size: 0.78em; color: #b2bdc8; margin-top: 2px; }
 .token-spacer  { flex: 1; }
 .token-value   { text-align: right; }
 .token-balance { font-weight: 700; font-size: 0.95em; }
-.token-usd     { font-size: 0.78em; color: #666; margin-top: 2px; }
+.token-usd     { font-size: 0.78em; color: #b2bdc8; margin-top: 2px; }
 .token-pnl     { font-size: 0.78em; font-weight: 600; margin-top: 2px; }
 
 /* ─── Network item ───────────────────────────────────────────── */
@@ -458,7 +402,7 @@ nav a.active::after {
   margin-bottom: 8px;
 }
 .network-name { font-weight: 600; }
-.network-id   { color: #666; font-size: 0.88em; }
+.network-id   { color: #b2bdc8; font-size: 0.88em; }
 .chain-logo {
   width: 40px; height: 40px; border-radius: 0;
   background: linear-gradient(135deg, var(--cyan), var(--purple));
@@ -488,14 +432,14 @@ nav a.active::after {
 /* ─── PnL bar chart ──────────────────────────────────────────── */
 .pnl-bar-chart { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
 .pnl-bar-row   { display: flex; align-items: center; gap: 10px; }
-.pnl-bar-label { width: 120px; font-size: 0.82em; color: #666; flex-shrink: 0; }
+.pnl-bar-label { width: 120px; font-size: 0.82em; color: #b2bdc8; flex-shrink: 0; }
 .pnl-bar-track { flex: 1; height: 7px; background: rgba(255,255,255,0.05); border-radius: 0; overflow: hidden; }
 .pnl-bar-fill  { height: 100%; background: linear-gradient(90deg, var(--cyan), var(--green)); }
 
 /* ─── Tables ─────────────────────────────────────────────────── */
 .table { width: 100%; border-collapse: collapse; margin-top: 14px; }
 .table th, .table td { padding: 11px 12px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.05); }
-.table th { color: var(--cyan); font-weight: 600; font-size: 0.88em; letter-spacing: 0.04em; text-transform: uppercase; }
+.table th { color: var(--cyan); font-weight: 600; font-size: 0.88em; letter-spacing: 0; text-transform: uppercase; }
 .table tr:hover td { background: rgba(0,212,255,0.03); }
 
 /* ─── Formula ────────────────────────────────────────────────── */
@@ -536,8 +480,11 @@ body > *:not(.galaxy-canvas) { position: relative; z-index: 1; }
 nav {
   position: sticky !important;
   top: 0;
+  z-index: 1000 !important;
   width: 100%;
-  background: rgba(5, 6, 20, 0.78);
+  background: linear-gradient(135deg, #050514 0%, #0a0a23 100%);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
   border-top: 0;
 }
 nav .container { max-width: 1500px; }
@@ -556,14 +503,25 @@ nav .container { max-width: 1500px; }
 .nav-toggle svg, .wallet-button svg { width: 18px; height: 18px; flex: 0 0 auto; }
 .wallet-button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
 .wallet-button svg { stroke: currentColor; fill: none; stroke-width: 1.8; }
-.wallet-button::before {
-  content: '';
-  width: 18px;
-  height: 18px;
-  flex: 0 0 18px;
-  background: center / contain no-repeat url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 6.5A2.5 2.5 0 0 1 6.5 4H19a1 1 0 0 1 1 1v2H6.5A2.5 2.5 0 0 0 4 9.5v-3Z'/%3E%3Cpath d='M4 9.5A2.5 2.5 0 0 1 6.5 7H20v13H6.5A2.5 2.5 0 0 1 4 17.5v-8Z'/%3E%3Cpath d='M15.5 13h.01'/%3E%3C/svg%3E");
+.wallet-dialog {
+  width: min(440px, calc(100vw - 32px));
+  max-width: 100%;
+  margin: auto;
+  padding: 0;
+  border: 1px solid #4d7887;
+  border-radius: 6px;
+  color: #edf4f8;
+  background: #07111b;
+  font: inherit;
 }
-
+.wallet-dialog::backdrop { background: rgba(0, 0, 0, .82); }
+.wallet-dialog-panel { display: grid; gap: 14px; padding: 22px; }
+.wallet-dialog-panel h2 { font-size: 1.35rem; }
+.wallet-dialog-panel p { color: #d4e0e8; line-height: 1.55; }
+.wallet-dialog-close { justify-self: end; min-height: 40px; padding: 6px 12px; color: #f0f5f8; background: #273642; border: 1px solid #708494; cursor: pointer; }
+.wallet-dialog-action { width: 100%; text-align: center; text-decoration: none; }
+.wallet-dialog-status { min-height: 1.5em; overflow-wrap: anywhere; }
+.wallet-dialog [hidden] { display: none; }
 .block-id-help {
   position: relative;
   margin: 8px 0 14px;
@@ -606,15 +564,61 @@ nav .container { max-width: 1500px; }
 }
 .block-id-help:not([open]) p { display: none; }
 .result { white-space: pre-wrap; overflow-wrap: anywhere; }
-.wallet-button:focus-visible, .nav-toggle:focus-visible, nav a:focus-visible {
-  outline: 2px solid var(--cyan);
-  outline-offset: 4px;
+:focus-visible { outline: 3px solid #ffe082; outline-offset: 3px; }
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
+.site-footer {
+  margin-top: 48px;
+  border-top: 1px solid rgba(220, 235, 245, .28);
+  background: rgba(4, 10, 18, .92);
+}
+.site-footer-inner {
+  max-width: 1400px;
+  min-height: 64px;
+  margin: 0 auto;
+  padding: 14px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  color: #e5edf3;
+}
+.site-footer nav { position: static; width: auto; padding: 0; background: transparent; border: 0; box-shadow: none; }
+.site-footer nav { display: flex; gap: 20px; }
+.site-footer a { color: #85e8f2; }
+.site-footer a:hover { color: #ffffff; }
+.legal-document { max-width: 940px; margin: 0 auto; }
+.legal-document .hero { padding: 34px 0 22px; text-align: left; }
+.legal-document .hero h1 { font-size: 2.3rem; }
+.legal-document .hero p { color: #d2dce5; font-size: 1rem; }
+.legal-document h2 { margin: 28px 0 10px; color: #8be9f2; font-size: 1.3rem; }
+.legal-document p, .legal-document li { color: #e0e8ef; line-height: 1.7; }
+.legal-document ul { margin: 10px 0 14px 22px; }
+.legal-document li + li { margin-top: 6px; }
+.legal-document a { color: #8be9f2; }
+.legal-status {
+  margin: 12px 0 26px;
+  padding: 14px 16px;
+  border-left: 4px solid #ffd166;
+  background: rgba(8, 17, 28, .94);
+  color: #f3f5f6;
+  line-height: 1.65;
+}
+.legal-status strong { color: #ffe19a; }
 .feature-status, .estimate-note { color: #b8bfd6; line-height: 1.7; margin-top: 10px; }
 .feature-status::before { content: 'STATUS · '; color: #ffc46b; font-weight: 700; }
 .price-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
 .estimate-note { font-size: .88em; color: #aab4cc; margin-top: 10px; }
-.grid-cell.unverified { background: rgba(150,160,190,.08); border: 1px solid rgba(170,185,215,.18); color: #8791aa; }
+.grid-cell.unverified { background: rgba(150,160,190,.08); border: 1px solid rgba(170,185,215,.35); color: #d2d9e8; }
 @media (max-width: 900px) {
   nav { padding: 10px 16px; }
   nav .container { flex-direction: row; flex-wrap: wrap; gap: 10px; }
@@ -626,6 +630,14 @@ nav .container { max-width: 1500px; }
   .nav-toggle { display: inline-flex; margin-left: auto; }
 }
 @media (max-width: 600px) { .price-fields { grid-template-columns: 1fr; } }
+@media (max-width: 520px) {
+  .site-footer-inner { align-items: flex-start; flex-direction: column; gap: 10px; padding: 16px; }
+  .site-footer nav { flex-wrap: wrap; gap: 12px 18px; }
+}
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; }
+  *, *::before, *::after { scroll-behavior: auto !important; animation: none !important; transition: none !important; }
+}
+@media (forced-colors: active) {
+  nav .logo, .hero h1 { color: CanvasText; background: none; -webkit-text-fill-color: currentColor; }
+  .button, .wallet-button { border: 1px solid ButtonText; }
 }

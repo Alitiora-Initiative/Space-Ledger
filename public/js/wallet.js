@@ -17,12 +17,6 @@ class WalletManager {
     });
   }
 
-  getMetaMaskProvider() {
-    const root = window.ethereum;
-    const providers = root?.providers || (root ? [root] : []);
-    return providers.find(provider => provider.isMetaMask && !provider.isBraveWallet) || null;
-  }
-
   attach(provider, wallet, address) {
     this.detachListeners();
     this.provider = provider;
@@ -57,18 +51,6 @@ class WalletManager {
       this.provider.removeListener?.('accountChanged', this._providerEvents.accountChanged);
     }
     this._providerEvents = null;
-  }
-
-  async connectMetaMask() {
-    const provider = this.getMetaMaskProvider();
-    if (!provider) throw new Error('MetaMask was not detected. Install the official MetaMask extension, then reload.');
-    try {
-      const accounts = await provider.request({ method: 'eth_requestAccounts' });
-      if (!Array.isArray(accounts) || !accounts[0]) throw new Error('MetaMask did not return an account.');
-      return this.attach(provider, 'metamask', accounts[0]);
-    } catch (error) {
-      throw new Error(`MetaMask connection failed: ${error.message}`);
-    }
   }
 
   async connectPhantom() {
