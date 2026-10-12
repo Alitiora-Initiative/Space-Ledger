@@ -11,12 +11,17 @@ env:
 
 jobs:
   build:
-
+    strategy:
+      fail-fast: false
+      matrix:
+        manifest:
+          - programs/space-ledger/Cargo.toml
+          - rust/bonding_curve_validator/Cargo.toml
     runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v4
     - name: Build
-      run: cargo build --verbose
+      run: cargo build --verbose --manifest-path "${{ matrix.manifest }}"
     - name: Run tests
-      run: cargo test --verbose
+      run: cargo test --verbose --manifest-path "${{ matrix.manifest }}"
