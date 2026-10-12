@@ -16,6 +16,16 @@ const NOT_DEPLOYED = 'The Solana Devnet program is not configured.';
 
 const app = express();
 app.disable('x-powered-by');
+app.use((_req, res, next) => {
+  res.set({
+    'Content-Security-Policy': "frame-ancestors 'none'",
+    'Permissions-Policy': 'camera=(), geolocation=(), microphone=()',
+    'Referrer-Policy': 'strict-origin-when-cross-origin',
+    'X-Content-Type-Options': 'nosniff',
+    'X-Frame-Options': 'DENY'
+  });
+  next();
+});
 app.use(express.json({ limit: '16kb' }));
 app.use(express.static(path.join(__dirname, '../public')));
 

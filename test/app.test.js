@@ -94,6 +94,12 @@ test('Express app serves its pages and read-only API endpoints', async t => {
     const response = await fetch(`${baseUrl}${route}`);
     assert.equal(response.status, 200, `${route} should return HTTP 200`);
     assert.match(response.headers.get('content-type') || '', new RegExp(contentType));
+    assert.equal(response.headers.get('content-security-policy'), "frame-ancestors 'none'");
+    assert.equal(response.headers.get('permissions-policy'), 'camera=(), geolocation=(), microphone=()');
+    assert.equal(response.headers.get('referrer-policy'), 'strict-origin-when-cross-origin');
+    assert.equal(response.headers.get('x-content-type-options'), 'nosniff');
+    assert.equal(response.headers.get('x-frame-options'), 'DENY');
+    assert.equal(response.headers.has('x-powered-by'), false);
     responses.set(route, contentType === 'application/json' ? await response.json() : await response.text());
   }
 
@@ -104,6 +110,8 @@ test('Express app serves its pages and read-only API endpoints', async t => {
   assert.match(responses.get('/pages/privacy.html'), /Publication status: incomplete/);
   assert.match(responses.get('/pages/terms.html'), /Terms and Conditions/);
   assert.match(responses.get('/pages/cookies.html'), /does not currently need a cookie-consent banner/);
+  assert.match(responses.get('/pages/grid.html'), /<main class="container" id="main-content">/);
+  assert.match(responses.get('/pages/network.html'), /<main class="container" id="main-content">/);
   assert.equal(responses.get('/api/price/0').price, 0.001);
   const labelResponse = await fetch(`${baseUrl}/api/price/000B`);
   assert.equal(labelResponse.status, 200);
