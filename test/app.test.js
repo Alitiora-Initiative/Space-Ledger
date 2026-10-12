@@ -1,10 +1,22 @@
 const assert = require('node:assert/strict');
 const { spawn } = require('node:child_process');
+const fs = require('node:fs');
 const net = require('node:net');
 const path = require('node:path');
 const test = require('node:test');
 
 const root = path.resolve(__dirname, '..');
+
+test('Vercel applies security headers to static assets and functions', () => {
+  const config = JSON.parse(fs.readFileSync(path.join(root, 'vercel.json'), 'utf8'));
+  const wildcard = config.headers.find(rule => rule.source === '/(.*)');
+  const headers = Object.fromEntries(wildcard.headers.map(({ key, value }) => [key.toLowerCase(), value]));
+  assert.equal(headers['content-security-policy'], "frame-ancestors 'none'");
+  assert.equal(headers['permissions-policy'], 'camera=(), geolocation=(), microphone=()');
+  assert.equal(headers['referrer-policy'], 'strict-origin-when-cross-origin');
+  assert.equal(headers['x-content-type-options'], 'nosniff');
+  assert.equal(headers['x-frame-options'], 'DENY');
+});
 
 async function findFreePort() {
   const probe = net.createServer();
