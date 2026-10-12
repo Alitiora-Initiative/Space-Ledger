@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Spatial Ledger Protocol — Grid</title>
+  <title>Space Ledger — Grid</title>
   <link rel="stylesheet" href="../css/styles.css">
   <style>
     /* ── Pixelated grid cells ─────────────────────────────────────────────── */
@@ -51,7 +51,7 @@
     <div class="container">
       <a href="/index.html" style="display:flex;align-items:center;gap:8px;text-decoration:none;">
         <img src="/img/logo.jpg" alt="" style="width:32px;height:32px;border-radius:7px;object-fit:cover;">
-        <span class="logo">Spatial Ledger Protocol</span>
+        <span class="logo">Space Ledger</span>
       </a>
       <ul>
         <li><a href="../index.html">Home</a></li>
@@ -66,7 +66,7 @@
     </div>
   </nav>
 
-  <main class="container" id="main-content">
+  <main class="container">
     <h1 style="text-align:center;margin-bottom:30px;">Block Grid Viewer</h1>
 
     <div class="card">
@@ -135,12 +135,6 @@
     </div>
   </main>
 
-  <!-- Mini-map -->
-  <div id="minimap" aria-hidden="true" style="position:fixed;bottom:20px;right:20px;width:200px;height:120px;background:rgba(10,10,15,0.9);border:1px solid rgba(0,212,255,0.3);z-index:500;overflow:hidden;padding:4px;">
-    <div style="font-size:0.65em;color:#888;margin-bottom:2px;">Position</div>
-    <canvas id="minimapCanvas" width="192" height="100" style="display:block;image-rendering:pixelated;"></canvas>
-  </div>
-
   <!-- Hover tooltip -->
   <div id="tooltip" aria-hidden="true"></div>
 
@@ -156,21 +150,6 @@
       document.querySelectorAll('[aria-label^="Set grid zoom"]').forEach(button => {
         button.setAttribute('aria-pressed', String(button.textContent.trim() === `${level}×`));
       });
-    }
-
-    // ── Mini-map ──────────────────────────────────────────────────────────────
-    function updateMinimap(blockId) {
-      const canvas = document.getElementById('minimapCanvas');
-      const ctx    = canvas.getContext('2d');
-      ctx.clearRect(0, 0, 192, 100);
-      ctx.fillStyle = 'rgba(0,212,255,0.1)';
-      ctx.fillRect(0, 0, 192, 100);
-      const x = Math.floor((blockId / 9999999999) * 188);
-      ctx.fillStyle = '#00d4ff';
-      ctx.fillRect(x, 46, 4, 8);
-      ctx.fillStyle = '#fff';
-      ctx.font = '9px monospace';
-      ctx.fillText('Block ' + BlockId.format(blockId), 4, 92);
     }
 
     // ── Navigation ────────────────────────────────────────────────────────────
@@ -247,8 +226,6 @@
             gridContainer.appendChild(cell);
           }
         }
-
-        updateMinimap(currentBlockId);
 
       } catch (error) {
         blockInfo.textContent = 'Error loading grid: ' + (error.message || 'unknown');

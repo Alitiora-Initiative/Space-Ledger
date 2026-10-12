@@ -136,15 +136,9 @@
     });
   }
 
-  const main = document.querySelector('main') || document.querySelector('body > .container');
-  if (main) {
-    main.id ||= 'main-content';
-    main.tabIndex = -1;
-    const skip = document.createElement('a');
-    skip.className = 'skip-link';
-    skip.href = `#${main.id}`;
-    skip.textContent = 'Skip to main content';
-    document.body.prepend(skip);
+  if (window.location.hash === '#main-content') {
+    window.history.replaceState(window.history.state, '', `${window.location.pathname}${window.location.search}`);
+    window.scrollTo(0, 0);
   }
 
   const footer = document.createElement('footer');

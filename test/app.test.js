@@ -116,14 +116,16 @@ test('Express app serves its pages and read-only API endpoints', async t => {
   }
 
   assert.match(responses.get('/'), /About Space Ledger/);
+  assert.match(responses.get('/'), /<h1>Space Ledger<\/h1>/);
+  assert.doesNotMatch(responses.get('/'), /Spatial Ledger Protocol/);
   assert.equal(responses.get('/api/config').totalBlocks, 10_000_000_000);
   assert.equal('solanaRpc' in responses.get('/api/config'), false);
   assert.doesNotMatch(JSON.stringify(responses.get('/api/config')), /api_key=/i);
   assert.match(responses.get('/pages/privacy.html'), /Publication status: incomplete/);
   assert.match(responses.get('/pages/terms.html'), /Terms and Conditions/);
   assert.match(responses.get('/pages/cookies.html'), /does not currently need a cookie-consent banner/);
-  assert.match(responses.get('/pages/grid.html'), /<main class="container" id="main-content">/);
-  assert.match(responses.get('/pages/network.html'), /<main class="container" id="main-content">/);
+  assert.doesNotMatch(responses.get('/pages/grid.html'), /id="main-content"|id="minimap"|minimapCanvas/);
+  assert.doesNotMatch(responses.get('/pages/network.html'), /id="main-content"/);
   assert.equal(responses.get('/api/price/0').price, 0.001);
   const labelResponse = await fetch(`${baseUrl}/api/price/000B`);
   assert.equal(labelResponse.status, 200);

@@ -4,6 +4,16 @@ Space Ledger is a shared digital canvas made of 10 billion numbered blocks, each
 
 The concept takes inspiration from [The Million Dollar Homepage](https://www.webdesignmuseum.org/web-design-history/million-dollar-homepage-2005), Alex Tew's pixel advertising page launched in **2005**. Space Ledger is an independent project and is not affiliated with it.
 
+## App pages
+
+- **Home** (`/`): project overview, supply and pricing summary, and links to the main tools.
+- **Pricing** (`/pages/purchase.html`): quotes and wallet-approved Devnet purchase flow.
+- **Grid** (`/pages/grid.html`): browse numbered blocks.
+- **Treasury**, **Network**, **Dashboard**, and **Profile**: project status, network configuration, and wallet views.
+- **Privacy**, **Terms**, and **Cookies**: notices under `/pages/`; these remain drafts until the operator identity and contact details are confirmed.
+
+The product name shown in the interface is **Space Ledger**. The app does not run autonomous agents or upgrade itself when visited.
+
 ## Devnet implementation
 
 This repository contains a Devnet-only purchase and ownership implementation. Whether it is configured and currently functioning depends on deployment settings and live network state; this audit did not perform a Devnet transaction.

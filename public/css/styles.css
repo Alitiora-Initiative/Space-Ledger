@@ -562,7 +562,6 @@ nav .container { max-width: 1500px; }
 .block-id-help:not([open]) p { display: none; }
 .result { white-space: pre-wrap; overflow-wrap: anywhere; }
 :focus-visible { outline: 3px solid #ffe082; outline-offset: 3px; }
-main:focus { outline: 3px solid #ffe082; outline-offset: 4px; }
 .sr-only {
   position: absolute;
   width: 1px;
@@ -574,17 +573,6 @@ main:focus { outline: 3px solid #ffe082; outline-offset: 4px; }
   white-space: nowrap;
   border: 0;
 }
-.skip-link {
-  position: fixed;
-  top: 8px;
-  left: 8px;
-  z-index: 100001;
-  padding: 10px 14px;
-  background: #ffffff;
-  color: #111820;
-  transform: translateY(-160%);
-}
-.skip-link:focus { transform: translateY(0); }
 .site-footer {
   margin-top: 48px;
   border-top: 1px solid rgba(220, 235, 245, .28);
