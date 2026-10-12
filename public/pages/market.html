@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Read live Solana Devnet primary-sale activity and the published Space Ledger price model.">
+  <title>Sale Activity — Space Ledger</title>
+  <link rel="stylesheet" href="../css/styles.css">
+  <script src="/js/site.js" defer></script>
+</head>
+<body>
+  <nav aria-label="Main navigation"><div class="container">
+    <a href="/index.html" style="display:flex;align-items:center;gap:8px;text-decoration:none;"><img src="/img/logo.jpg" alt="" style="width:32px;height:32px;border-radius:7px;object-fit:cover;"><span class="logo">Space Ledger</span></a>
+    <ul>
+      <li><a href="../index.html">Home</a></li><li><a href="purchase.html">Pricing</a></li><li><a href="grid.html">Grid View</a></li><li><a href="treasury.html">Treasury</a></li><li><a href="network.html">Network</a></li><li><a href="dashboard.html">Dashboard</a></li><li><a href="profile.html">Profile</a></li>
+      <li><button class="wallet-button" id="navWalletBtn" type="button" onclick="window.openWalletModal()">Connect wallet</button></li>
+    </ul>
+  </div></nav>
+  <main class="container">
+    <header class="hero"><h1>Sale activity</h1><p>Current primary-sale model and confirmed Devnet purchase receipts.</p></header>
+    <section class="card">
+      <p class="market-status"><strong>Not a trading market:</strong> this program does not support resale, transfers, or token swaps. There is no secondary order flow, so genuine buy/sell candlesticks and Jupiter trading are not available. The value below is a model estimate for the next primary-sale block, not a market quote.</p>
+    </section>
+    <section class="card">
+      <h2>Live Devnet snapshot</h2>
+      <p class="feature-status" id="marketStatus" role="status" aria-live="polite">Loading verified Devnet state…</p>
+      <dl class="market-metrics" id="marketMetrics" aria-label="Current primary-sale statistics"></dl>
+      <button class="button" id="refreshMarket" type="button" style="margin-top:18px;">Refresh Devnet data</button>
+    </section>
+    <section class="card">
+      <h2>Published price model</h2>
+      <p class="formula">P(x) = 0.001 + 0.0000000999999999 × x USD</p>
+      <p>The model increases with the sequential block index. A purchase quote may also depend on the current on-chain supply, Pyth SOL/USD data for SOL payments, and the $0.10 test fee. It is not a secondary-market price history.</p>
+    </section>
+    <section class="card">
+      <h2>Recent confirmed purchases</h2>
+      <p class="estimate-note">These entries come from validated on-chain receipt accounts. They are purchase receipts, not individual trade candles or transaction signatures.</p>
+      <div class="activity-list" id="recentReceipts" aria-live="polite"></div>
+    </section>
+  </main>
+  <script src="../js/wallet.js"></script>
+  <script src="../js/walletModal.js"></script>
+  <script>
+    const marketStatus = document.getElementById('marketStatus');
+    const metrics = document.getElementById('marketMetrics');
+    const receipts = document.getElementById('recentReceipts');
+    const refreshMarket = document.getElementById('refreshMarket');
+    function formatPayment(receipt) {
+      const decimals = receipt.asset === 'SOL' ? 1_000_000_000 : 1_000_000;
+      const digits = receipt.asset === 'SOL' ? 6 : 2;
+      return `${(Number(receipt.paidUnits) / decimals).toFixed(digits)} ${receipt.asset}`;
+    }
+    async function loadMarket() {
+      refreshMarket.disabled = true;
+      marketStatus.textContent = 'Reading the latest confirmed Devnet receipts…';
+      try {
+        const response = await fetch('/api/market');
+        const data = await response.json();
+        if (!response.ok || !data.verified) throw new Error(data.error || data.message || 'Verified Devnet data is unavailable.');
+        const values = [
+          ['Blocks sold', Number(data.currentSupply).toLocaleString()],
+          ['Confirmed purchases', Number(data.confirmedPurchaseCount).toLocaleString()],
+          ['Next-block model estimate', data.nextBlockModelPriceUsd === null ? 'Sale complete' : `$${Number(data.nextBlockModelPriceUsd).toFixed(6)}`]
+        ];
+        metrics.replaceChildren(...values.map(([label, value]) => {
+          const wrapper = document.createElement('div');
+          wrapper.className = 'market-metric';
+          const term = document.createElement('dt');
+          term.textContent = label;
+          const description = document.createElement('dd');
+          description.textContent = value;
+          wrapper.append(term, description);
+          return wrapper;
+        }));
+        receipts.replaceChildren();
+        for (const receipt of data.latestReceipts) {
+          const row = document.createElement('article');
+          row.className = 'activity-row';
+          const text = document.createElement('div');
+          const heading = document.createElement('strong');
+          heading.textContent = `Confirmed ${receipt.asset} purchase · ${receipt.startLabel}–${receipt.endLabel}`;
+          const detail = document.createElement('p');
+          detail.textContent = `${receipt.blockCount.toLocaleString()} block(s) · ${formatPayment(receipt)} paid · ${new Date(receipt.settledAt * 1000).toLocaleString()}`;
+          const link = document.createElement('a');
+          link.href = `https://explorer.solana.com/address/${encodeURIComponent(receipt.receipt)}?cluster=devnet`;
+          link.target = '_blank';
+          link.rel = 'noopener noreferrer';
+          link.textContent = 'View receipt';
+          link.setAttribute('aria-label', `View receipt for confirmed purchase ${receipt.startLabel} through ${receipt.endLabel}`);
+          text.append(heading, detail);
+          row.append(text, link);
+          receipts.append(row);
+        }
+        if (!data.latestReceipts.length) receipts.textContent = 'No confirmed purchases are available.';
+        marketStatus.textContent = `Verified Solana ${data.network} data. Refreshed ${new Date().toLocaleTimeString()}.`;
+      } catch (error) {
+        marketStatus.textContent = error.message || 'Could not load confirmed Devnet activity.';
+        metrics.replaceChildren();
+        receipts.textContent = 'Purchase receipts are unavailable while the Devnet connection is offline.';
+      } finally {
+        refreshMarket.disabled = false;
+      }
+    }
+    refreshMarket.addEventListener('click', loadMarket);
+    loadMarket();
+  </script>
+</body>
+</html>

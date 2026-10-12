@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="See the largest Space Ledger holders based on confirmed Solana Devnet purchase receipts.">
+  <title>Top Holders — Space Ledger</title>
+  <link rel="stylesheet" href="../css/styles.css">
+  <script src="/js/site.js" defer></script>
+</head>
+<body>
+  <nav aria-label="Main navigation"><div class="container">
+    <a href="/index.html" style="display:flex;align-items:center;gap:8px;text-decoration:none;"><img src="/img/logo.jpg" alt="" style="width:32px;height:32px;border-radius:7px;object-fit:cover;"><span class="logo">Space Ledger</span></a>
+    <ul>
+      <li><a href="../index.html">Home</a></li><li><a href="purchase.html">Pricing</a></li><li><a href="grid.html">Grid View</a></li><li><a href="treasury.html">Treasury</a></li><li><a href="network.html">Network</a></li><li><a href="dashboard.html">Dashboard</a></li><li><a href="profile.html">Profile</a></li>
+      <li><button class="wallet-button" id="navWalletBtn" type="button" onclick="window.openWalletModal()">Connect wallet</button></li>
+    </ul>
+  </div></nav>
+  <main class="container">
+    <header class="hero"><h1>Top holders</h1><p>Ranked by the number of blocks in confirmed Devnet purchase receipts.</p></header>
+    <section class="card">
+      <p class="feature-status" id="leaderboardStatus" role="status" aria-live="polite">Loading verified holder receipts…</p>
+      <p class="estimate-note">Wallet addresses and purchases are public on-chain data. Names and regions are not collected or inferred. This ranking reflects original buyers; blocks cannot currently be transferred.</p>
+      <div class="leaderboard-scroll">
+        <table class="leaderboard-table">
+          <caption class="sr-only">Top holders based on confirmed Solana Devnet purchase receipts</caption>
+          <thead><tr><th scope="col">Rank</th><th scope="col">Wallet</th><th scope="col">Blocks</th><th scope="col">Purchases</th><th scope="col">Latest receipt</th></tr></thead>
+          <tbody id="leaderboardRows"></tbody>
+        </table>
+      </div>
+      <button class="button" id="refreshLeaderboard" type="button" style="margin-top:18px;">Refresh from Devnet</button>
+    </section>
+    <section class="card">
+      <h2>Ranking method</h2>
+      <p>Holder totals are calculated from validated on-chain purchase receipts and refreshed from Solana Devnet when requested. No location, profile name, or off-chain identity is used.</p>
+    </section>
+  </main>
+  <script src="../js/wallet.js"></script>
+  <script src="../js/walletModal.js"></script>
+  <script>
+    const status = document.getElementById('leaderboardStatus');
+    const rows = document.getElementById('leaderboardRows');
+    const refresh = document.getElementById('refreshLeaderboard');
+    function shortAddress(address) { return `${address.slice(0, 5)}…${address.slice(-5)}`; }
+    async function loadLeaderboard() {
+      refresh.disabled = true;
+      status.textContent = 'Reading and validating Devnet purchase receipts…';
+      rows.replaceChildren();
+      try {
+        const response = await fetch('/api/leaderboard');
+        const data = await response.json();
+        if (!response.ok || !data.verified) throw new Error(data.error || 'Verified holder data is unavailable.');
+        for (const [index, holder] of data.holders.entries()) {
+          const row = document.createElement('tr');
+          const values = [
+            String(index + 1),
+            shortAddress(holder.address),
+            Number(holder.blocksOwned).toLocaleString(),
+            Number(holder.purchaseCount).toLocaleString(),
+            holder.lastPurchaseAt ? new Date(holder.lastPurchaseAt * 1000).toLocaleDateString() : '—'
+          ];
+          values.forEach((value, cellIndex) => {
+            const cell = document.createElement('td');
+            if (cellIndex === 0) cell.className = 'rank';
+            cell.textContent = value;
+            row.append(cell);
+          });
+          rows.append(row);
+        }
+        status.textContent = data.holderCount ? `${data.holderCount.toLocaleString()} holder wallet(s), ranked by confirmed blocks. Showing up to 100.` : 'No confirmed purchase receipts are recorded yet.';
+      } catch (error) {
+        status.textContent = error.message || 'Could not load Devnet holder data.';
+      } finally {
+        refresh.disabled = false;
+      }
+    }
+    refresh.addEventListener('click', loadLeaderboard);
+    loadLeaderboard();
+  </script>
+</body>
+</html>

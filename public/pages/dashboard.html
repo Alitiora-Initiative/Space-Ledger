@@ -31,6 +31,12 @@
       <h2>Holdings and activity</h2>
       <p class="feature-status" id="dashboardHoldingsStatus">Connect your wallet to read its confirmed Devnet purchase receipts.</p>
       <div id="dashboardHoldings"></div>
+      <p style="margin-top:16px;"><a href="profile.html">Open purchase history</a></p>
+    </section>
+    <section class="card">
+      <h2>Devnet ledger snapshot</h2>
+      <p class="feature-status" id="ledgerSnapshotStatus" aria-live="polite">Loading current on-chain statistics…</p>
+      <dl class="market-metrics" id="ledgerSnapshot" aria-label="Current Devnet ledger statistics"></dl>
     </section>
     <section class="card">
       <h2>Available now</h2>
@@ -45,6 +51,35 @@
     const feedback = document.getElementById('walletFeedback');
     const disconnect = document.getElementById('disconnectWallet');
     const copy = document.getElementById('copyWallet');
+    async function loadLedgerSnapshot() {
+      const status = document.getElementById('ledgerSnapshotStatus');
+      const metrics = document.getElementById('ledgerSnapshot');
+      try {
+        const response = await fetch('/api/stats');
+        const stats = await response.json();
+        if (!response.ok) throw new Error(stats.error || 'Ledger statistics are unavailable.');
+        if (stats.currentSupply === null) throw new Error('The ownership program is not configured.');
+        const items = [
+          ['Blocks sold', Number(stats.currentSupply).toLocaleString()],
+          ['Blocks available', BigInt(stats.blocksRemaining).toLocaleString()],
+          ['Confirmed purchases', Number(stats.purchaseCount).toLocaleString()],
+          ['Recorded test fees', `$${Number(stats.totalFeesUsd).toFixed(2)}`]
+        ];
+        metrics.replaceChildren(...items.map(([label, value]) => {
+          const wrapper = document.createElement('div');
+          wrapper.className = 'market-metric';
+          const term = document.createElement('dt');
+          term.textContent = label;
+          const description = document.createElement('dd');
+          description.textContent = value;
+          wrapper.append(term, description);
+          return wrapper;
+        }));
+        status.textContent = `Verified from Solana ${stats.network} receipts.`;
+      } catch (error) {
+        status.textContent = error.message || 'Ledger statistics are unavailable.';
+      }
+    }
     async function showDashboardWallet({ wallet, address: value }) {
       address.textContent = `${wallet} · ${value}`;
       disconnect.hidden = false;
@@ -82,6 +117,7 @@
       catch { feedback.textContent = 'Could not copy the address in this browser.'; }
     });
     if (walletManager.isConnected()) showDashboardWallet({ wallet: walletManager.currentWallet, address: walletManager.currentAddress });
+    loadLedgerSnapshot();
   </script>
 </body>
 </html>

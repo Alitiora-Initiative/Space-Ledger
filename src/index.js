@@ -171,6 +171,49 @@ app.get('/api/stats', async (_req, res) => {
   }
 });
 
+app.get('/api/market', async (_req, res) => {
+  if (!process.env.SOLANA_PROGRAM_ID) {
+    return res.json({ status: 'not_configured', verified: false, network: 'devnet', marketType: 'primary_curve_model', message: NOT_DEPLOYED, latestReceipts: [] });
+  }
+  try {
+    const state = await solanaService.getState();
+    const receipts = await solanaService.listReceipts();
+    const supply = Number(state.currentSupply);
+    res.json({
+      status: state.initialized ? 'devnet_verified' : 'awaiting_initialization',
+      verified: state.initialized,
+      network: 'devnet',
+      marketType: 'primary_curve_model',
+      currentSupply: state.currentSupply.toString(),
+      nextBlockModelPriceUsd: supply < bondingCurve.TOTAL_SUPPLY ? bondingCurve.calculatePrice(supply) : null,
+      confirmedPurchaseCount: receipts.length,
+      latestReceipts: receipts.sort((a, b) => b.settledAt - a.settledAt).slice(0, 30).map(({ buyer: _buyer, ...receipt }) => receipt),
+      message: 'The price is the published primary-sale model, not a traded market price. Receipts are confirmed Devnet purchases; resales and candlestick trading data are not available.',
+    });
+  } catch (error) {
+    res.status(503).json({ error: error.message });
+  }
+});
+
+app.get('/api/leaderboard', async (_req, res) => {
+  if (!process.env.SOLANA_PROGRAM_ID) return res.status(503).json({ verified: false, network: 'devnet', holders: [], error: NOT_DEPLOYED });
+  try {
+    const receipts = await solanaService.listReceipts();
+    const holders = new Map();
+    for (const receipt of receipts) {
+      const holder = holders.get(receipt.buyer) || { address: receipt.buyer, blocksOwned: 0, purchaseCount: 0, lastPurchaseAt: 0 };
+      holder.blocksOwned += receipt.blockCount;
+      holder.purchaseCount += 1;
+      holder.lastPurchaseAt = Math.max(holder.lastPurchaseAt, receipt.settledAt);
+      holders.set(receipt.buyer, holder);
+    }
+    const ranked = [...holders.values()].sort((a, b) => b.blocksOwned - a.blocksOwned || b.purchaseCount - a.purchaseCount || a.address.localeCompare(b.address)).slice(0, 100);
+    res.json({ verified: true, network: 'devnet', ranking: 'confirmed purchase receipts', holderCount: holders.size, holders: ranked });
+  } catch (error) {
+    res.status(503).json({ verified: false, network: 'devnet', holders: [], error: error.message });
+  }
+});
+
 app.get('/api/block-owner/:blockId', async (req, res) => {
   if (!process.env.SOLANA_PROGRAM_ID) return res.status(503).json({ error: 'Ownership cannot be verified: no ownership contract or indexer is deployed.' });
   const blockId = blockIds.parse(req.params.blockId);

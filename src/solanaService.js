@@ -18,6 +18,7 @@ const TARGET_PRICE_MICRO_USD = 1_000_000_000n;
 const PURCHASE_FEE_MICRO_USD = 100_000n;
 const MAX_PRICE_AGE_SECONDS = 90n;
 const MAX_BLOCKS_PER_PURCHASE = 100_000_000;
+const RECEIPT_ACCOUNT_DISCRIMINATOR = createHash('sha256').update('account:PurchaseReceipt').digest().subarray(0, 8);
 
 function web3() {
   return require('@solana/web3.js');
@@ -60,6 +61,38 @@ function configPda(programId) {
 
 function receiptPda(programId, startBlock) {
   return derivePda(programId, 'receipt', writeU64(startBlock));
+}
+
+function decodePurchaseReceipt(pubkey, account, programId) {
+  const data = Buffer.from(account.data || []);
+  if (!account.owner?.equals(programId) || data.length !== 85 || !data.subarray(0, 8).equals(RECEIPT_ACCOUNT_DISCRIMINATOR)) {
+    throw new Error('An on-chain purchase receipt failed validation.');
+  }
+
+  const startBlock = data.readBigUInt64LE(8);
+  const blockCount = data.readUInt32LE(16);
+  const endBlock = startBlock + BigInt(blockCount) - 1n;
+  const assetByte = data[52];
+  const settledAt = data.readBigInt64LE(77);
+  if (blockCount < 1 || blockCount > MAX_BLOCKS_PER_PURCHASE || startBlock >= TOTAL_BLOCKS || endBlock >= TOTAL_BLOCKS || assetByte > 1 || settledAt < 0n || !pubkey.equals(receiptPda(programId, startBlock))) {
+    throw new Error('An on-chain purchase receipt failed validation.');
+  }
+
+  const buyer = new (web3().PublicKey)(data.subarray(20, 52)).toBase58();
+  return {
+    receipt: pubkey.toBase58(),
+    buyer,
+    startBlock: startBlock.toString(),
+    startLabel: require('./blockId').format(Number(startBlock)),
+    blockCount,
+    endBlock: endBlock.toString(),
+    endLabel: require('./blockId').format(Number(endBlock)),
+    asset: assetByte === 0 ? 'SOL' : 'USDC',
+    paidUnits: data.readBigUInt64LE(53).toString(),
+    priceMicroUsd: data.readBigUInt64LE(61).toString(),
+    feeMicroUsd: data.readBigUInt64LE(69).toString(),
+    settledAt: Number(settledAt),
+  };
 }
 
 function totalPriceMicroUsd(start, count) {
@@ -293,28 +326,8 @@ async function listReceipts({ buyer, blockId } = {}) {
   const filters = [{ dataSize: 85 }];
   if (buyer) filters.push({ memcmp: { offset: 20, bytes: new PublicKey(buyer).toBase58() } });
   const accounts = await state.connection.getProgramAccounts(state.programId, { commitment: 'confirmed', filters });
-  return accounts.map(({ pubkey, account }) => {
-    if (account.data.length !== 85) return null;
-    const startBlock = account.data.readBigUInt64LE(8);
-    const count = account.data.readUInt32LE(16);
-    const endBlock = startBlock + BigInt(count) - 1n;
-    const owner = new PublicKey(account.data.subarray(20, 52)).toBase58();
-    const asset = account.data[52] === 0 ? 'SOL' : account.data[52] === 1 ? 'USDC' : 'unknown';
-    return {
-      receipt: pubkey.toBase58(),
-      buyer: owner,
-      startBlock: startBlock.toString(),
-      startLabel: require('./blockId').format(Number(startBlock)),
-      blockCount: count,
-      endBlock: endBlock.toString(),
-      endLabel: require('./blockId').format(Number(endBlock)),
-      asset,
-      paidUnits: account.data.readBigUInt64LE(53).toString(),
-      priceMicroUsd: account.data.readBigUInt64LE(61).toString(),
-      feeMicroUsd: account.data.readBigUInt64LE(69).toString(),
-      settledAt: Number(account.data.readBigInt64LE(77)),
-    };
-  }).filter(receipt => receipt && (blockId === undefined || BigInt(blockId) >= BigInt(receipt.startBlock) && BigInt(blockId) <= BigInt(receipt.endBlock)));
+  return accounts.map(({ pubkey, account }) => decodePurchaseReceipt(pubkey, account, state.programId))
+    .filter(receipt => blockId === undefined || BigInt(blockId) >= BigInt(receipt.startBlock) && BigInt(blockId) <= BigInt(receipt.endBlock));
 }
 
 async function publicConfig() {
@@ -351,6 +364,7 @@ module.exports = {
   USDC_MINT,
   buildPurchaseTransaction,
   configPda,
+  decodePurchaseReceipt,
   getState,
   listReceipts,
   parsePythSolUsd,

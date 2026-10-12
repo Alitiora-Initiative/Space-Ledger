@@ -2,6 +2,24 @@
 
 This is a planning document, not a promise that work runs automatically. The website does not improve itself when visited. Changes need an owner, review, tests, and an intentional deployment.
 
+## Beta work completed
+
+- [x] Read-only Devnet supply and purchase statistics.
+- [x] Top-holder ranking derived from validated purchase receipts; ranks original buyers because transfers are not implemented.
+- [x] Profile purchase history from confirmed on-chain receipts.
+- [x] Simulate unsigned purchase transactions before requesting a wallet signature.
+- [x] Persistent legal footer, responsive navigation, local system typography, and site icon.
+- [x] Market activity view that separates the primary-sale model from unavailable secondary-market trading data.
+
+## Remaining beta gates
+
+- [ ] Test signed purchases on Devnet with an explicitly approved wallet transaction and record the transaction receipt.
+- [ ] Add Wallet Standard discovery and mobile wallet support; the current purchase flow supports Phantom's injected Solana provider.
+- [ ] Preserve transaction signatures in receipts or add a verified indexer if a true transaction history is needed.
+- [ ] Resolve operator identity/contact fields and provider retention details in the privacy, terms, and cookie notices.
+- [ ] Complete responsive visual, keyboard, screen-reader, and WCAG contrast checks on real mobile and desktop browsers.
+- [ ] Obtain an independent program/security review before any public beta beyond test-only Devnet use.
+
 ## Before public launch
 
 - [ ] Add the operator's verified legal name, service address, and privacy contact to the notices.

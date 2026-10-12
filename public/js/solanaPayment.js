@@ -160,7 +160,11 @@
       const connection = new window.solanaWeb3.Connection(appConfig.rpc, 'confirmed');
       const solBefore = await solBalance(connection, wallet.address);
       const assetBefore = await selectedBalance(connection, activeQuote.asset, wallet.address);
-      setQuoteText(`${quoteSummary(activeQuote)}\n\nPhantom will show the transaction for your review. Approve only if the network, recipient, block count, and spend are correct.`);
+      setQuoteText(`${quoteSummary(activeQuote)}\n\nSimulating this unsigned transaction on Solana Devnet before requesting wallet approval…`);
+      const simulation = await connection.simulateTransaction(transaction, [], false);
+      if (simulation.value.err) throw new Error('Devnet simulation failed. The transaction was not sent; request a fresh quote and try again.');
+      const computeUnits = Number.isFinite(simulation.value.unitsConsumed) ? ` Estimated compute: ${simulation.value.unitsConsumed.toLocaleString()} units.` : '';
+      setQuoteText(`${quoteSummary(activeQuote)}\n\nDevnet simulation succeeded.${computeUnits} Phantom will now show the transaction for your review. Approve only if the network, recipient, block count, and spend are correct.`);
       const responseFromWallet = await window.walletManager.provider.signAndSendTransaction(transaction, {
         preflightCommitment: 'confirmed'
       });

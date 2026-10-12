@@ -1,8 +1,10 @@
 'use strict';
 
 const assert = require('node:assert/strict');
+const { createHash } = require('node:crypto');
 const test = require('node:test');
 const service = require('../src/solanaService');
+const { Keypair, PublicKey } = require('@solana/web3.js');
 
 test('on-chain curve quote matches the one-microUSD fixed-point rule', () => {
   assert.equal(service.totalPriceMicroUsd(0n, 1), 1_000n);
@@ -28,4 +30,37 @@ test('Pyth SOL/USD decoder checks feed identity, confidence, and freshness', () 
   const wrongFeed = Buffer.from(account);
   wrongFeed[41] ^= 0xff;
   assert.throws(() => service.parsePythSolUsd(wrongFeed, publishTime), /not a fully verified/);
+});
+
+test('purchase receipt decoder validates owner, discriminator, bounds, asset, and PDA', () => {
+  const programId = Keypair.generate().publicKey;
+  const buyer = Keypair.generate().publicKey;
+  const data = Buffer.alloc(85);
+  data.set(createHash('sha256').update('account:PurchaseReceipt').digest().subarray(0, 8), 0);
+  data.writeBigUInt64LE(12n, 8);
+  data.writeUInt32LE(3, 16);
+  buyer.toBuffer().copy(data, 20);
+  data[52] = 0;
+  data.writeBigUInt64LE(3000n, 53);
+  data.writeBigUInt64LE(2900n, 61);
+  data.writeBigUInt64LE(100n, 69);
+  data.writeBigInt64LE(1_800_000_000n, 77);
+  const [receipt] = PublicKey.findProgramAddressSync([Buffer.from('receipt'), Buffer.from([12, 0, 0, 0, 0, 0, 0, 0])], programId);
+  const account = { owner: programId, data };
+
+  const decoded = service.decodePurchaseReceipt(receipt, account, programId);
+  assert.equal(decoded.buyer, buyer.toBase58());
+  assert.equal(decoded.startBlock, '12');
+  assert.equal(decoded.blockCount, 3);
+  assert.equal(decoded.endBlock, '14');
+  assert.equal(decoded.asset, 'SOL');
+  assert.equal(decoded.paidUnits, '3000');
+
+  const wrongDiscriminator = Buffer.from(data);
+  wrongDiscriminator[0] ^= 0xff;
+  assert.throws(() => service.decodePurchaseReceipt(receipt, { owner: programId, data: wrongDiscriminator }, programId), /failed validation/);
+  assert.throws(() => service.decodePurchaseReceipt(receipt, { owner: Keypair.generate().publicKey, data }, programId), /failed validation/);
+  const invalidRange = Buffer.from(data);
+  invalidRange.writeBigUInt64LE(10_000_000_000n, 8);
+  assert.throws(() => service.decodePurchaseReceipt(receipt, { owner: programId, data: invalidRange }, programId), /failed validation/);
 });

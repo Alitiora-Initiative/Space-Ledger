@@ -17,6 +17,15 @@ test('shared sticky navigation stays above scrolling content', () => {
   assert.match(navRule, /backdrop-filter:\s*none/);
 });
 
+test('shared footer stays fixed without covering page content', () => {
+  const styles = fs.readFileSync(path.join(root, 'public', 'css', 'styles.css'), 'utf8');
+  assert.match(styles, /\.site-footer\s*\{[^}]*position:\s*fixed !important/);
+  assert.match(styles, /\.site-footer\s*\{[^}]*bottom:\s*0/);
+  assert.match(styles, /body\s*\{[^}]*padding-bottom:\s*calc\(82px/);
+  assert.match(styles, /\.site-footer nav\s*\{\s*position:\s*static !important/);
+  assert.match(styles, /column-gap:\s*34px/);
+});
+
 test('Vercel applies security headers to static assets and functions', () => {
   const config = JSON.parse(fs.readFileSync(path.join(root, 'vercel.json'), 'utf8'));
   const wildcard = config.headers.find(rule => rule.source === '/(.*)');
@@ -95,6 +104,8 @@ test('Express app serves its pages and read-only API endpoints', async t => {
     ['/pages/network.html', 'text/html'],
     ['/pages/dashboard.html', 'text/html'],
     ['/pages/profile.html', 'text/html'],
+    ['/pages/leaderboard.html', 'text/html'],
+    ['/pages/market.html', 'text/html'],
     ['/pages/swap.html', 'text/html'],
     ['/pages/privacy.html', 'text/html'],
     ['/pages/terms.html', 'text/html'],
@@ -108,7 +119,8 @@ test('Express app serves its pages and read-only API endpoints', async t => {
     ['/api/networks', 'application/json'],
     ['/api/grid?block=1', 'application/json'],
     ['/api/genesis', 'application/json'],
-    ['/api/stats', 'application/json']
+    ['/api/stats', 'application/json'],
+    ['/api/market', 'application/json']
   ];
 
   const responses = new Map();
@@ -134,6 +146,9 @@ test('Express app serves its pages and read-only API endpoints', async t => {
   assert.match(responses.get('/pages/privacy.html'), /Publication status: incomplete/);
   assert.match(responses.get('/pages/terms.html'), /Terms and Conditions/);
   assert.match(responses.get('/pages/cookies.html'), /does not currently need a cookie-consent banner/);
+  assert.match(responses.get('/pages/leaderboard.html'), /confirmed Devnet purchase receipts/);
+  assert.match(responses.get('/pages/market.html'), /Not a trading market/);
+  assert.match(responses.get('/pages/profile.html'), /id="purchaseHistory" hidden/);
   assert.doesNotMatch(responses.get('/pages/grid.html'), /id="main-content"|id="minimap"|minimapCanvas/);
   assert.doesNotMatch(responses.get('/pages/network.html'), /id="main-content"/);
   assert.equal(responses.get('/api/price/0').price, 0.001);
@@ -153,6 +168,13 @@ test('Express app serves its pages and read-only API endpoints', async t => {
   assert.equal(namedGrid.blockId, 26_000);
   assert.equal(namedGrid.blockLabel, '000AA');
   assert.equal(responses.get('/api/genesis').verified, false);
+  assert.equal(responses.get('/api/market').verified, false);
+  assert.deepEqual(responses.get('/api/market').latestReceipts, []);
+  const paymentScript = fs.readFileSync(path.join(root, 'public', 'js', 'solanaPayment.js'), 'utf8');
+  assert.ok(paymentScript.indexOf('simulateTransaction(transaction') < paymentScript.indexOf('signAndSendTransaction(transaction'));
+  const leaderboardResponse = await fetch(`${baseUrl}/api/leaderboard`);
+  assert.equal(leaderboardResponse.status, 503);
+  assert.equal((await leaderboardResponse.json()).verified, false);
 
   const ownerResponse = await fetch(`${baseUrl}/api/block-owner/0`);
   assert.equal(ownerResponse.status, 503);

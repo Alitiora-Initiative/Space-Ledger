@@ -28,7 +28,7 @@
     </div>
   </nav>
 
-  <div class="container">
+  <main class="container">
     <div class="hero">
       <h1>Space Ledger</h1>
       <p>1 Trillion Pixels · 10 Billion Blocks · Explore a shared digital canvas concept</p>
@@ -72,10 +72,26 @@
 
     <div class="card" id="about">
       <h2>About Space Ledger</h2>
-      <p style="color: #888; line-height: 1.6;">
+      <p style="color: #c4d0d7; line-height: 1.7;">
         Space Ledger is a shared canvas of 10 billion blocks and 1 trillion pixels, inspired by the Million Dollar Homepage's pixel-by-pixel format. The original launched in 2005. Space Ledger accepts test purchases on Solana Devnet and records block ranges in on-chain receipts.
         Connect Phantom on Devnet to see the current quote, approve a purchase, and view confirmed holdings. Vesting, swaps, and resales are not enabled.
       </p>
+    </div>
+
+    <div class="card">
+      <h2>One trillion pixels, addressable in blocks</h2>
+      <p style="color:#c4d0d7;line-height:1.7;">Each numbered block contains a 10 × 10 cluster of pixels. That makes a simple shared coordinate system: 10 billion blocks multiplied by 100 pixels per block gives 1 trillion pixel positions. The grid is designed for exploring that scale, while Devnet receipts currently record block ranges rather than artwork or transferable assets.</p>
+      <div class="quick-actions" style="display:flex;gap:16px;flex-wrap:wrap;margin-top:18px;">
+        <a href="pages/grid.html" class="button">Explore the grid</a>
+        <a href="pages/leaderboard.html" class="button">See top holders</a>
+        <a href="pages/market.html" class="button">See live sale activity</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>What is live in this beta</h2>
+      <p style="color:#c4d0d7;line-height:1.7;">Supply, primary purchases, portfolio ranges, and holder rankings are read from confirmed Solana Devnet program accounts. A wallet must approve each test purchase. Devnet tokens are for testing only and have no real-world value.</p>
+      <p style="color:#c4d0d7;line-height:1.7;margin-top:12px;">Block ownership cannot currently be transferred or resold. There is no token pool, Jupiter route, or secondary trading feed, so the app does not display trading candles or claim a market price. The published curve is a purchase-price model.</p>
     </div>
 
     <div class="card">
@@ -83,7 +99,7 @@
       <div class="formula">
         P(x) = (9.99999999 × 10⁻⁸)x + 0.001
       </div>
-      <p style="color: #888; line-height: 1.6;">
+      <p style="color: #c4d0d7; line-height: 1.7;">
         The linear model ranges from $0.001 to $1,000.00. A live Devnet quote uses the current on-chain supply and a fresh Pyth SOL/USD price. Devnet tokens have no real-world value.
       </p>
     </div>
@@ -96,9 +112,11 @@
         <a href="pages/treasury.html" class="button">Treasury Info</a>
         <a href="pages/network.html" class="button">Network Config</a>
         <a href="pages/profile.html" class="button">View Profile</a>
+        <a href="pages/leaderboard.html" class="button">Leaderboard</a>
+        <a href="pages/market.html" class="button">Live sale activity</a>
       </div>
     </div>
-  </div>
+  </main>
 
   <script>
     fetch('/api/supply').then(response => response.json()).then(data => {

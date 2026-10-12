@@ -101,7 +101,33 @@
   const nav = document.querySelector('nav');
   const list = nav?.querySelector('ul');
   const brand = nav?.querySelector('.container > a');
+  if (!document.head.querySelector('link[rel~="icon"]')) {
+    const icon = document.createElement('link');
+    icon.rel = 'icon';
+    icon.type = 'image/jpeg';
+    icon.href = '/img/logo.jpg';
+    document.head.append(icon);
+  }
+  if (!document.head.querySelector('link[rel="apple-touch-icon"]')) {
+    const icon = document.createElement('link');
+    icon.rel = 'apple-touch-icon';
+    icon.href = '/img/logo.jpg';
+    document.head.append(icon);
+  }
   if (nav && list && brand) {
+    if (!list.querySelector('a[href="/pages/leaderboard.html"]')) {
+      const item = document.createElement('li');
+      const link = document.createElement('a');
+      link.href = '/pages/leaderboard.html';
+      link.textContent = 'Leaderboard';
+      if (window.location.pathname === '/pages/leaderboard.html') {
+        link.className = 'active';
+        link.setAttribute('aria-current', 'page');
+      }
+      item.append(link);
+      const walletItem = list.querySelector('.wallet-button, #navWalletBtn')?.closest('li');
+      list.insertBefore(item, walletItem || null);
+    }
     const toggle = document.createElement('button');
     toggle.className = 'nav-toggle';
     toggle.type = 'button';
@@ -143,6 +169,6 @@
 
   const footer = document.createElement('footer');
   footer.className = 'site-footer';
-  footer.innerHTML = '<div class="site-footer-inner"><span>Space Ledger</span><nav aria-label="Legal"><a href="/pages/privacy.html">Privacy</a><a href="/pages/terms.html">Terms</a><a href="/pages/cookies.html">Cookies</a></nav></div>';
+  footer.innerHTML = '<div class="site-footer-inner"><span>Space Ledger</span><nav aria-label="Legal information"><a href="/pages/privacy.html">Privacy</a><a href="/pages/terms.html">Terms</a><a href="/pages/cookies.html">Cookies</a></nav></div>';
   document.body.append(footer);
 })();

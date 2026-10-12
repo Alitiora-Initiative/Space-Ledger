@@ -31,6 +31,11 @@
       <p class="feature-status" id="holdingsStatus">Connect your wallet to load verified Devnet purchases.</p>
       <div id="holdingsList" aria-live="polite"></div>
     </section>
+    <section class="card history-section" id="purchaseHistory" hidden>
+      <h2>Purchase history</h2>
+      <p class="estimate-note">Confirmed Devnet receipts for this connected wallet. Receipt accounts are public on Solana; they are not transferable assets.</p>
+      <div class="activity-list" id="historyList" aria-live="polite"></div>
+    </section>
   </main>
   <script src="../js/wallet.js"></script>
   <script src="../js/walletModal.js"></script>
@@ -47,8 +52,12 @@
     async function loadHoldings(address) {
       const status = document.getElementById('holdingsStatus');
       const list = document.getElementById('holdingsList');
+      const historySection = document.getElementById('purchaseHistory');
+      const history = document.getElementById('historyList');
+      historySection.hidden = false;
       status.textContent = 'Loading on-chain Devnet receipts…';
       list.replaceChildren();
+      history.replaceChildren();
       try {
         const response = await fetch(`/api/portfolio/${encodeURIComponent(address)}`);
         const data = await response.json();
@@ -58,15 +67,43 @@
           const item = document.createElement('p');
           item.textContent = `${range.startLabel}–${range.endLabel} · ${range.blockCount.toLocaleString()} blocks · ${range.asset.toUpperCase()} · receipt ${range.receipt}`;
           list.appendChild(item);
+
+          const row = document.createElement('article');
+          row.className = 'activity-row';
+          const details = document.createElement('div');
+          const heading = document.createElement('strong');
+          heading.textContent = `Confirmed purchase · ${range.startLabel}–${range.endLabel}`;
+          const paid = Number(range.paidUnits) / (range.asset === 'SOL' ? 1_000_000_000 : 1_000_000);
+          const price = Number(range.priceMicroUsd) / 1_000_000;
+          const fee = Number(range.feeMicroUsd) / 1_000_000;
+          const detail = document.createElement('p');
+          detail.textContent = `${range.blockCount.toLocaleString()} blocks · ${paid.toFixed(range.asset === 'SOL' ? 6 : 2)} ${range.asset} paid · $${price.toFixed(6)} purchase amount · $${fee.toFixed(2)} fee · ${new Date(range.settledAt * 1000).toLocaleString()}`;
+          const receiptLink = document.createElement('a');
+          receiptLink.href = `https://explorer.solana.com/address/${encodeURIComponent(range.receipt)}?cluster=devnet`;
+          receiptLink.target = '_blank';
+          receiptLink.rel = 'noopener noreferrer';
+          receiptLink.textContent = 'View receipt';
+          receiptLink.setAttribute('aria-label', `View Devnet receipt for blocks ${range.startLabel} through ${range.endLabel}`);
+          details.append(heading, detail);
+          row.append(details, receiptLink);
+          history.append(row);
         }
-        if (!data.ranges.length) status.textContent = 'No verified Devnet purchases found for this wallet.';
-      } catch (error) { status.textContent = error.message || 'Could not load verified holdings.'; }
+        if (!data.ranges.length) {
+          status.textContent = 'No verified Devnet purchases found for this wallet.';
+          history.textContent = 'No confirmed purchases for this wallet yet.';
+        }
+      } catch (error) {
+        status.textContent = error.message || 'Could not load verified holdings.';
+        history.textContent = 'Purchase history could not be loaded.';
+      }
     }
     walletManager.on('connected', showWallet);
     walletManager.on('disconnected', () => {
       profileAddress.textContent = 'No wallet connected.';
       document.getElementById('holdingsStatus').textContent = 'Connect your wallet to load verified Devnet purchases.';
       document.getElementById('holdingsList').replaceChildren();
+      document.getElementById('purchaseHistory').hidden = true;
+      document.getElementById('historyList').replaceChildren();
       copyButton.hidden = true;
       document.getElementById('connectWallet').hidden = false;
     });
