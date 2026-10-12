@@ -113,7 +113,7 @@ The legal pages are not ready for public launch: the operator still needs to pro
 
 The Vercel configuration applies response-security headers. Vercel's Express support can run the `src/index.js` app, with static assets served from `public/`; an authenticated deployment and live production verification are still required. Pushing code does not prove Vercel has deployed it.
 
-See [ROADMAP.md](ROADMAP.md) for the current TODO list and [the detailed beta guide](docs/Space-Ledger-Devnet-Beta-Guide.md). GitHub Wikis are currently unavailable for the target repository; the guide is ready in this repository until a maintainer enables the Wiki.
+See [ROADMAP.md](ROADMAP.md) for the current TODO list and [the detailed beta guide](docs/Space-Ledger-Devnet-Beta-Guide.md). The repository's Wiki setting is enabled, but GitHub has not initialized the Wiki repository yet; a maintainer must create its first page in GitHub before the guide can be pushed there.
 
 ## License
 
