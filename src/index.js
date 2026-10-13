@@ -5,6 +5,11 @@ const bondingCurve = require('./bondingCurve');
 const rpcRouter = require('./rpcRouter');
 const blockIds = require('./blockId');
 const solanaService = require('./solanaService');
+const { createRateLimiter } = require('./rateLimit');
+
+// Best-effort per-instance limits for Devnet beta (see issue #5).
+const quoteRateLimit = createRateLimiter({ windowMs: 60_000, max: 30, name: 'quote' });
+const purchaseRateLimit = createRateLimiter({ windowMs: 60_000, max: 10, name: 'purchase' });
 
 const PORT = Number.parseInt(process.env.PORT, 10) || 3000;
 // This release is deliberately pinned to Devnet. Mainnet must be a separately
@@ -35,7 +40,7 @@ app.get('/api/solana/config', async (_req, res) => {
   }
 });
 
-app.get('/api/solana/quote', async (req, res) => {
+app.get('/api/solana/quote', quoteRateLimit, async (req, res) => {
   try {
     res.json(await solanaService.quote({ asset: req.query.asset, amount: req.query.amount }));
   } catch (error) {
@@ -215,7 +220,7 @@ app.get('/api/portfolio/:address', async (req, res) => {
   }
 });
 
-app.post('/api/purchase', async (req, res) => {
+app.post('/api/purchase', purchaseRateLimit, async (req, res) => {
   if (!process.env.SOLANA_PROGRAM_ID) return res.status(503).json({ error: 'Purchases are disabled until the Devnet ownership program is deployed and configured.' });
   try {
     const result = await solanaService.buildPurchaseTransaction({
