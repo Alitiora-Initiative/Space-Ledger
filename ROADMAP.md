@@ -14,10 +14,12 @@ This is a human-maintained checklist. The website does not create agents, edit i
 
 ## Beta Release Gates
 
+- [x] Add best-effort in-memory rate limits on `/api/solana/quote` (30/min/IP) and `POST /api/purchase` (10/min/IP). See issue #5.
+- [x] Basic accessibility pass: skip link, focus-visible styles, reduced-motion, logo alt text on home. Further page-by-page checks remain open (issue #7).
 - [x] Publish and verify the GitHub Wiki page at `Space-Ledger/wiki/Devnet-Beta-Guide`.
-- [ ] Verify the Vercel production deployment, configured environment variables, and live API responses after publishing.
+- [x] Verify the Vercel production deployment, configured environment variables, and live API responses after publishing. (Live checks 2026-10-14: `/api/solana/config`, `/api/supply`, `/api/market` return 200 with Devnet data; security headers present. Operator should still confirm private env var names in the Vercel dashboard.)
 - [ ] Complete an explicitly approved test purchase on Solana Devnet, then verify the transaction and receipt in Solana Explorer. Never request or send a wallet transaction without the user's explicit approval.
-- [ ] Add transaction signatures to receipts or build a verified indexer that joins signatures to program receipts.
+- [ ] Add transaction signatures to receipts or build a verified indexer that joins signatures to program receipts. (UI already surfaces the tx signature via Solana Explorer after confirmation; on-chain or off-chain persistence still open — see issue #4.)
 - [ ] Review the official MetaMask Connect Solana package license and obtain any needed commercial permission before deciding whether to bundle it; then test the SDK and mobile flow. Do not claim MetaMask support before then.
 - [ ] Test mobile wallet support. Wallet Standard discovery currently sees wallets exposed in the active browser; it does not implement QR, WalletConnect, or app handoff.
 - [ ] Complete responsive browser testing, keyboard-only use, screen-reader checks, zoom/reflow, forced-colors, reduced-motion, image-alt review, and measured contrast testing.
