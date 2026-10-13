@@ -1,8 +1,8 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="Explore Space Ledger's published pixel block pricing model.">
   <title>Pricing Preview — Space Ledger</title>
   <link rel="stylesheet" href="../css/styles.css">
@@ -12,81 +12,69 @@
   <nav>
     <div class="container">
       <a href="/index.html" style="display:flex;align-items:center;gap:8px;text-decoration:none;">
-        <img src="/img/logo.jpg" alt="" style="width:32px;height:32px;border-radius:7px;object-fit:cover;">
+        <img src="/img/logo.jpg" alt="Space Ledger logo" style="width:32px;height:32px;border-radius:7px;object-fit:cover;">
         <span class="logo">Space Ledger</span>
       </a>
       <ul>
         <li><a href="../index.html">Home</a></li>
-        <li><a href="purchase.html" class="active" aria-current="page">Pricing</a></li>
+        <li><a href="purchase.html">Pricing</a></li>
         <li><a href="grid.html">Grid View</a></li>
         <li><a href="treasury.html">Treasury</a></li>
         <li><a href="network.html">Network</a></li>
         <li><a href="dashboard.html">Dashboard</a></li>
         <li><a href="profile.html">Profile</a></li>
-        <li><button class="wallet-button" id="navWalletBtn" type="button" onclick="window.openWalletModal()">Connect Wallet</button></li>
+        <li><button class="wallet-button" id="navWalletBtn" type="button">Connect Wallet</button></li>
       </ul>
     </div>
   </nav>
 
   <main class="container">
-    <header class="hero">
-      <h1>Block Pricing & Devnet Purchases</h1>
+    <div class="hero">
+      <h1>Block Pricing &amp; Devnet Purchases</h1>
       <p>Request a live Devnet quote, then review the unsigned transaction in a compatible Solana wallet.</p>
-    </header>
+    </div>
 
-    <section class="card" aria-labelledby="statusTitle">
-      <h2 id="statusTitle">Devnet purchases are loading</h2>
+    <div class="card" id="devnetPurchase" hidden>
+      <h2>Buy on Solana Devnet</h2>
       <p class="feature-status" id="purchaseStatus">Checking whether the Devnet ownership program is available. No transaction is sent until you review and approve it in your wallet.</p>
-    </section>
-
-    <section class="card" id="devnetPurchase" aria-labelledby="devnetPurchaseTitle" hidden>
-      <h2 id="devnetPurchaseTitle">Buy blocks on Solana Devnet</h2>
-      <p>Use Devnet SOL or Devnet USDC from your own wallet. The $0.10 test platform fee is included in the quote. Solana network fees and any new token-account rent are additional and shown by your wallet. Devnet tokens have no real-world value.</p>
       <form id="devnetPurchaseForm">
-        <div class="price-fields">
-          <div class="input-group">
-            <label for="paymentAsset">Payment token</label>
-            <select id="paymentAsset" name="asset">
-              <option value="SOL">Devnet SOL</option>
-              <option value="USDC">Devnet USDC</option>
-            </select>
-          </div>
-          <div class="input-group">
-            <label for="paymentAmount">Maximum amount to spend</label>
-            <input id="paymentAmount" name="amount" type="number" min="0.000001" step="0.000001" value="1" required>
-          </div>
+        <div class="input-group">
+          <label for="asset">Asset</label>
+          <select id="asset" name="asset">
+            <option value="SOL">Devnet SOL</option>
+            <option value="USDC">Devnet USDC</option>
+          </select>
+        </div>
+        <div class="input-group">
+          <label for="amount">Budget (token units)</label>
+          <input id="amount" name="amount" type="number" min="0.001" step="any" value="0.1" required>
         </div>
         <button class="button" id="quotePurchaseBtn" type="submit">Get Devnet quote</button>
       </form>
+      <p>Use Devnet SOL or Devnet USDC from your own wallet. The $0.10 test platform fee is included in the quote. Solana network fees and any new token-account rent are additional and shown by your wallet. Devnet tokens have no real-world value.</p>
       <p id="walletBalanceStatus" class="feature-status" aria-live="polite">Connect a compatible Solana Devnet wallet to display its balance here.</p>
       <div id="purchaseQuote" class="result" role="status" aria-live="polite">Connect a wallet and request a quote to see the block range and exact payment.</div>
-      <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:14px;">
+      <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:14px;">
         <button class="button" id="buyBlocksBtn" type="button" disabled>Connect wallet to buy</button>
-        <a id="purchaseExplorerLink" href="#" target="_blank" rel="noopener" hidden>View transaction on Solana Explorer</a>
+        <a id="purchaseExplorerLink" class="button" href="#" hidden target="_blank" rel="noopener noreferrer">View on Explorer</a>
       </div>
-    </section>
+    </div>
 
-    <section class="card" aria-labelledby="calculatorTitle">
-      <h2 id="calculatorTitle">Estimate a block range</h2>
-      <form id="estimateForm">
-        <div class="price-fields">
-          <div class="input-group">
-            <label for="blockId">First block ID</label>
-            <input id="blockId" name="blockId" type="text" inputmode="text" autocomplete="off" maxlength="8" value="000BDWGO" aria-describedby="blockIdHelp" required>
-            <details class="block-id-help" id="blockIdHelp">
-              <summary>Quick tip: block labels advance automatically</summary>
-              <p>Enter a short label instead of a long number: 000A through 999A, then 000B through 999B, then 000C, and so on. After Z, labels continue AA, AB, and onward. The calculator accepts either a label or its original number.</p>
-            </details>
-          </div>
-          <div class="input-group">
-            <label for="blockCount">Number of blocks (up to 100)</label>
-            <input id="blockCount" name="blockCount" type="number" min="1" max="100" value="1" required>
-          </div>
-        </div>
-        <button class="button" type="submit">Calculate estimate</button>
-      </form>
-      <div id="estimateResult" class="result" role="status" aria-live="polite">Estimates are model outputs only and are not sale quotes.</div>
-    </section>
+    <div class="card">
+      <h2>Estimate a block range</h2>
+      <p class="feature-status">Quick tip: block labels advance automatically</p>
+      <p style="color:#c4d0d7;line-height:1.6;margin-bottom:12px;">Enter a short label instead of a long number: 000A through 999A, then 000B through 999B, then 000C, and so on. After Z, labels continue AA, AB, and onward. The calculator accepts either a label or its original number.</p>
+      <div class="input-group">
+        <label for="estimateStart">Start block (label or number)</label>
+        <input id="estimateStart" type="text" value="000A" autocomplete="off">
+      </div>
+      <div class="input-group">
+        <label for="estimateCount">Number of blocks</label>
+        <input id="estimateCount" type="number" min="1" max="1000000" value="1">
+      </div>
+      <button class="button" id="estimateBtn" type="button">Calculate estimate</button>
+      <div id="estimateResult" class="result" role="status" aria-live="polite"></div>
+    </div>
   </main>
 
   <script src="../js/block-id.js"></script>
@@ -94,32 +82,32 @@
   <script src="../js/walletModal.js"></script>
   <script src="../js/vendor/solana-web3.js" defer></script>
   <script src="../js/solanaPayment.js" defer></script>
+  <script src="../js/purchaseDeepLink.js" defer></script>
   <script>
-    const form = document.getElementById('estimateForm');
-    const result = document.getElementById('estimateResult');
-    form.addEventListener('submit', async event => {
-      event.preventDefault();
-      const startLabel = form.elements.blockId.value.trim().toUpperCase();
-      const start = BlockId.parse(startLabel);
-      const count = Number(form.elements.blockCount.value);
-      if (start === null || !Number.isInteger(count) || count < 1 || count > 100 || start + count > BlockId.totalBlocks) {
-        result.textContent = 'Enter a valid block label such as 000A or 000B and a range of up to 100 blocks.';
-        return;
-      }
-      result.textContent = 'Calculating…';
+    document.getElementById('estimateBtn')?.addEventListener('click', () => {
+      const result = document.getElementById('estimateResult');
       try {
-        const response = await fetch(`/api/price/range?start=${encodeURIComponent(startLabel)}&count=${count}`);
-        const data = await response.json();
-        if (!response.ok) throw new Error(data.error || 'Price estimate unavailable.');
-        const total = data.reduce((sum, block) => sum + block.price, 0);
-        result.replaceChildren();
+        const startRaw = document.getElementById('estimateStart').value.trim();
+        const count = Number(document.getElementById('estimateCount').value);
+        const start = window.BlockId ? window.BlockId.parse(startRaw) : Number(startRaw);
+        if (start === null || !Number.isFinite(start) || start < 0) throw new Error('Enter a valid start block label or number.');
+        if (!Number.isFinite(count) || count < 1) throw new Error('Enter a positive block count.');
+        // Simple linear model mirror for local estimate only
+        const TOTAL = 10_000_000_000;
+        const START = 0.001;
+        const TARGET = 1000;
+        let total = 0;
+        for (let i = 0; i < Math.min(count, 10000); i++) {
+          const x = start + i;
+          total += START + (TARGET - START) * (x / TOTAL);
+        }
+        if (count > 10000) total *= count / 10000;
         const summary = document.createElement('p');
-        const lastLabel = BlockId.format(start + count - 1);
-        summary.textContent = `${count.toLocaleString()} block${count === 1 ? '' : 's'} (${BlockId.format(start)}–${lastLabel}) · estimated model total $${total.toFixed(6)}`;
+        summary.textContent = `Model estimate for ${count} block(s) from ${startRaw}: about $${total.toFixed(6)}`;
         const note = document.createElement('p');
         note.className = 'estimate-note';
         note.textContent = 'This is not a live price or a purchase. Ownership, availability, fees, and settlement are not verified.';
-        result.append(summary, note);
+        result.replaceChildren(summary, note);
       } catch (error) {
         result.textContent = error.message;
       }
