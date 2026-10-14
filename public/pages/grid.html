@@ -7,18 +7,45 @@
   <link rel="stylesheet" href="../css/styles.css">
   <style>
     .grid-cell {
-      border: 1px solid rgba(0,212,255,0.12);
-      border-radius: 0;
+      border: 1px solid rgba(0,212,255,0.35);
+      border-radius: 2px;
       image-rendering: pixelated;
-      min-width: 32px;
-      min-height: 32px;
+      width: 100%;
+      min-width: 28px;
+      min-height: 36px;
+      height: 36px;
       cursor: pointer;
-      display: inline-flex;
+      display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 0.5em;
+      font-size: 0.65em;
       color: #e8edf4;
-      transition: opacity 0.1s ease;
+      background: rgba(0, 40, 60, 0.55);
+      position: relative;
+      z-index: 1;
+      -webkit-tap-highlight-color: rgba(0,212,255,0.35);
+      touch-action: manipulation;
+      user-select: none;
+    }
+    .grid-cell:hover, .grid-cell:focus {
+      outline: 2px solid #00d4ff;
+      outline-offset: 1px;
+      background: rgba(0, 80, 110, 0.75);
+    }
+    #pixelGrid {
+      display: grid !important;
+      grid-template-columns: repeat(10, minmax(28px, 1fr));
+      gap: 3px;
+      width: 100%;
+      max-width: 420px;
+      position: relative;
+      z-index: 2;
+    }
+    .grid-scroll {
+      overflow: auto;
+      padding: 8px 0;
+      position: relative;
+      z-index: 2;
     }
     @keyframes flash {
       0%,100% { opacity: 1; }
@@ -42,7 +69,8 @@
   </style>
   <script src="/js/site.js" defer></script>
 </head>
-<body><nav>
+<body>
+  <nav>
     <div class="container">
       <a href="/index.html" style="display:flex;align-items:center;gap:8px;text-decoration:none;">
         <img src="/img/logo.jpg" alt="Space Ledger logo" style="width:32px;height:32px;border-radius:7px;object-fit:cover;">
@@ -71,13 +99,14 @@
         <input type="text" id="blockId" value="000A" maxlength="8" autocomplete="off" aria-describedby="blockIdHelp">
         <details class="block-id-help" id="blockIdHelp">
           <summary>Quick tip: use short block labels</summary>
-          <p>Labels run 000A to 999A, then 000B to 999B, then 000C, and so on. After Z, they continue AA, AB, and onward. You can also enter the original numeric block number.</p>
+          <p>Labels run 000A to 999A, then 000B to 999B, then 000C, and so on. After Z, they continue AA, AB, and onward.</p>
         </details>
       </div>
       <div style="display:flex;gap:10px;margin-bottom:15px;flex-wrap:wrap;">
         <button class="button" type="button" onclick="loadGrid()">Load Grid</button>
         <button class="button" type="button" onclick="previousBlock()">Previous Block</button>
         <button class="button" type="button" onclick="nextBlock()">Next Block</button>
+        <a class="button" id="buyCurrentBlockBtn" href="purchase.html?amount=0.05&asset=SOL&from=grid&autquote=1">Buy this block on Devnet</a>
       </div>
       <div class="result" id="blockInfo" role="status" aria-live="polite"></div>
     </div>
@@ -85,14 +114,14 @@
     <div class="card">
       <h2>10 × 10 Pixel Grid</h2>
       <p style="color:#c4d0d7;margin-bottom:15px;">
-        Each block preview contains 100 cells in a 10×10 grid. Prices are model estimates; ownership status is checked against Devnet receipts.
+        Tap any cell to inspect it. Purchases buy the <strong>whole block</strong> (100 pixels). Opening the purchase page does not spend tokens until you approve in your wallet.
       </p>
       <div style="display:flex;gap:8px;margin-bottom:10px;">
         <button class="button" type="button" aria-label="Set grid zoom to 1×" aria-pressed="true" onclick="setZoom(1)">1×</button>
         <button class="button" type="button" aria-label="Set grid zoom to 2×" aria-pressed="false" onclick="setZoom(2)">2×</button>
         <button class="button" type="button" aria-label="Set grid zoom to 4×" aria-pressed="false" onclick="setZoom(4)">4×</button>
       </div>
-      <div style="overflow-x:auto;" tabindex="0" aria-label="Scrollable pixel grid">
+      <div class="grid-scroll" tabindex="0" aria-label="Scrollable pixel grid">
         <div class="grid-container" id="pixelGrid" role="group" aria-label="Pixels in selected block"></div>
       </div>
     </div>
@@ -100,7 +129,7 @@
     <div class="card">
       <h2>Pixel Details</h2>
       <div id="pixelDetails" aria-live="polite">
-        <p style="color:#c4d0d7;">Select a pixel to see its details and buy the whole block on Devnet.</p>
+        <p style="color:#c4d0d7;">Select a pixel, or use <strong>Buy this block on Devnet</strong> above.</p>
       </div>
     </div>
 
@@ -132,14 +161,20 @@
   <script src="../js/block-id.js"></script>
   <script>
     let currentBlockId = 0;
+
     function setZoom(level) {
       const g = document.getElementById('pixelGrid');
-      g.style.transform = 'scale(' + level + ')';
-      g.style.transformOrigin = 'top left';
+      const size = 28 * level;
+      g.style.gridTemplateColumns = 'repeat(10, minmax(' + size + 'px, 1fr))';
+      g.querySelectorAll('.grid-cell').forEach(cell => {
+        cell.style.minHeight = size + 'px';
+        cell.style.height = size + 'px';
+      });
       document.querySelectorAll('[aria-label^="Set grid zoom"]').forEach(button => {
         button.setAttribute('aria-pressed', String(button.textContent.trim() === level + '×'));
       });
     }
+
     async function loadGrid() {
       const input = document.getElementById('blockId');
       const parsed = BlockId.parse(input.value);
@@ -150,7 +185,13 @@
       currentBlockId = parsed;
       input.value = BlockId.format(currentBlockId);
       await renderGrid();
+      const buyBtn = document.getElementById('buyCurrentBlockBtn');
+      if (buyBtn) {
+        buyBtn.href = 'purchase.html?amount=0.05&asset=SOL&from=grid&block=' + encodeURIComponent(String(currentBlockId)) + '&autquote=1';
+        buyBtn.textContent = 'Buy block ' + BlockId.format(currentBlockId) + ' on Devnet';
+      }
     }
+
     async function renderGrid() {
       const gridContainer = document.getElementById('pixelGrid');
       const blockInfo = document.getElementById('blockInfo');
@@ -166,7 +207,7 @@
           const ownershipResponse = await fetch('/api/block-owner/' + encodeURIComponent(currentBlockId));
           ownership = await ownershipResponse.json();
           if (!ownershipResponse.ok) ownership = { verified: false };
-        } catch { ownership = { verified: false }; }
+        } catch (e) { ownership = { verified: false }; }
         const ownershipLabel = ownership.verified ? (ownership.owner ? 'owned by ' + ownership.owner : 'available') : 'unverified';
         document.getElementById('currentBlockDisplay').textContent = blockLabel;
         document.getElementById('blockPriceDisplay').textContent = '$' + blockPrice.toFixed(6);
@@ -179,18 +220,20 @@
             const cell = document.createElement('button');
             cell.type = 'button';
             cell.dataset.pixelIndex = String(pixelIndex);
-            cell.tabIndex = pixelIndex === 0 ? 0 : -1;
+            cell.tabIndex = 0;
             cell.className = 'grid-cell ' + (ownership.verified ? (ownership.owner ? 'owned' : 'available') : 'unverified');
-            cell.textContent = pixelIndex;
+            cell.textContent = String(pixelIndex);
             cell.setAttribute('aria-label', 'Block ' + blockLabel + ', pixel ' + (pixelIndex + 1) + ', ' + ownershipLabel);
-            cell.addEventListener('click', () => showPixelDetails(pixelIndex, globalPixelId, row, col, blockPrice));
-            cell.addEventListener('mousemove', function(e) {
+            cell.addEventListener('click', function () {
+              showPixelDetails(pixelIndex, globalPixelId, row, col, blockPrice);
+            });
+            cell.addEventListener('mousemove', function (e) {
               tooltip.style.display = 'block';
               tooltip.style.left = (e.clientX + 14) + 'px';
               tooltip.style.top = (e.clientY + 14) + 'px';
-              tooltip.textContent = 'Pixel: ' + pixelIndex + '\nGlobal ID: ' + globalPixelId.toLocaleString() + '\nEst. pixel: $' + (blockPrice / 100).toFixed(8) + '\n' + ownershipLabel;
+              tooltip.textContent = 'Pixel: ' + pixelIndex + '\nBlock: ' + blockLabel + '\n' + ownershipLabel;
             });
-            cell.addEventListener('mouseleave', function() { tooltip.style.display = 'none'; });
+            cell.addEventListener('mouseleave', function () { tooltip.style.display = 'none'; });
             gridContainer.appendChild(cell);
           }
         }
@@ -198,22 +241,26 @@
         blockInfo.textContent = 'Error loading grid: ' + (error.message || 'unknown');
       }
     }
+
     function showPixelDetails(pixelIndex, globalPixelId, row, col, blockPrice) {
-      const pixelPrice = blockPrice / 100;
-      const buyUrl = '/pages/purchase.html?amount=1&asset=SOL&from=grid&block=' + encodeURIComponent(String(currentBlockId));
-      document.getElementById('pixelDetails').innerHTML =
+      const blockLabel = BlockId.format(currentBlockId);
+      const buyUrl = 'purchase.html?amount=0.05&asset=SOL&from=grid&block=' + encodeURIComponent(String(currentBlockId)) + '&autquote=1';
+      const panel = document.getElementById('pixelDetails');
+      panel.innerHTML =
         '<table class="table">' +
         '<tr><th>Property</th><th>Value</th></tr>' +
-        '<tr><td>Pixel Index (in block)</td><td>' + pixelIndex + '</td></tr>' +
-        '<tr><td>Global Pixel ID</td><td>' + globalPixelId.toLocaleString() + '</td></tr>' +
-        '<tr><td>Block ID</td><td>' + BlockId.format(currentBlockId) + ' (' + currentBlockId.toLocaleString() + ')</td></tr>' +
-        '<tr><td>Grid Position</td><td>Row ' + row + ', Column ' + col + '</td></tr>' +
-        '<tr><td>Estimated model block price</td><td>$' + blockPrice.toFixed(6) + '</td></tr>' +
-        '<tr><td>Estimated model pixel price</td><td>$' + pixelPrice.toFixed(8) + '</td></tr>' +
+        '<tr><td>Pixel in this block</td><td>' + pixelIndex + '</td></tr>' +
+        '<tr><td>Global pixel id</td><td>' + globalPixelId.toLocaleString() + '</td></tr>' +
+        '<tr><td>Block</td><td>' + blockLabel + ' (#' + currentBlockId + ')</td></tr>' +
+        '<tr><td>Grid position</td><td>Row ' + row + ', Column ' + col + '</td></tr>' +
+        '<tr><td>Model block price</td><td>$' + Number(blockPrice).toFixed(6) + '</td></tr>' +
         '</table>' +
-        '<p style="color:#c4d0d7;margin-top:12px;line-height:1.55;">On-chain purchases settle as <strong>whole blocks</strong> (100 pixels). Pixel-level ownership is not on-chain yet.</p>' +
-        '<p style="margin-top:14px;"><a class="button" href="' + buyUrl + '">Buy this block on Devnet</a></p>';
+        '<p style="color:#c4d0d7;margin-top:12px;line-height:1.55;">On-chain purchase buys the <strong>whole block</strong> (100 pixels). You still must connect a wallet and approve the transaction.</p>' +
+        '<p style="margin-top:14px;"><a class="button" id="buyBlockLink" href="' + buyUrl + '">Continue to buy block ' + blockLabel + '</a></p>';
+      panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
+    window.showPixelDetails = showPixelDetails;
+
     function previousBlock() {
       if (currentBlockId > 0) {
         currentBlockId--;
@@ -228,10 +275,10 @@
         loadGrid();
       }
     }
+
     loadGrid();
   </script>
   <script src="../js/wallet.js"></script>
   <script src="../js/walletModal.js?v=20261014"></script>
-  <script src="../js/gridBuy.js"></script>
 </body>
 </html>
