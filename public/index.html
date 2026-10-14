@@ -5,16 +5,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Space Ledger — Home</title>
   <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/polish.css">
   <script src="/js/site.js" defer></script>
 </head>
 <body>
-  <a class="skip-link" href="#main-content">Skip to main content</a>
   <nav>
     <div class="container">
       <a href="/index.html" style="display:flex;align-items:center;gap:8px;text-decoration:none;">
-      <img src="/img/logo.jpg" alt="Space Ledger logo" style="width:32px;height:32px;border-radius:7px;object-fit:cover;">
-      <span class="logo">Space Ledger</span>
-    </a>
+        <img src="/img/logo.jpg" alt="Space Ledger logo" style="width:32px;height:32px;border-radius:7px;object-fit:cover;">
+        <span class="logo">Space Ledger</span>
+      </a>
       <ul>
         <li><a href="index.html">Home</a></li>
         <li><a href="pages/purchase.html">Pricing</a></li>
@@ -23,19 +23,33 @@
         <li><a href="pages/network.html">Network</a></li>
         <li><a href="pages/dashboard.html">Dashboard</a></li>
         <li><a href="pages/profile.html">Profile</a></li>
-
-        <li><button class="wallet-button" id="navWalletBtn" onclick="window.openWalletModal()">Connect Wallet</button></li>
+        <li><button class="wallet-button" id="navWalletBtn" type="button" onclick="window.openWalletModal()">Connect Wallet</button></li>
       </ul>
     </div>
   </nav>
 
   <main id="main-content" class="container">
     <div class="hero">
+      <p><span class="devnet-pill">Solana Devnet · Beta</span></p>
       <h1>Space Ledger</h1>
-      <p>1 Trillion Pixels · 10 Billion Blocks · Explore a shared digital canvas concept</p>
-      <p>Like the Million Dollar Homepage — at trillion scale</p>
+      <p>1 Trillion Pixels · 10 Billion Blocks · Shared digital canvas on Solana Devnet</p>
+      <p>Primary-sale block ranges with on-chain receipts — test tokens only</p>
       <br>
-      <a href="pages/purchase.html" class="button">Explore the price model</a>
+      <a href="pages/purchase.html" class="button">Buy on Devnet</a>
+      <a href="pages/grid.html" class="button" style="margin-left:10px;">Open Grid</a>
+    </div>
+
+    <div class="card" id="how-to-buy">
+      <h2>How to buy a block</h2>
+      <ol>
+        <li><strong>Connect once</strong> with Connect Wallet in the top navigation (Phantom or Solflare on <strong>Devnet</strong>). That session is reused on Pricing, Grid, Dashboard, and Profile.</li>
+        <li>Open <a href="pages/grid.html">Grid View</a> or <a href="pages/purchase.html">Pricing</a>.</li>
+        <li>On the grid, tap a cell or use <strong>Buy this block on Devnet</strong>. Purchases settle as a <strong>whole block</strong> (100 pixels).</li>
+        <li>Request a <strong>Devnet quote</strong>, then <strong>Review and buy in wallet</strong>.</li>
+        <li><strong>Approve</strong> in your wallet. Nothing is spent until you approve.</li>
+        <li>Check the Explorer link and your <a href="pages/profile.html">Profile</a> for holdings, history, and model PnL.</li>
+      </ol>
+      <p class="estimate-note">Devnet SOL/USDC have no real-world value. This is a test prototype, not an investment product.</p>
     </div>
 
     <div class="stats-grid">
@@ -74,35 +88,16 @@
     <div class="card" id="about">
       <h2>About Space Ledger</h2>
       <p style="color: #c4d0d7; line-height: 1.7;">
-        Space Ledger is a shared canvas of 10 billion blocks and 1 trillion pixels, inspired by the Million Dollar Homepage's pixel-by-pixel format. The original launched in 2005. Space Ledger accepts test purchases on Solana Devnet and records block ranges in on-chain receipts.
-        Connect a compatible Solana wallet on Devnet to request a quote, approve a purchase, and view confirmed holdings. Transfers, swaps, and resales are not enabled.
+        Space Ledger is a shared canvas of 10 billion blocks and 1 trillion pixels, inspired by the Million Dollar Homepage format.
+        Test purchases on Solana Devnet record block ranges in on-chain receipts.
+        Connect a Solana wallet on Devnet to quote, approve, and view confirmed holdings. Transfers and resales are not enabled.
       </p>
-    </div>
-
-    <div class="card">
-      <h2>One trillion pixels, addressable in blocks</h2>
-      <p style="color:#c4d0d7;line-height:1.7;">Each numbered block contains a 10 × 10 cluster of pixels. That makes a simple shared coordinate system: 10 billion blocks multiplied by 100 pixels per block gives 1 trillion pixel positions. The grid is designed for exploring that scale, while Devnet receipts currently record block ranges rather than artwork or transferable assets.</p>
-      <div class="quick-actions" style="display:flex;gap:16px;flex-wrap:wrap;margin-top:18px;">
-        <a href="pages/grid.html" class="button">Explore the grid</a>
-        <a href="pages/leaderboard.html" class="button">See top holders</a>
-        <a href="pages/market.html" class="button">See live sale activity</a>
-      </div>
     </div>
 
     <div class="card">
       <h2>What is live in this beta</h2>
-      <p style="color:#c4d0d7;line-height:1.7;">Supply, primary purchases, portfolio ranges, and holder rankings are read from confirmed Solana Devnet program accounts. A wallet must approve each test purchase. Devnet tokens are for testing only and have no real-world value.</p>
-      <p style="color:#c4d0d7;line-height:1.7;margin-top:12px;">Block ownership cannot currently be transferred or resold. There is no token pool, Jupiter route, or secondary trading feed, so the app does not display trading candles or claim a market price. The published curve is a purchase-price model.</p>
-    </div>
-
-    <div class="card">
-      <h2>Bonding Curve Pricing</h2>
-      <div class="formula">
-        P(x) = (9.99999999 × 10⁻⁸)x + 0.001
-      </div>
-      <p style="color: #c4d0d7; line-height: 1.7;">
-        The linear model ranges from $0.001 to $1,000.00. A live Devnet quote uses the current on-chain supply and a fresh Pyth SOL/USD price. Devnet tokens have no real-world value.
-      </p>
+      <p style="color:#c4d0d7;line-height:1.7;">Supply, primary purchases, portfolio ranges, and holder rankings are read from confirmed Solana Devnet accounts. A wallet must approve each test purchase. Devnet tokens are for testing only.</p>
+      <p style="color:#c4d0d7;line-height:1.7;margin-top:12px;">Block ownership cannot currently be transferred or resold. The published curve is a primary-sale price model, not a secondary market.</p>
     </div>
 
     <div class="card">
@@ -110,9 +105,8 @@
       <div style="display: flex; gap: 15px; flex-wrap: wrap;">
         <a href="pages/purchase.html" class="button">Buy on Devnet</a>
         <a href="pages/grid.html" class="button">View Grid</a>
-        <a href="pages/treasury.html" class="button">Treasury Info</a>
-        <a href="pages/network.html" class="button">Network Config</a>
-        <a href="pages/profile.html" class="button">View Profile</a>
+        <a href="pages/profile.html" class="button">Profile</a>
+        <a href="pages/dashboard.html" class="button">Dashboard</a>
         <a href="pages/leaderboard.html" class="button">Leaderboard</a>
         <a href="pages/market.html" class="button">Live sale activity</a>
       </div>
@@ -123,20 +117,13 @@
     fetch('/api/supply').then(response => response.json()).then(data => {
       const sold = data.status === 'devnet_verified' ? BigInt(data.currentSupply) : null;
       document.getElementById('availableBlocks').textContent = sold === null ? 'Devnet initializing' : (BigInt(data.totalSupply) - sold).toLocaleString();
-      document.getElementById('saleStatusLabel').textContent = sold === null ? 'Awaiting the first confirmed purchase' : `${sold.toLocaleString()} blocks sold on Devnet`;
+      document.getElementById('saleStatusLabel').textContent = sold === null ? 'Awaiting the first confirmed purchase' : sold.toLocaleString() + ' blocks sold on Devnet';
     }).catch(() => {
       document.getElementById('availableBlocks').textContent = 'Temporarily unavailable';
       document.getElementById('saleStatusLabel').textContent = 'Could not reach Solana Devnet';
     });
   </script>
-
   <script src="js/wallet.js"></script>
-  <script src="js/walletModal.js?v=20261012"></script>
-  <script>
-    async function connectWallet() {
-      window.openWalletModal();
-    }
-  </script>
-
+  <script src="js/walletModal.js?v=20261014"></script>
 </body>
 </html>
