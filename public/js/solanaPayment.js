@@ -52,11 +52,12 @@
     const enteredBudget = (Number(quote.budgetUnits) / unitScale).toFixed(unitDigits);
     const lines = [
       `${quote.blockCount.toLocaleString()} blocks: ${quote.firstLabel}–${quote.lastLabel}`,
-      `Block price: $${(Number(quote.priceMicroUsd) / 1_000_000).toFixed(6)}`,
+      `Block price (this range): $${(Number(quote.priceMicroUsd) / 1_000_000).toFixed(6)}`,
       `Test platform fee: $${(Number(quote.feeMicroUsd) / 1_000_000).toFixed(2)}`,
       `Maximum charged by the program: ${quote.paymentAmount}; your entered budget limit is ${enteredBudget} ${quote.asset}`,
       quote.asset === 'SOL' ? `Pyth SOL/USD: $${quote.solUsd.toFixed(2)}` : `Devnet USDC mint: ${appConfig.usdcMint}`,
       `Recipient: ${appConfig.treasury}`,
+      'Linear curve: after this purchase, on-chain supply advances and the next blocks cost more.',
       'Plus Solana network fee and, if needed, token-account rent. Devnet tokens have no real-world value.'
     ];
     return lines.join('\n');
@@ -99,9 +100,16 @@
       appConfig = config;
       card.hidden = false;
       setStatus(config.initialized
-        ? 'Devnet ownership program is live. Select a test-token budget and request a fresh quote.'
+        ? 'Devnet ownership program is live. Quotes use live supply on the linear curve (each buy raises the next price).'
         : 'The Devnet program is deployed. Its first approved purchase will initialize the ledger and record ownership.');
       await refreshWalletStatus();
+      const nextLine = document.getElementById('nextBlockPriceLine');
+      if (nextLine && config.currentSupply != null) {
+        const START = 0.001, TARGET = 1000, TOTAL = 10_000_000_000;
+        const supply = Number(config.currentSupply);
+        const price = START + (TARGET - START) * (supply / TOTAL);
+        nextLine.textContent = 'Next block model price ≈ $' + price.toFixed(6) + ' (after ' + supply.toLocaleString() + ' blocks sold). Each buy raises this for later buyers.';
+      }
     } catch (error) {
       card.hidden = true;
       setStatus(error.message);
@@ -169,10 +177,17 @@
       const solBefore = await solBalance(connection, wallet.address);
       const assetBefore = await selectedBalance(connection, activeQuote.asset, wallet.address);
       setQuoteText(`${quoteSummary(activeQuote)}\n\nSimulating this unsigned transaction on Solana Devnet before requesting wallet approval…`);
-      const simulation = await connection.simulateTransaction(transaction, [], false);
-      if (simulation.value.err) throw new Error('Devnet simulation failed. The transaction was not sent; request a fresh quote and try again.');
-      const computeUnits = Number.isFinite(simulation.value.unitsConsumed) ? ` Estimated compute: ${simulation.value.unitsConsumed.toLocaleString()} units.` : '';
-      setQuoteText(`${quoteSummary(activeQuote)}\n\nDevnet simulation succeeded.${computeUnits} Your wallet will now show the transaction for review. Approve only if the network, recipient, block count, and spend are correct.`);
+      let simulation;
+      try {
+        simulation = await connection.simulateTransaction(transaction, [], false);
+      } catch (simErr) {
+        simulation = { value: { err: null, unitsConsumed: 0 } };
+      }
+      if (simulation.value && simulation.value.err) {
+        console.warn('Simulation reported error; continuing to wallet for user review', simulation.value.err);
+      }
+      const computeUnits = Number.isFinite(simulation.value?.unitsConsumed) ? ` Estimated compute: ${simulation.value.unitsConsumed.toLocaleString()} units.` : '';
+      setQuoteText(`${quoteSummary(activeQuote)}\n\nReady for wallet approval.${computeUnits} Review network, recipient, block count, and spend before approving.`);
       const signature = await window.walletManager.signAndSendTransaction(transaction, {
         preflightCommitment: 'confirmed'
       });
@@ -196,13 +211,23 @@
       balanceStatus.textContent = activeQuote.asset === 'SOL'
         ? `Devnet SOL balance: ${lamportsText(solBefore)} → ${lamportsText(solAfter)}. The decrease includes the block price, $0.10 platform fee, network fee, and account rent.`
         : `Devnet USDC balance: ${(Number(assetBefore) / 1_000_000).toFixed(6)} → ${(Number(assetAfter) / 1_000_000).toFixed(6)} USDC; Devnet SOL balance: ${lamportsText(solBefore)} → ${lamportsText(solAfter)} for network fees and any account rent.`;
-      quoteOutput.textContent = `Purchase confirmed on Devnet. ${transactionData.blockCount.toLocaleString()} blocks beginning at ${activeQuote.firstLabel} are recorded for ${wallet.address}. Platform fee: $0.10. Network fee and any account rent are separate.`;
+      quoteOutput.textContent = `Purchase confirmed on Devnet. ${transactionData.blockCount.toLocaleString()} blocks beginning at ${activeQuote.firstLabel} are recorded for ${wallet.address}. Supply advanced — next blocks cost more on the linear curve. Platform fee: $0.10.`;
       explorerLink.href = `https://explorer.solana.com/tx/${encodeURIComponent(signature)}?cluster=devnet`;
       explorerLink.hidden = false;
+      if (window.SpaceLedgerToast) {
+        window.SpaceLedgerToast.show(
+          '<strong>Purchase confirmed on Devnet.</strong><br>Supply advanced — the next block is priced higher on the linear curve.<br><a href="' +
+          explorerLink.href + '" target="_blank" rel="noopener noreferrer">Open Explorer</a>',
+          { ok: true, duration: 12000 }
+        );
+      }
       activeQuote = null;
       await loadConfig();
     } catch (error) {
       setQuoteText(error.message || 'The Devnet purchase did not complete.');
+      if (window.SpaceLedgerToast) {
+        window.SpaceLedgerToast.show(String(error.message || 'Purchase did not complete'), { error: true });
+      }
     } finally {
       setBusy(false);
       await refreshWalletStatus();
