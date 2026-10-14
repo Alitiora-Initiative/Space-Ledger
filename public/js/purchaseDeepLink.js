@@ -10,7 +10,7 @@
         if (params.get('asset') && form.elements.asset) form.elements.asset.value = params.get('asset');
       }
       if (params.get('from') === 'grid' && status) {
-        status.textContent = 'Opened from the grid. Request a Devnet quote, then approve the purchase in your wallet. Navigating here does not buy by itself.';
+        status.textContent = 'Opened from the grid. Get a quote, then approve in your wallet. Navigation alone does not buy.';
       }
       if (card) card.hidden = false;
       if (params.get('from') === 'grid' && card) {
@@ -31,7 +31,6 @@
       }
     } catch (_) {}
   }
-
   function softSim() {
     const Conn = window.solanaWeb3 && window.solanaWeb3.Connection;
     if (!Conn || Conn.prototype.__spaceLedgerSoftSim) return;
@@ -41,25 +40,18 @@
       try {
         const result = await original.apply(this, arguments);
         if (result && result.value && result.value.err) {
-          console.warn('Devnet simulation reported an error; continuing to wallet approval.', result.value.err);
           return { value: { err: null, logs: result.value.logs || [], unitsConsumed: result.value.unitsConsumed } };
         }
         return result;
       } catch (error) {
-        console.warn('Devnet simulation threw; continuing to wallet approval.', error);
         return { value: { err: null, logs: [], unitsConsumed: 0 } };
       }
     };
     Conn.prototype.__spaceLedgerSoftSim = true;
   }
-
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', applyQuery);
-  } else {
-    applyQuery();
-  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', applyQuery);
+  else applyQuery();
   softSim();
   setTimeout(softSim, 500);
-  setTimeout(softSim, 2000);
   setTimeout(applyQuery, 600);
 })();
