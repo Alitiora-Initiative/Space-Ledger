@@ -1,4 +1,11 @@
+/**
+ * Wallet Standard discovery for Solana.
+ * Lists any registered Solana wallet with connect + signAndSendTransaction.
+ * Devnet is preferred but wallets that only advertise mainnet are still shown;
+ * the purchase path always requests chain solana:devnet at sign time.
+ */
 const SOLANA_DEVNET = 'solana:devnet';
+const SOLANA_MAINNET = 'solana:mainnet';
 const SOLANA_SEND = 'solana:signAndSendTransaction';
 const BASE58_ALPHABET = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
 
@@ -28,6 +35,17 @@ function standardEvent(type, detail) {
   return event;
 }
 
+function isSolanaChain(chain) {
+  return typeof chain === 'string' && chain.startsWith('solana:');
+}
+
+function walletSupportsSolana(wallet) {
+  if (!wallet || typeof wallet !== 'object') return false;
+  const chains = wallet.chains || [];
+  if (chains.some(isSolanaChain)) return true;
+  return Boolean(wallet.features?.[SOLANA_SEND]?.signAndSendTransaction);
+}
+
 class WalletManager {
   constructor() {
     this.currentWallet = null;
@@ -44,6 +62,9 @@ class WalletManager {
       if (typeof event.detail === 'function') event.detail(this._registryApi);
     });
     window.dispatchEvent(standardEvent('wallet-standard:app-ready', this._registryApi));
+
+    setTimeout(() => this.emit('walletsChanged', this.getAvailableWallets()), 250);
+    setTimeout(() => this.emit('walletsChanged', this.getAvailableWallets()), 1000);
   }
 
   on(event, callback) {
@@ -75,31 +96,40 @@ class WalletManager {
       const send = wallet.features?.[SOLANA_SEND];
       return typeof wallet.name === 'string'
         && typeof connect === 'function'
-        && wallet.chains?.includes(SOLANA_DEVNET)
-        && typeof send?.signAndSendTransaction === 'function'
-        && send.supportedTransactionVersions?.includes('legacy');
+        && walletSupportsSolana(wallet)
+        && typeof send?.signAndSendTransaction === 'function';
+    }).sort((a, b) => {
+      const aDev = (a.chains || []).includes(SOLANA_DEVNET) ? 0 : 1;
+      const bDev = (b.chains || []).includes(SOLANA_DEVNET) ? 0 : 1;
+      return aDev - bDev || String(a.name).localeCompare(String(b.name));
     });
   }
 
   canSignDevnet() {
     if (!this.connected || !this.provider || !this.currentAccount) return false;
     const send = this.provider.features?.[SOLANA_SEND];
-    return this.provider.chains?.includes(SOLANA_DEVNET)
-      && this.currentAccount.chains?.includes(SOLANA_DEVNET)
-      && this.currentAccount.features?.includes(SOLANA_SEND)
-      && typeof send?.signAndSendTransaction === 'function'
-      && send.supportedTransactionVersions?.includes('legacy');
+    return typeof send?.signAndSendTransaction === 'function';
+  }
+
+  _pickAccount(wallet, accounts) {
+    if (!Array.isArray(accounts) || !accounts.length) return null;
+    const withDevnet = accounts.find(account =>
+      account?.address && (account.chains || []).includes(SOLANA_DEVNET));
+    if (withDevnet) return withDevnet;
+    const anySolana = accounts.find(account =>
+      account?.address && ((account.chains || []).some(isSolanaChain) || !(account.chains || []).length));
+    return anySolana || accounts.find(account => account?.address) || null;
   }
 
   async connect(wallet) {
     if (!wallet || !this.getAvailableWallets().includes(wallet)) {
-      throw new Error('Choose a detected wallet that supports Solana Devnet transactions.');
+      throw new Error('Choose a detected Solana wallet from the list.');
     }
     if (this.connected) await this.disconnect();
     const response = await wallet.features['standard:connect'].connect();
-    const account = response?.accounts?.find(candidate => this._accountCanSign(wallet, candidate));
+    const account = this._pickAccount(wallet, response?.accounts);
     if (!account?.address) {
-      throw new Error(`${wallet.name} did not provide a Solana Devnet account with legacy transaction signing.`);
+      throw new Error(`${wallet.name} did not provide a Solana account. Switch the wallet network to Devnet and try again.`);
     }
     this.provider = wallet;
     this.currentAccount = account;
@@ -111,7 +141,7 @@ class WalletManager {
     if (typeof events?.on === 'function') {
       this._walletEventsOff = events.on('change', change => {
         if (!Array.isArray(change?.accounts)) return;
-        const next = change.accounts.find(candidate => this._accountCanSign(wallet, candidate));
+        const next = this._pickAccount(wallet, change.accounts);
         if (!next) return this.disconnect(false);
         this.currentAccount = next;
         this.currentAddress = next.address;
@@ -122,15 +152,8 @@ class WalletManager {
     return { success: true, wallet: this.currentWallet, address: this.currentAddress };
   }
 
-  _accountCanSign(wallet, account) {
-    return Boolean(account?.address
-      && account.chains?.includes(SOLANA_DEVNET)
-      && account.features?.includes(SOLANA_SEND)
-      && wallet.features?.[SOLANA_SEND]?.supportedTransactionVersions?.includes('legacy'));
-  }
-
   async signAndSendTransaction(transaction, options = {}) {
-    if (!this.canSignDevnet()) throw new Error('Connect a wallet that supports Solana Devnet legacy transactions.');
+    if (!this.canSignDevnet()) throw new Error('Connect a Solana wallet first.');
     const feature = this.provider.features[SOLANA_SEND];
     const serialized = new Uint8Array(transaction.serialize({ requireAllSignatures: false, verifySignatures: false }));
     const [result] = await feature.signAndSendTransaction({
@@ -141,7 +164,9 @@ class WalletManager {
     });
     if (typeof result?.signature === 'string') return result.signature;
     const signature = result?.signature;
-    if (!signature || signature.length !== 64) throw new Error(`${this.currentWallet} did not return a valid transaction signature.`);
+    if (!signature || signature.length !== 64) {
+      throw new Error(`${this.currentWallet} did not return a valid transaction signature.`);
+    }
     return encodeBase58(signature);
   }
 
@@ -154,10 +179,10 @@ class WalletManager {
     this.currentWallet = null;
     this.currentAddress = null;
     this.connected = false;
-    try { off?.(); } catch (_) { /* wallet event cleanup is best-effort */ }
+    try { off?.(); } catch (_) { /* best-effort */ }
     this.emit('disconnected');
     if (notifyWallet) {
-      try { await previousWallet?.features?.['standard:disconnect']?.disconnect(); } catch (_) { /* wallet cleanup is best-effort */ }
+      try { await previousWallet?.features?.['standard:disconnect']?.disconnect(); } catch (_) { /* best-effort */ }
     }
     return { success: true };
   }

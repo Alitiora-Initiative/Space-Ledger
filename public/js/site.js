@@ -1,4 +1,14 @@
 (() => {
+  // Presentability layer (cards, metrics, hide skip-link) — does not change app logic.
+  if (!document.querySelector('link[data-polish]')) {
+    const polish = document.createElement('link');
+    polish.rel = 'stylesheet';
+    polish.href = (location.pathname.includes('/pages/') ? '../css/' : 'css/') + 'polish.css';
+    polish.setAttribute('data-polish', '1');
+    document.head.appendChild(polish);
+  }
+  document.querySelectorAll('a.skip-link').forEach(el => { el.remove(); });
+
   const canvas = document.createElement('canvas');
   canvas.className = 'galaxy-canvas';
   canvas.setAttribute('aria-hidden', 'true');
@@ -171,4 +181,12 @@
   footer.className = 'site-footer';
   footer.innerHTML = '<div class="site-footer-inner"><span>Space Ledger</span><nav aria-label="Legal information"><a href="/pages/privacy.html">Privacy</a><a href="/pages/terms.html">Terms</a><a href="/pages/cookies.html">Cookies</a></nav></div>';
   document.body.append(footer);
+
+  if (!document.querySelector('script[data-wallet-reconnect]')) {
+    const s = document.createElement('script');
+    s.src = (location.pathname.includes('/pages/') ? '../js/' : 'js/') + 'walletReconnect.js';
+    s.defer = true;
+    s.setAttribute('data-wallet-reconnect', '1');
+    document.head.appendChild(s);
+  }
 })();

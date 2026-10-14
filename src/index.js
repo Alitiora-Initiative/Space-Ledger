@@ -5,6 +5,11 @@ const bondingCurve = require('./bondingCurve');
 const rpcRouter = require('./rpcRouter');
 const blockIds = require('./blockId');
 const solanaService = require('./solanaService');
+const { createRateLimiter } = require('./rateLimit');
+
+// Best-effort per-instance limits for Devnet beta (see issue #5).
+const quoteRateLimit = createRateLimiter({ windowMs: 60_000, max: 30, name: 'quote' });
+const purchaseRateLimit = createRateLimiter({ windowMs: 60_000, max: 10, name: 'purchase' });
 
 const PORT = Number.parseInt(process.env.PORT, 10) || 3000;
 // This release is deliberately pinned to Devnet. Mainnet must be a separately
@@ -35,7 +40,7 @@ app.get('/api/solana/config', async (_req, res) => {
   }
 });
 
-app.get('/api/solana/quote', async (req, res) => {
+app.get('/api/solana/quote', quoteRateLimit, async (req, res) => {
   try {
     res.json(await solanaService.quote({ asset: req.query.asset, amount: req.query.amount }));
   } catch (error) {
@@ -186,11 +191,38 @@ app.get('/api/block-owner/:blockId', async (req, res) => {
   try {
     const receipts = await solanaService.listReceipts({ blockId });
     const receipt = receipts[0];
-    res.json(receipt
-      ? { blockId, blockLabel: blockIds.format(blockId), owner: receipt.buyer, verified: true, receipt: receipt.receipt, asset: receipt.asset }
-      : { blockId, blockLabel: blockIds.format(blockId), owner: null, verified: true, status: 'unowned' });
+    if (!receipt) {
+      return res.json({ blockId, blockLabel: blockIds.format(blockId), owner: null, verified: true, status: 'unowned' });
+    }
+    let signatures = [];
+    try {
+      signatures = await solanaService.signaturesForAccount(receipt.receipt, 5);
+    } catch (_) { /* signature lookup is best-effort */ }
+    res.json({
+      blockId,
+      blockLabel: blockIds.format(blockId),
+      owner: receipt.buyer,
+      verified: true,
+      receipt: receipt.receipt,
+      asset: receipt.asset,
+      startBlock: receipt.startBlock,
+      blockCount: receipt.blockCount,
+      signatures,
+      primarySignature: signatures[0]?.signature || null,
+      explorerUrl: signatures[0]?.explorerUrl || null,
+    });
   } catch (error) {
     res.status(503).json({ error: error.message });
+  }
+});
+
+app.get('/api/receipt/:address/signatures', async (req, res) => {
+  if (!process.env.SOLANA_PROGRAM_ID) return res.status(503).json({ error: NOT_DEPLOYED });
+  try {
+    const signatures = await solanaService.signaturesForAccount(req.params.address, 10);
+    res.json({ network: 'devnet', receipt: req.params.address, signatures });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
   }
 });
 
@@ -215,7 +247,7 @@ app.get('/api/portfolio/:address', async (req, res) => {
   }
 });
 
-app.post('/api/purchase', async (req, res) => {
+app.post('/api/purchase', purchaseRateLimit, async (req, res) => {
   if (!process.env.SOLANA_PROGRAM_ID) return res.status(503).json({ error: 'Purchases are disabled until the Devnet ownership program is deployed and configured.' });
   try {
     const result = await solanaService.buildPurchaseTransaction({

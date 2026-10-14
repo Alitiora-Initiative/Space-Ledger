@@ -119,7 +119,6 @@ function usdMicroToLamports(usdMicro, price, exponent) {
 function parsePythSolUsd(data, nowSeconds = BigInt(Math.floor(Date.now() / 1000))) {
   const bytes = Buffer.from(data);
   const accountDiscriminator = createHash('sha256').update('account:PriceUpdateV2').digest().subarray(0, 8);
-  // PriceUpdateV2 Anchor discriminator + write authority + full verification + message.
   if (bytes.length < 101 || !bytes.subarray(0, 8).equals(accountDiscriminator) || bytes[40] !== 1 || !bytes.subarray(41, 73).equals(SOL_USD_FEED_ID)) {
     throw new Error('The on-chain Pyth account is not a fully verified SOL/USD feed.');
   }
@@ -343,7 +342,6 @@ async function publicConfig() {
     : '0';
   return {
     network: 'devnet',
-    // Browser requests use the public endpoint; server RPC credentials stay private.
     rpc: 'https://api.devnet.solana.com',
     programId: programId.toBase58(),
     treasury: TREASURY,
@@ -355,6 +353,20 @@ async function publicConfig() {
     treasuryBalanceSol: (solBalanceLamports / 1_000_000_000).toFixed(9),
     treasuryBalanceUsdc: usdcBalance,
   };
+}
+
+async function signaturesForAccount(address, limit = 5) {
+  const { PublicKey } = web3();
+  const state = await getState();
+  const pubkey = typeof address === 'string' ? new PublicKey(address) : address;
+  const rows = await state.connection.getSignaturesForAddress(pubkey, { limit });
+  return rows.map(row => ({
+    signature: row.signature,
+    slot: row.slot,
+    err: row.err || null,
+    blockTime: row.blockTime || null,
+    explorerUrl: `https://explorer.solana.com/tx/${row.signature}?cluster=devnet`,
+  }));
 }
 
 module.exports = {
@@ -370,6 +382,7 @@ module.exports = {
   parsePythSolUsd,
   publicConfig,
   quote,
+  signaturesForAccount,
   totalPriceMicroUsd,
   usdMicroToLamports,
 };
