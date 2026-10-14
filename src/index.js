@@ -191,11 +191,38 @@ app.get('/api/block-owner/:blockId', async (req, res) => {
   try {
     const receipts = await solanaService.listReceipts({ blockId });
     const receipt = receipts[0];
-    res.json(receipt
-      ? { blockId, blockLabel: blockIds.format(blockId), owner: receipt.buyer, verified: true, receipt: receipt.receipt, asset: receipt.asset }
-      : { blockId, blockLabel: blockIds.format(blockId), owner: null, verified: true, status: 'unowned' });
+    if (!receipt) {
+      return res.json({ blockId, blockLabel: blockIds.format(blockId), owner: null, verified: true, status: 'unowned' });
+    }
+    let signatures = [];
+    try {
+      signatures = await solanaService.signaturesForAccount(receipt.receipt, 5);
+    } catch (_) { /* signature lookup is best-effort */ }
+    res.json({
+      blockId,
+      blockLabel: blockIds.format(blockId),
+      owner: receipt.buyer,
+      verified: true,
+      receipt: receipt.receipt,
+      asset: receipt.asset,
+      startBlock: receipt.startBlock,
+      blockCount: receipt.blockCount,
+      signatures,
+      primarySignature: signatures[0]?.signature || null,
+      explorerUrl: signatures[0]?.explorerUrl || null,
+    });
   } catch (error) {
     res.status(503).json({ error: error.message });
+  }
+});
+
+app.get('/api/receipt/:address/signatures', async (req, res) => {
+  if (!process.env.SOLANA_PROGRAM_ID) return res.status(503).json({ error: NOT_DEPLOYED });
+  try {
+    const signatures = await solanaService.signaturesForAccount(req.params.address, 10);
+    res.json({ network: 'devnet', receipt: req.params.address, signatures });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
   }
 });
 
