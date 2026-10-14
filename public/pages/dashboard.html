@@ -3,121 +3,114 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Account status — Space Ledger</title>
+  <title>Dashboard — Space Ledger</title>
   <link rel="stylesheet" href="../css/styles.css">
   <script src="/js/site.js" defer></script>
 </head>
 <body>
   <nav><div class="container">
-    <a href="/index.html" style="display:flex;align-items:center;gap:8px;text-decoration:none;"><img src="/img/logo.jpg" alt="" style="width:32px;height:32px;border-radius:7px;object-fit:cover;"><span class="logo">Space Ledger</span></a>
+    <a href="/index.html" style="display:flex;align-items:center;gap:8px;text-decoration:none;"><img src="/img/logo.jpg" alt="Space Ledger logo" style="width:32px;height:32px;border-radius:7px;object-fit:cover;"><span class="logo">Space Ledger</span></a>
     <ul>
-      <li><a href="../index.html">Home</a></li><li><a href="purchase.html">Pricing</a></li><li><a href="grid.html">Grid View</a></li><li><a href="treasury.html">Treasury</a></li><li><a href="network.html">Network</a></li><li><a class="active" aria-current="page" href="dashboard.html">Dashboard</a></li><li><a href="profile.html">Profile</a></li>
-      <li><button class="wallet-button" id="navWalletBtn" type="button" onclick="window.openWalletModal()">Connect Wallet</button></li>
+      <li><a href="../index.html">Home</a></li>
+      <li><a href="purchase.html">Pricing</a></li>
+      <li><a href="grid.html">Grid View</a></li>
+      <li><a href="treasury.html">Treasury</a></li>
+      <li><a href="network.html">Network</a></li>
+      <li><a class="active" aria-current="page" href="dashboard.html">Dashboard</a></li>
+      <li><a href="profile.html">Profile</a></li>
+      <li><button class="wallet-button" id="navWalletBtn" type="button">Connect Wallet</button></li>
     </ul>
   </div></nav>
   <main class="container">
-    <header class="hero"><h1>Account</h1><p>Wallet connection status and verified app capabilities.</p></header>
-    <section class="card" id="walletCard">
-      <h2>Connect a wallet</h2>
+    <header class="hero">
+      <h1>Dashboard</h1>
+      <p>Wallet status, model PnL, and Devnet ledger snapshot. One top-nav connection applies site-wide.</p>
+    </header>
+    <section class="card">
+      <h2>Wallet</h2>
       <p id="walletAddress" class="feature-status">Not connected</p>
       <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:18px;">
-        <button class="button" id="connectWallet" type="button" onclick="window.openWalletModal()">Connect wallet</button>
+        <button class="button" id="connectWallet" type="button">Connect wallet</button>
         <button class="button" id="disconnectWallet" type="button" hidden>Disconnect</button>
         <button class="button" id="copyWallet" type="button" hidden>Copy address</button>
       </div>
       <p id="walletFeedback" class="estimate-note" aria-live="polite"></p>
     </section>
     <section class="card">
-      <h2>Holdings and activity</h2>
-      <p class="feature-status" id="dashboardHoldingsStatus">Connect your wallet to read its confirmed Devnet purchase receipts.</p>
+      <h2>Your model PnL</h2>
+      <div id="dashPnl"><p class="estimate-note">Connect a wallet to load holdings.</p></div>
+    </section>
+    <section class="card">
+      <h2>Holdings</h2>
+      <p class="feature-status" id="dashboardHoldingsStatus">Connect your wallet to read confirmed Devnet purchase receipts.</p>
       <div id="dashboardHoldings"></div>
-      <p style="margin-top:16px;"><a href="profile.html">Open purchase history</a></p>
+      <p style="margin-top:16px;"><a href="profile.html">Open full transaction history</a></p>
     </section>
     <section class="card">
       <h2>Devnet ledger snapshot</h2>
-      <p class="feature-status" id="ledgerSnapshotStatus" aria-live="polite">Loading current on-chain statistics…</p>
+      <p class="feature-status" id="ledgerSnapshotStatus" aria-live="polite">Loading…</p>
       <dl class="market-metrics" id="ledgerSnapshot" aria-label="Current Devnet ledger statistics"></dl>
-    </section>
-    <section class="card">
-      <h2>Available now</h2>
-      <p>Use a compatible Solana wallet on Devnet to approve purchases. Resales are not enabled; connecting a wallet alone does not create ownership.</p>
-      <p style="margin-top:18px;"><a class="button" href="purchase.html">Buy on Devnet</a> <a class="button" href="grid.html">Browse the grid</a></p>
     </section>
   </main>
   <script src="../js/wallet.js"></script>
   <script src="../js/walletModal.js"></script>
+  <script src="../js/portfolioView.js"></script>
   <script>
-    const address = document.getElementById('walletAddress');
+    const walletAddress = document.getElementById('walletAddress');
+    const connectBtn = document.getElementById('connectWallet');
+    const disconnectBtn = document.getElementById('disconnectWallet');
+    const copyBtn = document.getElementById('copyWallet');
     const feedback = document.getElementById('walletFeedback');
-    const disconnect = document.getElementById('disconnectWallet');
-    const copy = document.getElementById('copyWallet');
-    async function loadLedgerSnapshot() {
+    connectBtn.addEventListener('click', () => window.openWalletModal?.());
+    disconnectBtn.addEventListener('click', () => window.walletManager?.disconnect());
+    copyBtn.addEventListener('click', async () => {
+      const info = window.walletManager?.getWalletInfo();
+      if (!info?.address) return;
+      try { await navigator.clipboard.writeText(info.address); feedback.textContent = 'Address copied.'; }
+      catch (_) { feedback.textContent = 'Could not copy.'; }
+    });
+    async function onConnected(data) {
+      walletAddress.textContent = (data.wallet || 'Wallet') + ' · ' + data.address;
+      connectBtn.hidden = true;
+      disconnectBtn.hidden = false;
+      copyBtn.hidden = false;
+      await window.SpaceLedgerPortfolio.loadPortfolio(data.address, {
+        holdingsId: 'dashboardHoldings',
+        statusId: 'dashboardHoldingsStatus',
+        historyId: null,
+        historySectionId: null,
+        summaryId: 'dashPnl',
+      });
+    }
+    function onDisconnected() {
+      walletAddress.textContent = 'Not connected';
+      connectBtn.hidden = false;
+      disconnectBtn.hidden = true;
+      copyBtn.hidden = true;
+      document.getElementById('dashboardHoldingsStatus').textContent = 'Connect your wallet to read confirmed Devnet purchase receipts.';
+      document.getElementById('dashboardHoldings').innerHTML = '';
+      document.getElementById('dashPnl').innerHTML = '<p class="estimate-note">Connect a wallet to load holdings.</p>';
+    }
+    window.walletManager?.on('connected', onConnected);
+    window.walletManager?.on('disconnected', onDisconnected);
+    if (window.walletManager?.isConnected()) onConnected(window.walletManager.getWalletInfo());
+    (async function loadLedger() {
       const status = document.getElementById('ledgerSnapshotStatus');
-      const metrics = document.getElementById('ledgerSnapshot');
+      const dl = document.getElementById('ledgerSnapshot');
       try {
-        const response = await fetch('/api/stats');
-        const stats = await response.json();
-        if (!response.ok) throw new Error(stats.error || 'Ledger statistics are unavailable.');
-        if (stats.currentSupply === null) throw new Error('The ownership program is not configured.');
-        const items = [
-          ['Blocks sold', Number(stats.currentSupply).toLocaleString()],
-          ['Blocks available', BigInt(stats.blocksRemaining).toLocaleString()],
-          ['Confirmed purchases', Number(stats.purchaseCount).toLocaleString()],
-          ['Recorded test fees', `$${Number(stats.totalFeesUsd).toFixed(2)}`]
-        ];
-        metrics.replaceChildren(...items.map(([label, value]) => {
-          const wrapper = document.createElement('div');
-          wrapper.className = 'market-metric';
-          const term = document.createElement('dt');
-          term.textContent = label;
-          const description = document.createElement('dd');
-          description.textContent = value;
-          wrapper.append(term, description);
-          return wrapper;
-        }));
-        status.textContent = `Verified from Solana ${stats.network} receipts.`;
-      } catch (error) {
-        status.textContent = error.message || 'Ledger statistics are unavailable.';
+        const res = await fetch('/api/stats');
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Stats unavailable');
+        status.textContent = data.message || 'Devnet ledger';
+        dl.innerHTML =
+          '<div><dt>Status</dt><dd>' + (data.status || '—') + '</dd></div>' +
+          '<div><dt>Current supply</dt><dd>' + (data.currentSupply ?? '—') + '</dd></div>' +
+          '<div><dt>Purchases</dt><dd>' + (data.purchaseCount ?? '—') + '</dd></div>' +
+          '<div><dt>Modeled fees (USD)</dt><dd>' + (data.totalFeesUsd ?? '—') + '</dd></div>';
+      } catch (e) {
+        status.textContent = e.message || 'Could not load ledger snapshot.';
       }
-    }
-    async function showDashboardWallet({ wallet, address: value }) {
-      address.textContent = `${wallet} · ${value}`;
-      disconnect.hidden = false;
-      copy.hidden = false;
-      document.getElementById('connectWallet').hidden = true;
-      const status = document.getElementById('dashboardHoldingsStatus');
-      const list = document.getElementById('dashboardHoldings');
-      status.textContent = 'Loading confirmed Devnet receipts…';
-      list.replaceChildren();
-      try {
-        const response = await fetch(`/api/portfolio/${encodeURIComponent(value)}`);
-        const data = await response.json();
-        if (!response.ok || !data.verified) throw new Error(data.error || 'Holdings are not available.');
-        status.textContent = `${data.blocksOwned.toLocaleString()} blocks in ${data.purchaseCount.toLocaleString()} confirmed purchase(s).`;
-        for (const range of data.ranges) {
-          const item = document.createElement('p');
-          item.textContent = `${range.startLabel}–${range.endLabel} · ${range.blockCount.toLocaleString()} blocks · ${range.asset.toUpperCase()}`;
-          list.appendChild(item);
-        }
-        if (!data.ranges.length) status.textContent = 'No confirmed Devnet purchases for this wallet.';
-      } catch (error) { status.textContent = error.message || 'Could not load wallet receipts.'; }
-    }
-    walletManager.on('connected', showDashboardWallet);
-    walletManager.on('disconnected', () => {
-      address.textContent = 'Not connected';
-      document.getElementById('dashboardHoldingsStatus').textContent = 'Connect your wallet to read its confirmed Devnet purchase receipts.';
-      document.getElementById('dashboardHoldings').replaceChildren();
-      disconnect.hidden = true;
-      copy.hidden = true;
-      document.getElementById('connectWallet').hidden = false;
-    });
-    disconnect.addEventListener('click', () => walletManager.disconnect());
-    copy.addEventListener('click', async () => {
-      try { await navigator.clipboard.writeText(walletManager.currentAddress); feedback.textContent = 'Address copied.'; }
-      catch { feedback.textContent = 'Could not copy the address in this browser.'; }
-    });
-    if (walletManager.isConnected()) showDashboardWallet({ wallet: walletManager.currentWallet, address: walletManager.currentAddress });
-    loadLedgerSnapshot();
+    })();
   </script>
 </body>
 </html>
