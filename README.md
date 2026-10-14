@@ -75,4 +75,4 @@ Never commit real API keys. Prefer `https://devnet.helius-rpc.com/?api-key=…` 
 
 ## License / contribution
 
-Operator: Alitiora Initiative. Review `ROADMAP.md` before proposing mainnet or marketplace features.
+Operator: Alitiora Initiative. Review `ROADMAP.md` and `docs/MAINNET-MIGRATION-GUIDE.md` before proposing mainnet or marketplace features.
