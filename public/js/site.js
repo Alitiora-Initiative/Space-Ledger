@@ -171,4 +171,13 @@
   footer.className = 'site-footer';
   footer.innerHTML = '<div class="site-footer-inner"><span>Space Ledger</span><nav aria-label="Legal information"><a href="/pages/privacy.html">Privacy</a><a href="/pages/terms.html">Terms</a><a href="/pages/cookies.html">Cookies</a></nav></div>';
   document.body.append(footer);
+
+  // Session reconnect: remember top-nav wallet across pages in this tab.
+  if (!document.querySelector('script[data-wallet-reconnect]')) {
+    const s = document.createElement('script');
+    s.src = (location.pathname.includes('/pages/') ? '../js/' : 'js/') + 'walletReconnect.js';
+    s.defer = true;
+    s.setAttribute('data-wallet-reconnect', '1');
+    document.head.appendChild(s);
+  }
 })();
