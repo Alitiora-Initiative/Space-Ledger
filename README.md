@@ -2,7 +2,20 @@
 
 Shared digital-canvas prototype on **Solana Devnet**: 10 billion blocks × 100 pixels = 1 trillion pixel positions.
 
-Live site (when deployed): [space-ledger-alitiora.vercel.app](https://space-ledger-alitiora.vercel.app)
+Live site: [space-ledger-alitiora.vercel.app](https://space-ledger-alitiora.vercel.app)
+
+## Overview
+
+Space Ledger is a shared canvas inspired by the Million Dollar Homepage, scaled to 1 trillion pixels. Built on Solana's high-performance blockchain, it features transparent bonding-curve pricing, on-chain ownership verification, and immutable receipts for every purchase.
+
+### Key Features
+
+- **Transparent Pricing**: Linear bonding curve from $0.001 to $1,000 per block, mathematically predictable and fully on-chain
+- **On-Chain Ownership**: Every purchase recorded as an immutable Solana transaction receipt, verifiable by anyone
+- **Real-Time Supply**: Live Devnet data shows exact blocks sold, available inventory, and holder rankings
+- **Portfolio Tracking**: View your holdings, purchase history, and estimated model PnL in your profile
+- **Grid Exploration**: Interactive 10×10 pixel grid view for browsing and discovering available blocks
+- **Accessibility**: Keyboard navigation, screen reader support, and responsive design for all devices
 
 ## What works on Devnet
 
@@ -11,6 +24,7 @@ Live site (when deployed): [space-ledger-alitiora.vercel.app](https://space-ledg
 - Quote → unsigned transaction → user approves in wallet → receipt account on Devnet.
 - Grid browse, market of confirmed receipts, leaderboard, profile/dashboard with **model PnL %** and transaction history links.
 - Rate limits on quote/purchase APIs; security headers on responses.
+- Accessibility improvements: ARIA labels, focus states, keyboard navigation, Devnet-only legal notices.
 
 Program ID (Devnet): `EbP7vsnMXPonTfriPUFynco69d69JiXpWbKnwVmz8sgG`
 
