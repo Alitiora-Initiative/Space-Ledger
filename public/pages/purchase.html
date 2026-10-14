@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Explore Space Ledger's published pixel block pricing model.">
-  <title>Pricing Preview — Space Ledger</title>
+  <meta name="description" content="Space Ledger Devnet pricing: linear curve quotes sized to your wallet balance.">
+  <title>Pricing — Space Ledger</title>
   <link rel="stylesheet" href="../css/styles.css">
   <script src="/js/site.js" defer></script>
 </head>
@@ -30,13 +30,15 @@
 
   <main class="container">
     <div class="hero">
-      <h1>Block Pricing &amp; Devnet Purchases</h1>
-      <p>Request a live Devnet quote, then review the unsigned transaction in a compatible Solana wallet.</p>
+      <h1>Block Pricing & Devnet Purchases</h1>
+      <p>Budget is your max spend in Devnet SOL or USDC. The quote sizes how many blocks fit under that budget on the linear curve. Quotes check your wallet balance.</p>
     </div>
 
     <div class="card" id="devnetPurchase" hidden>
       <h2>Buy on Solana Devnet</h2>
-      <p class="feature-status" id="purchaseStatus">Checking whether the Devnet ownership program is available. No transaction is sent until you review and approve it in your wallet.</p>
+      <p class="feature-status" id="purchaseStatus">Checking whether the Devnet ownership program is available.</p>
+      <p class="estimate-note" id="curvePriceNote">Primary sale uses a <strong>linear bonding curve</strong>: each confirmed purchase advances supply, so the <strong>next</strong> blocks cost more. Model range: $0.001 → $1,000 per block.</p>
+      <p class="feature-status" id="nextBlockPriceLine" aria-live="polite">Loading next-block model price…</p>
       <form id="devnetPurchaseForm">
         <div class="input-group">
           <label for="asset">Asset</label>
@@ -46,14 +48,18 @@
           </select>
         </div>
         <div class="input-group">
-          <label for="amount">Budget (token units)</label>
+          <label for="amount">Budget (max you are willing to spend in Devnet SOL or USDC)</label>
           <input id="amount" name="amount" type="number" min="0.001" step="any" value="0.1" required>
+          <p class="estimate-note">This is not “number of blocks”. Example: with ~2.5 Devnet SOL, use <strong>Use available balance</strong> or enter up to about 2.48 SOL (a small amount is reserved for network fees).</p>
         </div>
-        <button class="button" id="quotePurchaseBtn" type="submit">Get Devnet quote</button>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px;">
+          <button class="button" id="quotePurchaseBtn" type="submit">Get Devnet quote</button>
+          <button class="button" id="useMaxBalanceBtn" type="button">Use available balance</button>
+        </div>
       </form>
-      <p>Use Devnet SOL or Devnet USDC from your own wallet. The $0.10 test platform fee is included in the quote. Solana network fees and any new token-account rent are additional and shown by your wallet. Devnet tokens have no real-world value.</p>
-      <p id="walletBalanceStatus" class="feature-status" aria-live="polite">Connect a compatible Solana Devnet wallet to display its balance here.</p>
-      <div id="purchaseQuote" class="result" role="status" aria-live="polite">Connect a wallet and request a quote to see the block range and exact payment.</div>
+      <p class="estimate-note">The $0.10 test platform fee is included in the quote. Solana network fees are extra. Devnet tokens have no real-world value. USD hints use the on-chain Pyth SOL/USD feed (often near ~$100; not a guarantee).</p>
+      <p id="walletBalanceStatus" class="feature-status" aria-live="polite">Connect a Solana Devnet wallet to display balance here.</p>
+      <div id="purchaseQuote" class="result" role="status" aria-live="polite">Connect a wallet and request a quote.</div>
       <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:14px;">
         <button class="button" id="buyBlocksBtn" type="button" disabled>Connect wallet to buy</button>
         <a id="purchaseExplorerLink" class="button" href="#" hidden target="_blank" rel="noopener noreferrer">View on Explorer</a>
@@ -61,9 +67,8 @@
     </div>
 
     <div class="card">
-      <h2>Estimate a block range</h2>
-      <p class="feature-status">Quick tip: block labels advance automatically</p>
-      <p style="color:#c4d0d7;line-height:1.6;margin-bottom:12px;">Enter a short label instead of a long number: 000A through 999A, then 000B through 999B, then 000C, and so on. After Z, labels continue AA, AB, and onward. The calculator accepts either a label or its original number.</p>
+      <h2>Estimate a block range (model only)</h2>
+      <p style="color:#c4d0d7;line-height:1.6;margin-bottom:12px;">Local model estimate. Live buys always use on-chain supply and a fresh quote.</p>
       <div class="input-group">
         <label for="estimateStart">Start block (label or number)</label>
         <input id="estimateStart" type="text" value="000A" autocomplete="off">
@@ -81,6 +86,7 @@
   <script src="../js/wallet.js"></script>
   <script src="../js/walletModal.js"></script>
   <script src="../js/vendor/solana-web3.js" defer></script>
+  <script src="../js/toast.js"></script>
   <script src="../js/solanaPayment.js" defer></script>
   <script src="../js/purchaseDeepLink.js" defer></script>
   <script>
@@ -92,21 +98,19 @@
         const start = window.BlockId ? window.BlockId.parse(startRaw) : Number(startRaw);
         if (start === null || !Number.isFinite(start) || start < 0) throw new Error('Enter a valid start block label or number.');
         if (!Number.isFinite(count) || count < 1) throw new Error('Enter a positive block count.');
-        // Simple linear model mirror for local estimate only
         const TOTAL = 10_000_000_000;
         const START = 0.001;
         const TARGET = 1000;
-        let total = 0;
-        for (let i = 0; i < Math.min(count, 10000); i++) {
-          const x = start + i;
-          total += START + (TARGET - START) * (x / TOTAL);
-        }
-        if (count > 10000) total *= count / 10000;
+        const n = Math.min(count, 100000);
+        const end = start + n - 1;
+        const p0 = START + (TARGET - START) * (start / TOTAL);
+        const p1 = START + (TARGET - START) * (end / TOTAL);
+        const total = ((p0 + p1) / 2) * n;
         const summary = document.createElement('p');
-        summary.textContent = `Model estimate for ${count} block(s) from ${startRaw}: about $${total.toFixed(6)}`;
+        summary.textContent = 'Model estimate for ' + n + ' block(s) from ' + startRaw + ': about $' + total.toFixed(6);
         const note = document.createElement('p');
         note.className = 'estimate-note';
-        note.textContent = 'This is not a live price or a purchase. Ownership, availability, fees, and settlement are not verified.';
+        note.textContent = 'Not a live quote. Use Get Devnet quote for payable amounts.';
         result.replaceChildren(summary, note);
       } catch (error) {
         result.textContent = error.message;
