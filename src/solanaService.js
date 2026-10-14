@@ -18,6 +18,7 @@ const TARGET_PRICE_MICRO_USD = 1_000_000_000n;
 const PURCHASE_FEE_MICRO_USD = 100_000n;
 const MAX_PRICE_AGE_SECONDS = 90n;
 const MAX_BLOCKS_PER_PURCHASE = 100_000_000;
+const MIN_USD_VALUE_MICRO = 100n; // Minimum purchase: $0.0001 USD (100 micro USD)
 const RECEIPT_ACCOUNT_DISCRIMINATOR = createHash('sha256').update('account:PurchaseReceipt').digest().subarray(0, 8);
 
 function web3() {
@@ -181,6 +182,11 @@ async function quote({ asset, amount }) {
   }
   if (low < 1n) throw new Error('That amount is below the minimum purchase plus the $0.10 test fee.');
   const priceMicro = totalPriceMicroUsd(state.currentSupply, Number(low));
+  
+  // Validate minimum USD value ($0.0001)
+  if (priceMicro < MIN_USD_VALUE_MICRO) {
+    throw new Error(`Minimum purchase is $0.0001 USD. This quote is only $${(Number(priceMicro) / 1_000_000).toFixed(6)} USD. Increase your budget to meet the minimum.`);
+  }
   const paymentUnits = normalizedAsset === 'USDC'
     ? priceMicro + PURCHASE_FEE_MICRO_USD
     : usdMicroToLamports(priceMicro + PURCHASE_FEE_MICRO_USD, oracle.price, oracle.exponent);
@@ -240,6 +246,12 @@ async function buildPurchaseTransaction({ buyer: buyerValue, asset: assetValue, 
 
   const state = await getState();
   const priceMicro = totalPriceMicroUsd(state.currentSupply, blockCount);
+  
+  // Validate minimum USD value ($0.0001)
+  if (priceMicro < MIN_USD_VALUE_MICRO) {
+    throw new Error(`Minimum purchase is $0.0001 USD. This purchase is only $${(Number(priceMicro) / 1_000_000).toFixed(6)} USD. Increase the block count to meet the minimum.`);
+  }
+  
   const programId = state.programId;
   const treasury = new PublicKey(TREASURY);
   const receipt = receiptPda(programId, state.currentSupply);
