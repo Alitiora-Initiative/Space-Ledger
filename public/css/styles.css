@@ -568,6 +568,7 @@ nav .container { max-width: 1500px; }
 .block-id-help:not([open]) p { display: none; }
 .result { white-space: pre-wrap; overflow-wrap: anywhere; }
 :focus-visible { outline: 3px solid #ffe082; outline-offset: 3px; }
+button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible { outline: 3px solid #ffe082; outline-offset: 2px; }
 .sr-only {
   position: absolute;
   width: 1px;

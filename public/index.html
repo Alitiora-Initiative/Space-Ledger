@@ -9,7 +9,7 @@
   <script src="/js/site.js" defer></script>
 </head>
 <body>
-  <nav>
+  <nav aria-label="Main navigation">
     <div class="container">
       <a href="/index.html" style="display:flex;align-items:center;gap:8px;text-decoration:none;">
         <img src="/img/logo.jpg" alt="Space Ledger logo" style="width:32px;height:32px;border-radius:7px;object-fit:cover;">
@@ -112,6 +112,21 @@
       </div>
     </div>
   </main>
+
+  <footer class="site-footer">
+    <div class="site-footer-inner">
+      <div>
+        <p style="margin:0;font-size:0.85em;color:#c4d0d7;">
+          <strong>Devnet test prototype</strong> — Devnet SOL and Devnet USDC have no real-world value. No investment, no secondary market, no transfers.
+        </p>
+      </div>
+      <nav aria-label="Footer navigation">
+        <a href="pages/privacy.html">Privacy</a>
+        <a href="pages/terms.html">Terms</a>
+        <a href="pages/cookies.html">Cookies</a>
+      </nav>
+    </div>
+  </footer>
 
   <script>
     fetch('/api/supply').then(response => response.json()).then(data => {
