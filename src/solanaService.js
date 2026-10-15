@@ -346,7 +346,7 @@ async function publicConfig() {
     : '0';
   return {
     network: 'devnet',
-    rpc: DEVNET_RPC,
+    rpc: 'https://api.devnet.solana.com',
     programId: programId.toBase58(),
     treasury: TREASURY,
     usdcMint: USDC_MINT,
