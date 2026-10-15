@@ -25,59 +25,42 @@
       font-size: 0.9rem;
       line-height: 1.5;
     }
-    .support-bar.is-hidden {
-      display: none !important;
-    }
-    .support-bar h2 {
-      margin: 0 0 6px;
-      font-size: 1rem;
-      color: #85e8f2;
-    }
+    .support-bar.is-hidden { display: none !important; }
+    .support-bar h2 { margin: 0 0 6px; font-size: 1rem; color: #85e8f2; }
     .support-bar p { margin: 0 0 10px; }
     .support-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      align-items: center;
-      margin: 6px 0;
-      word-break: break-all;
+      display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
+      margin: 6px 0; word-break: break-all;
     }
     .support-row code {
-      flex: 1;
-      min-width: 0;
-      background: #16252c;
-      padding: 6px 8px;
-      border-radius: 6px;
-      font-size: 0.78rem;
-      color: #e8f4f6;
+      flex: 1; min-width: 0; background: #16252c; padding: 6px 8px;
+      border-radius: 6px; font-size: 0.78rem; color: #e8f4f6;
     }
     .support-row button {
-      flex-shrink: 0;
-      border: 1px solid #3a6a78;
-      background: #1a3038;
-      color: #85e8f2;
-      border-radius: 6px;
-      padding: 6px 10px;
-      cursor: pointer;
-      font-size: 0.8rem;
+      flex-shrink: 0; border: 1px solid #3a6a78; background: #1a3038;
+      color: #85e8f2; border-radius: 6px; padding: 6px 10px; cursor: pointer; font-size: 0.8rem;
     }
-    .support-row button:hover { background: #243e48; }
-    .support-bar-actions {
-      display: flex;
-      justify-content: flex-end;
-      gap: 8px;
-      margin-top: 10px;
-    }
+    .support-bar-actions { display: flex; justify-content: flex-end; margin-top: 10px; }
     .support-bar-actions button {
-      border: 1px solid #3a6a78;
-      background: #1a3038;
-      color: #85e8f2;
-      border-radius: 6px;
-      padding: 6px 12px;
-      cursor: pointer;
-      font-size: 0.85rem;
+      border: 1px solid #3a6a78; background: #1a3038; color: #85e8f2;
+      border-radius: 6px; padding: 6px 12px; cursor: pointer; font-size: 0.85rem;
     }
     body.has-support-bar { padding-bottom: 220px; }
+    .goal-wrap { margin-top: 16px; }
+    .goal-meta {
+      display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+      margin-bottom: 8px; color: #c4d0d7; font-size: 0.9rem;
+    }
+    .goal-track {
+      height: 18px; border-radius: 999px; background: #16252c;
+      border: 1px solid #2a4a55; overflow: hidden;
+    }
+    .goal-fill {
+      height: 100%; width: 0%;
+      background: linear-gradient(90deg, #1a6b78, #85e8f2);
+      transition: width 0.6s ease;
+    }
+    .goal-pct { font-weight: 600; color: #85e8f2; }
     @media (max-width: 640px) {
       body.has-support-bar { padding-bottom: 280px; }
       .support-bar { left: 8px; right: 8px; bottom: 8px; }
@@ -98,10 +81,24 @@
       <h2 id="treasuryStatus">Checking Devnet</h2>
       <p class="feature-status" id="treasuryDescription" aria-live="polite">Loading the configured Devnet treasury and verified balances…</p>
     </section>
+    <section class="card" id="supportGoalCard">
+      <h2>Builder support goal</h2>
+      <p class="estimate-note">Optional. Helps the developer access tools and hosting. Separate from Devnet purchases. Not an investment.</p>
+      <div class="goal-wrap">
+        <div class="goal-meta">
+          <span>Raised (approx): <strong id="goalRaised">…</strong> / <strong id="goalTarget">10</strong> SOL</span>
+          <span class="goal-pct" id="goalPercent">—%</span>
+        </div>
+        <div class="goal-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="goalBar">
+          <div class="goal-fill" id="goalFill"></div>
+        </div>
+        <p class="estimate-note" id="goalNote" style="margin-top:10px;">Loading live balances…</p>
+      </div>
+    </section>
     <section class="card">
       <h2>Payment destination configuration</h2>
       <p id="treasuryBalance">Treasury balances are read from Solana Devnet.</p>
-      <p class="estimate-note" style="margin-top:12px;">Optional support for the developer (tools &amp; hosting) is separate from this Devnet treasury and is never required to test the app.</p>
+      <p class="estimate-note" style="margin-top:12px;">Optional support for the developer (tools & hosting) is separate from this Devnet treasury and is never required to test the app.</p>
     </section>
   </main>
 
@@ -156,39 +153,55 @@
       document.getElementById('treasuryDescription').textContent = error.message;
     });
 
+    function refreshSupportGoal() {
+      fetch('/api/support-goal').then(async (response) => {
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Unavailable');
+        const raised = Number(data.raisedSolApprox) || 0;
+        const goal = Number(data.goalSol) || 10;
+        const pct = Number(data.percent) || 0;
+        document.getElementById('goalRaised').textContent = raised.toFixed(4);
+        document.getElementById('goalTarget').textContent = String(goal);
+        document.getElementById('goalPercent').textContent = pct.toFixed(2) + '%';
+        document.getElementById('goalFill').style.width = Math.min(100, pct) + '%';
+        document.getElementById('goalBar').setAttribute('aria-valuenow', String(Math.round(pct)));
+        const parts = [];
+        const b = data.breakdown || {};
+        if (b.solana && b.solana.balance != null) parts.push('Solana ' + Number(b.solana.balance).toFixed(4) + ' SOL');
+        if (b.arbitrum && b.arbitrum.balance != null) parts.push('Arbitrum ' + Number(b.arbitrum.balance).toFixed(6) + ' ETH');
+        if (b.bitcoin && b.bitcoin.balance != null) parts.push('Bitcoin ' + Number(b.bitcoin.balance).toFixed(8) + ' BTC');
+        document.getElementById('goalNote').textContent =
+          (parts.length ? parts.join(' · ') + '. ' : '') +
+          (data.note || 'Live from public RPCs.');
+      }).catch((error) => {
+        document.getElementById('goalNote').textContent = error.message || 'Could not load support progress.';
+      });
+    }
+    refreshSupportGoal();
+    setInterval(refreshSupportGoal, 45000);
+
     (function supportBar() {
       var bar = document.getElementById('supportBar');
       var dismissBtn = document.getElementById('dismissSupport');
       if (!bar || !dismissBtn) return;
-
       var key = 'spaceLedger.supportBarDismissed';
-
       function hide() {
         bar.classList.add('is-hidden');
         document.body.classList.remove('has-support-bar');
         try { localStorage.setItem(key, '1'); } catch (e) {}
       }
-
       function show() {
         bar.classList.remove('is-hidden');
         document.body.classList.add('has-support-bar');
       }
-
       var dismissed = false;
       try { dismissed = localStorage.getItem(key) === '1'; } catch (e) {}
-
-      if (dismissed) {
-        hide();
-      } else {
-        show();
-      }
-
+      if (dismissed) hide(); else show();
       dismissBtn.addEventListener('click', function (e) {
         e.preventDefault();
         e.stopPropagation();
         hide();
       });
-
       document.querySelectorAll('[data-copy]').forEach(function (btn) {
         btn.addEventListener('click', async function () {
           var el = document.getElementById(btn.getAttribute('data-copy'));
