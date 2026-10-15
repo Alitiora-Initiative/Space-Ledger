@@ -25,7 +25,9 @@
       font-size: 0.9rem;
       line-height: 1.5;
     }
-    .support-bar[hidden] { display: none !important; }
+    .support-bar.is-hidden {
+      display: none !important;
+    }
     .support-bar h2 {
       margin: 0 0 6px;
       font-size: 1rem;
@@ -67,11 +69,12 @@
       margin-top: 10px;
     }
     .support-bar-actions button {
-      border: 0;
-      background: transparent;
+      border: 1px solid #3a6a78;
+      background: #1a3038;
       color: #85e8f2;
+      border-radius: 6px;
+      padding: 6px 12px;
       cursor: pointer;
-      text-decoration: underline;
       font-size: 0.85rem;
     }
     body.has-support-bar { padding-bottom: 220px; }
@@ -81,7 +84,7 @@
     }
   </style>
 </head>
-<body class="has-support-bar">
+<body>
   <nav><div class="container">
     <a href="/index.html" style="display:flex;align-items:center;gap:8px;text-decoration:none;"><img src="/img/logo.jpg" alt="Space Ledger logo" style="width:32px;height:32px;border-radius:7px;object-fit:cover;"><span class="logo">Space Ledger</span></a>
     <ul>
@@ -111,12 +114,12 @@
       <nav aria-label="Footer">
         <a href="privacy.html">Privacy</a>
         <a href="terms.html">Terms</a>
-        <a href="#" id="openSupportNote">Support the builder</a>
+        <a href="cookies.html">Cookies</a>
       </nav>
     </div>
   </footer>
 
-  <aside id="supportBar" class="support-bar" role="dialog" aria-label="Optional support addresses">
+  <aside id="supportBar" class="support-bar is-hidden" role="dialog" aria-label="Optional support addresses">
     <h2>Optional support</h2>
     <p>If you want to help the developer access more tools, you can send a small amount to any of these addresses. <strong>Not required</strong> to use Space Ledger. Not an investment.</p>
     <div class="support-row">
@@ -154,37 +157,47 @@
     });
 
     (function supportBar() {
-      const bar = document.getElementById('supportBar');
-      const key = 'spaceLedger.supportBarDismissed';
+      var bar = document.getElementById('supportBar');
+      var dismissBtn = document.getElementById('dismissSupport');
+      if (!bar || !dismissBtn) return;
+
+      var key = 'spaceLedger.supportBarDismissed';
+
       function hide() {
-        bar.hidden = true;
+        bar.classList.add('is-hidden');
         document.body.classList.remove('has-support-bar');
-        try { sessionStorage.setItem(key, '1'); } catch (_) {}
+        try { localStorage.setItem(key, '1'); } catch (e) {}
       }
+
       function show() {
-        bar.hidden = false;
+        bar.classList.remove('is-hidden');
         document.body.classList.add('has-support-bar');
       }
-      try {
-        if (sessionStorage.getItem(key) === '1') hide();
-        else show();
-      } catch (_) { show(); }
-      document.getElementById('dismissSupport').addEventListener('click', hide);
-      document.getElementById('openSupportNote').addEventListener('click', function (e) {
-        e.preventDefault();
-        try { sessionStorage.removeItem(key); } catch (_) {}
+
+      var dismissed = false;
+      try { dismissed = localStorage.getItem(key) === '1'; } catch (e) {}
+
+      if (dismissed) {
+        hide();
+      } else {
         show();
-        bar.scrollIntoView({ behavior: 'smooth', block: 'end' });
+      }
+
+      dismissBtn.addEventListener('click', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        hide();
       });
+
       document.querySelectorAll('[data-copy]').forEach(function (btn) {
         btn.addEventListener('click', async function () {
-          const el = document.getElementById(btn.getAttribute('data-copy'));
-          const text = el ? el.textContent.trim() : '';
+          var el = document.getElementById(btn.getAttribute('data-copy'));
+          var text = el ? el.textContent.trim() : '';
           try {
             await navigator.clipboard.writeText(text);
             btn.textContent = 'Copied';
             setTimeout(function () { btn.textContent = 'Copy'; }, 1500);
-          } catch (_) {
+          } catch (e) {
             btn.textContent = 'Select & copy';
           }
         });
