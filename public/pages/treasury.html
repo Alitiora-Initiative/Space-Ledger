@@ -45,24 +45,34 @@
       border: 1px solid #3a6a78; background: #1a3038; color: #85e8f2;
       border-radius: 6px; padding: 6px 12px; cursor: pointer; font-size: 0.85rem;
     }
-    body.has-support-bar { padding-bottom: 220px; }
-    .goal-wrap { margin-top: 16px; }
+    body.has-support-bar { padding-bottom: 240px; }
+    .goal-wrap { margin-top: 14px; }
     .goal-meta {
       display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap;
       margin-bottom: 8px; color: #c4d0d7; font-size: 0.9rem;
     }
     .goal-track {
-      height: 18px; border-radius: 999px; background: #16252c;
-      border: 1px solid #2a4a55; overflow: hidden;
+      height: 22px; border-radius: 999px; background: #16252c;
+      border: 1px solid #2a4a55; overflow: hidden; position: relative;
     }
     .goal-fill {
-      height: 100%; width: 0%;
+      height: 100%; width: 0%; min-width: 0;
       background: linear-gradient(90deg, #1a6b78, #85e8f2);
       transition: width 0.6s ease;
     }
-    .goal-pct { font-weight: 600; color: #85e8f2; }
+    .goal-fill.has-amount { min-width: 8px; }
+    .goal-pct { font-weight: 600; color: #85e8f2; font-variant-numeric: tabular-nums; }
+    .breakdown-table {
+      width: 100%; border-collapse: collapse; margin-top: 14px; font-size: 0.88rem;
+    }
+    .breakdown-table th, .breakdown-table td {
+      text-align: left; padding: 8px 6px; border-bottom: 1px solid #243840; color: #c4d0d7;
+    }
+    .breakdown-table th { color: #85e8f2; font-weight: 600; }
+    .breakdown-table code { font-size: 0.75rem; color: #e8f4f6; word-break: break-all; }
+    .mono { font-variant-numeric: tabular-nums; }
     @media (max-width: 640px) {
-      body.has-support-bar { padding-bottom: 280px; }
+      body.has-support-bar { padding-bottom: 300px; }
       .support-bar { left: 8px; right: 8px; bottom: 8px; }
     }
   </style>
@@ -76,29 +86,39 @@
     </ul>
   </div></nav>
   <main class="container">
-    <header class="hero"><h1>Treasury</h1><p>Devnet payment destination and on-chain balances.</p></header>
+    <header class="hero">
+      <h1>Treasury</h1>
+      <p>Devnet sale destination (test tokens) and optional builder support (separate wallets).</p>
+    </header>
+
     <section class="card">
       <h2 id="treasuryStatus">Checking Devnet</h2>
-      <p class="feature-status" id="treasuryDescription" aria-live="polite">Loading the configured Devnet treasury and verified balances…</p>
+      <p class="feature-status" id="treasuryDescription" aria-live="polite">Loading the configured Devnet treasury…</p>
+      <p id="treasuryBalance" class="mono">—</p>
+      <p class="estimate-note" style="margin-top:10px;">This is the <strong>program treasury</strong> for Devnet purchases only. It is not the support addresses below.</p>
     </section>
+
     <section class="card" id="supportGoalCard">
       <h2>Builder support goal</h2>
-      <p class="estimate-note">Optional. Helps the developer access tools and hosting. Separate from Devnet purchases. Not an investment.</p>
+      <p class="estimate-note">Optional. Helps the developer pay for tools and hosting. <strong>Not required</strong> to use the app. Not an investment. Not the Devnet sale treasury.</p>
       <div class="goal-wrap">
         <div class="goal-meta">
-          <span>Raised (approx): <strong id="goalRaised">…</strong> / <strong id="goalTarget">10</strong> SOL</span>
+          <span>Raised (approx): <strong id="goalRaised" class="mono">…</strong> / <strong id="goalTarget">10</strong> SOL-eq</span>
           <span class="goal-pct" id="goalPercent">—%</span>
         </div>
-        <div class="goal-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="goalBar">
+        <div class="goal-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-label="Support progress toward 10 SOL" id="goalBar">
           <div class="goal-fill" id="goalFill"></div>
         </div>
-        <p class="estimate-note" id="goalNote" style="margin-top:10px;">Loading live balances…</p>
+        <table class="breakdown-table" aria-label="Support balances by chain">
+          <thead>
+            <tr><th>Chain</th><th>Balance</th><th>Toward goal</th></tr>
+          </thead>
+          <tbody id="goalBreakdownBody">
+            <tr><td colspan="3">Loading…</td></tr>
+          </tbody>
+        </table>
+        <p class="estimate-note" id="goalNote" style="margin-top:12px;">Loading live balances…</p>
       </div>
-    </section>
-    <section class="card">
-      <h2>Payment destination configuration</h2>
-      <p id="treasuryBalance">Treasury balances are read from Solana Devnet.</p>
-      <p class="estimate-note" style="margin-top:12px;">Optional support for the developer (tools & hosting) is separate from this Devnet treasury and is never required to test the app.</p>
     </section>
   </main>
 
@@ -117,8 +137,8 @@
   </footer>
 
   <aside id="supportBar" class="support-bar is-hidden" role="dialog" aria-label="Optional support addresses">
-    <h2>Optional support</h2>
-    <p>If you want to help the developer access more tools, you can send a small amount to any of these addresses. <strong>Not required</strong> to use Space Ledger. Not an investment.</p>
+    <h2>Optional support addresses</h2>
+    <p>Send only if you want to help. Copy an address carefully. Not required to test Space Ledger.</p>
     <div class="support-row">
       <span style="min-width:4.5rem;">Solana</span>
       <code id="addrSol">ETuGxX6Znxr9q59THJtcYDJKt6RvCfN7wp79tRnbG1xG</code>
@@ -142,39 +162,75 @@
   <script src="../js/wallet.js"></script>
   <script src="../js/walletModal.js"></script>
   <script>
-    fetch('/api/treasury').then(async response => {
-      const data = await response.json();
+    function fmtSol(n) {
+      var x = Number(n);
+      if (!Number.isFinite(x)) return '—';
+      if (x === 0) return '0';
+      if (x < 0.0001) return x.toFixed(9);
+      if (x < 1) return x.toFixed(6);
+      return x.toFixed(4);
+    }
+    function fmtAmt(n, digits) {
+      var x = Number(n);
+      if (!Number.isFinite(x)) return '—';
+      return x.toFixed(digits);
+    }
+
+    fetch('/api/treasury').then(async function (response) {
+      var data = await response.json();
       if (!response.ok) throw new Error(data.error || 'Treasury status unavailable.');
-      document.getElementById('treasuryStatus').textContent = data.verified ? 'Program live on Solana Devnet' : 'Devnet program deployed; awaiting initialization';
-      document.getElementById('treasuryDescription').textContent = `Fixed receiving wallet: ${data.walletAddress}. Program: ${data.contractAddress}.`;
-      document.getElementById('treasuryBalance').textContent = `Treasury balance: ${data.treasuryBalanceSol} Devnet SOL and ${data.treasuryBalanceUsdc} Devnet USDC.`;
-    }).catch(error => {
+      document.getElementById('treasuryStatus').textContent = data.verified
+        ? 'Program live on Solana Devnet'
+        : 'Devnet program deployed; awaiting initialization';
+      document.getElementById('treasuryDescription').textContent =
+        'Devnet receiving wallet: ' + data.walletAddress + ' · Program: ' + data.contractAddress;
+      document.getElementById('treasuryBalance').textContent =
+        'Devnet balances: ' + (data.treasuryBalanceSol || '0') + ' SOL · ' +
+        (data.treasuryBalanceUsdc || '0') + ' USDC (test tokens only)';
+    }).catch(function (error) {
       document.getElementById('treasuryStatus').textContent = 'Devnet status unavailable';
       document.getElementById('treasuryDescription').textContent = error.message;
+      document.getElementById('treasuryBalance').textContent = '';
     });
 
     function refreshSupportGoal() {
-      fetch('/api/support-goal').then(async (response) => {
-        const data = await response.json();
+      fetch('/api/support-goal').then(async function (response) {
+        var data = await response.json();
         if (!response.ok) throw new Error(data.error || 'Unavailable');
-        const raised = Number(data.raisedSolApprox) || 0;
-        const goal = Number(data.goalSol) || 10;
-        const pct = Number(data.percent) || 0;
-        document.getElementById('goalRaised').textContent = raised.toFixed(4);
+        var raised = Number(data.raisedSolApprox) || 0;
+        var goal = Number(data.goalSol) || 10;
+        var pct = Number(data.percent) || 0;
+        document.getElementById('goalRaised').textContent = fmtSol(raised);
         document.getElementById('goalTarget').textContent = String(goal);
         document.getElementById('goalPercent').textContent = pct.toFixed(2) + '%';
-        document.getElementById('goalFill').style.width = Math.min(100, pct) + '%';
+
+        var fill = document.getElementById('goalFill');
+        // Visual floor so tiny balances still show a sliver; label stays exact.
+        var visualPct = pct;
+        if (raised > 0 && visualPct < 1.5) visualPct = 1.5;
+        fill.style.width = Math.min(100, visualPct) + '%';
+        fill.classList.toggle('has-amount', raised > 0);
         document.getElementById('goalBar').setAttribute('aria-valuenow', String(Math.round(pct)));
-        const parts = [];
-        const b = data.breakdown || {};
-        if (b.solana && b.solana.balance != null) parts.push('Solana ' + Number(b.solana.balance).toFixed(4) + ' SOL');
-        if (b.arbitrum && b.arbitrum.balance != null) parts.push('Arbitrum ' + Number(b.arbitrum.balance).toFixed(6) + ' ETH');
-        if (b.bitcoin && b.bitcoin.balance != null) parts.push('Bitcoin ' + Number(b.bitcoin.balance).toFixed(8) + ' BTC');
+
+        var b = data.breakdown || {};
+        var rows = [
+          { name: 'Solana', unit: 'SOL', dig: 6, row: b.solana },
+          { name: 'Arbitrum', unit: 'ETH', dig: 6, row: b.arbitrum },
+          { name: 'Bitcoin', unit: 'BTC', dig: 8, row: b.bitcoin }
+        ];
+        var tbody = document.getElementById('goalBreakdownBody');
+        tbody.innerHTML = rows.map(function (r) {
+          var bal = r.row && r.row.balance != null ? fmtAmt(r.row.balance, r.dig) + ' ' + r.unit : '—';
+          var toward = r.row && r.row.towardGoalSol != null ? fmtSol(r.row.towardGoalSol) + ' SOL-eq' : '—';
+          return '<tr><td>' + r.name + '</td><td class="mono">' + bal + '</td><td class="mono">' + toward + '</td></tr>';
+        }).join('');
+
         document.getElementById('goalNote').textContent =
-          (parts.length ? parts.join(' · ') + '. ' : '') +
-          (data.note || 'Live from public RPCs.');
-      }).catch((error) => {
+          (data.note || 'Live from public RPCs.') +
+          (data.updatedAt ? ' Last update: ' + data.updatedAt : '');
+      }).catch(function (error) {
         document.getElementById('goalNote').textContent = error.message || 'Could not load support progress.';
+        document.getElementById('goalBreakdownBody').innerHTML = '<tr><td colspan="3">Unavailable</td></tr>';
       });
     }
     refreshSupportGoal();
