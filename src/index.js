@@ -5,6 +5,7 @@ const bondingCurve = require('./bondingCurve');
 const rpcRouter = require('./rpcRouter');
 const blockIds = require('./blockId');
 const solanaService = require('./solanaService');
+const supportGoal = require('./supportGoal');
 const { createRateLimiter } = require('./rateLimit');
 
 const quoteRateLimit = createRateLimiter({ windowMs: 60_000, max: 20, name: 'quote' });
@@ -27,12 +28,13 @@ function withCache(key, ttlMs, fn) {
   };
 }
 const cachedConfig = withCache('config', 8_000, () => solanaService.publicConfig());
+const cachedSupportGoal = withCache('supportGoal', 30_000, () => supportGoal.getProgress());
 
 const app = express();
 app.disable('x-powered-by');
 app.use((_req, res, next) => {
   res.set({
-    'Content-Security-Policy': "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; img-src 'self' data:; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; font-src 'self' data:; connect-src 'self' https://api.devnet.solana.com wss://api.devnet.solana.com https://*.helius-rpc.com https://devnet.helius-rpc.com https://rpc.ankr.com https://solana-devnet.g.alchemy.com",
+    'Content-Security-Policy': "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; img-src 'self' data:; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; font-src 'self' data:; connect-src 'self' https://api.devnet.solana.com wss://api.devnet.solana.com https://*.helius-rpc.com https://devnet.helius-rpc.com https://rpc.ankr.com https://solana-devnet.g.alchemy.com https://api.mainnet-beta.solana.com https://arb1.arbitrum.io https://api.coingecko.com https://blockstream.info",
     'Permissions-Policy': 'camera=(), geolocation=(), microphone=()',
     'Referrer-Policy': 'strict-origin-when-cross-origin',
     'X-Content-Type-Options': 'nosniff',
@@ -99,6 +101,14 @@ app.get('/api/treasury', readRateLimit, async (_req, res) => {
     res.json({ status: config.initialized ? 'devnet_verified' : 'awaiting_initialization', contractAddress: config.programId, walletAddress: config.treasury, verified: config.initialized, network: 'devnet', treasuryBalanceLamports: config.treasuryBalanceLamports, treasuryBalanceSol: config.treasuryBalanceSol, treasuryBalanceUsdc: config.treasuryBalanceUsdc });
   } catch (error) {
     res.status(503).json({ error: error.message });
+  }
+});
+
+app.get('/api/support-goal', readRateLimit, async (_req, res) => {
+  try {
+    res.json(await cachedSupportGoal());
+  } catch (error) {
+    res.status(503).json({ error: error.message || 'Support progress unavailable.' });
   }
 });
 
