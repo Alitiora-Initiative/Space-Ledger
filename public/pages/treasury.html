@@ -5,11 +5,85 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Treasury status — Space Ledger</title>
   <link rel="stylesheet" href="../css/styles.css">
+  <link rel="stylesheet" href="../css/polish.css">
   <script src="/js/site.js" defer></script>
+  <style>
+    .support-bar {
+      position: fixed;
+      left: 12px;
+      right: 12px;
+      bottom: 12px;
+      z-index: 40;
+      max-width: 720px;
+      margin: 0 auto;
+      background: #0f1a20;
+      border: 1px solid #2a4a55;
+      border-radius: 12px;
+      box-shadow: 0 8px 28px rgba(0,0,0,.45);
+      padding: 14px 16px;
+      color: #c4d0d7;
+      font-size: 0.9rem;
+      line-height: 1.5;
+    }
+    .support-bar[hidden] { display: none !important; }
+    .support-bar h2 {
+      margin: 0 0 6px;
+      font-size: 1rem;
+      color: #85e8f2;
+    }
+    .support-bar p { margin: 0 0 10px; }
+    .support-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      margin: 6px 0;
+      word-break: break-all;
+    }
+    .support-row code {
+      flex: 1;
+      min-width: 0;
+      background: #16252c;
+      padding: 6px 8px;
+      border-radius: 6px;
+      font-size: 0.78rem;
+      color: #e8f4f6;
+    }
+    .support-row button {
+      flex-shrink: 0;
+      border: 1px solid #3a6a78;
+      background: #1a3038;
+      color: #85e8f2;
+      border-radius: 6px;
+      padding: 6px 10px;
+      cursor: pointer;
+      font-size: 0.8rem;
+    }
+    .support-row button:hover { background: #243e48; }
+    .support-bar-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .support-bar-actions button {
+      border: 0;
+      background: transparent;
+      color: #85e8f2;
+      cursor: pointer;
+      text-decoration: underline;
+      font-size: 0.85rem;
+    }
+    body.has-support-bar { padding-bottom: 220px; }
+    @media (max-width: 640px) {
+      body.has-support-bar { padding-bottom: 280px; }
+      .support-bar { left: 8px; right: 8px; bottom: 8px; }
+    }
+  </style>
 </head>
-<body>
+<body class="has-support-bar">
   <nav><div class="container">
-    <a href="/index.html" style="display:flex;align-items:center;gap:8px;text-decoration:none;"><img src="/img/logo.jpg" alt="" style="width:32px;height:32px;border-radius:7px;object-fit:cover;"><span class="logo">Space Ledger</span></a>
+    <a href="/index.html" style="display:flex;align-items:center;gap:8px;text-decoration:none;"><img src="/img/logo.jpg" alt="Space Ledger logo" style="width:32px;height:32px;border-radius:7px;object-fit:cover;"><span class="logo">Space Ledger</span></a>
     <ul>
       <li><a href="../index.html">Home</a></li><li><a href="purchase.html">Pricing</a></li><li><a href="grid.html">Grid View</a></li><li><a class="active" aria-current="page" href="treasury.html">Treasury</a></li><li><a href="network.html">Network</a></li><li><a href="dashboard.html">Dashboard</a></li><li><a href="profile.html">Profile</a></li>
       <li><button class="wallet-button" id="navWalletBtn" type="button" onclick="window.openWalletModal()">Connect Wallet</button></li>
@@ -24,8 +98,47 @@
     <section class="card">
       <h2>Payment destination configuration</h2>
       <p id="treasuryBalance">Treasury balances are read from Solana Devnet.</p>
+      <p class="estimate-note" style="margin-top:12px;">Optional support for the developer (tools &amp; hosting) is separate from this Devnet treasury and is never required to test the app.</p>
     </section>
   </main>
+
+  <footer class="site-footer">
+    <div class="site-footer-inner">
+      <p style="margin:0;font-size:0.85em;color:#c4d0d7;">
+        Devnet only · Operator: Joseph Mushelle Nyingeh ·
+        <a href="mailto:jaymnyon@gmail.com">jaymnyon@gmail.com</a>
+      </p>
+      <nav aria-label="Footer">
+        <a href="privacy.html">Privacy</a>
+        <a href="terms.html">Terms</a>
+        <a href="#" id="openSupportNote">Support the builder</a>
+      </nav>
+    </div>
+  </footer>
+
+  <aside id="supportBar" class="support-bar" role="dialog" aria-label="Optional support addresses">
+    <h2>Optional support</h2>
+    <p>If you want to help the developer access more tools, you can send a small amount to any of these addresses. <strong>Not required</strong> to use Space Ledger. Not an investment.</p>
+    <div class="support-row">
+      <span style="min-width:4.5rem;">Solana</span>
+      <code id="addrSol">ETuGxX6Znxr9q59THJtcYDJKt6RvCfN7wp79tRnbG1xG</code>
+      <button type="button" data-copy="addrSol">Copy</button>
+    </div>
+    <div class="support-row">
+      <span style="min-width:4.5rem;">Arbitrum</span>
+      <code id="addrArb">0x7CaC4214A4842c30D1E19adab492F62fAE449bed</code>
+      <button type="button" data-copy="addrArb">Copy</button>
+    </div>
+    <div class="support-row">
+      <span style="min-width:4.5rem;">Bitcoin</span>
+      <code id="addrBtc">bc1q9sadwz9aymgj9sw3xhfjxtw9zser6tgqp8xm8t</code>
+      <button type="button" data-copy="addrBtc">Copy</button>
+    </div>
+    <div class="support-bar-actions">
+      <button type="button" id="dismissSupport">Dismiss</button>
+    </div>
+  </aside>
+
   <script src="../js/wallet.js"></script>
   <script src="../js/walletModal.js"></script>
   <script>
@@ -39,6 +152,44 @@
       document.getElementById('treasuryStatus').textContent = 'Devnet status unavailable';
       document.getElementById('treasuryDescription').textContent = error.message;
     });
+
+    (function supportBar() {
+      const bar = document.getElementById('supportBar');
+      const key = 'spaceLedger.supportBarDismissed';
+      function hide() {
+        bar.hidden = true;
+        document.body.classList.remove('has-support-bar');
+        try { sessionStorage.setItem(key, '1'); } catch (_) {}
+      }
+      function show() {
+        bar.hidden = false;
+        document.body.classList.add('has-support-bar');
+      }
+      try {
+        if (sessionStorage.getItem(key) === '1') hide();
+        else show();
+      } catch (_) { show(); }
+      document.getElementById('dismissSupport').addEventListener('click', hide);
+      document.getElementById('openSupportNote').addEventListener('click', function (e) {
+        e.preventDefault();
+        try { sessionStorage.removeItem(key); } catch (_) {}
+        show();
+        bar.scrollIntoView({ behavior: 'smooth', block: 'end' });
+      });
+      document.querySelectorAll('[data-copy]').forEach(function (btn) {
+        btn.addEventListener('click', async function () {
+          const el = document.getElementById(btn.getAttribute('data-copy'));
+          const text = el ? el.textContent.trim() : '';
+          try {
+            await navigator.clipboard.writeText(text);
+            btn.textContent = 'Copied';
+            setTimeout(function () { btn.textContent = 'Copy'; }, 1500);
+          } catch (_) {
+            btn.textContent = 'Select & copy';
+          }
+        });
+      });
+    })();
   </script>
 </body>
 </html>
