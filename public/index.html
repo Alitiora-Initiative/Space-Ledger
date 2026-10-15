@@ -12,7 +12,7 @@
   <nav aria-label="Main navigation">
     <div class="container">
       <a href="/index.html" style="display:flex;align-items:center;gap:8px;text-decoration:none;">
-        <img src="/img/logo.jpg" alt="Space Ledger logo" style="width:32px;height:32px;border-radius:7px;object-fit:cover;">
+        <img src="/img/logo.jpg" alt="Space Ledger logo" width="32" height="32" style="border-radius:7px;object-fit:cover;">
         <span class="logo">Space Ledger</span>
       </a>
       <ul>
@@ -20,20 +20,20 @@
         <li><a href="pages/purchase.html">Pricing</a></li>
         <li><a href="pages/grid.html">Grid View</a></li>
         <li><a href="pages/treasury.html">Treasury</a></li>
-        <li><a href="pages/network.html">Network</a></li>
         <li><a href="pages/dashboard.html">Dashboard</a></li>
         <li><a href="pages/profile.html">Profile</a></li>
-        <li><button class="wallet-button" id="navWalletBtn" type="button" onclick="window.openWalletModal()">Connect Wallet</button></li>
+        <li><a href="pages/mobile.html">Mobile</a></li>
+        <li><button class="wallet-button" id="navWalletBtn" type="button">Connect Wallet</button></li>
       </ul>
     </div>
   </nav>
 
   <main id="main-content" class="container">
     <div class="hero">
-      <p><span class="devnet-pill">Solana Devnet · Beta</span></p>
+      <p><span class="devnet-pill">Solana Devnet · Beta · Free tier</span></p>
       <h1>Space Ledger</h1>
-      <p>1 Trillion Pixels · 10 Billion Blocks · Shared digital canvas on Solana Devnet</p>
-      <p>Primary-sale block ranges with on-chain receipts — test tokens only</p>
+      <p>1 Trillion Pixels · 10 Billion Blocks · Shared canvas on Solana Devnet</p>
+      <p>Primary-sale blocks with on-chain receipts — test tokens only</p>
       <br>
       <a href="pages/purchase.html" class="button">Buy on Devnet</a>
       <a href="pages/grid.html" class="button" style="margin-left:10px;">Open Grid</a>
@@ -42,84 +42,57 @@
     <div class="card" id="how-to-buy">
       <h2>How to buy a block</h2>
       <ol>
-        <li><strong>Connect once</strong> with Connect Wallet in the top navigation (Phantom or Solflare on <strong>Devnet</strong>). That session is reused on Pricing, Grid, Dashboard, and Profile.</li>
-        <li>Open <a href="pages/grid.html">Grid View</a> or <a href="pages/purchase.html">Pricing</a>.</li>
-        <li>On the grid, tap a cell or use <strong>Buy this block on Devnet</strong>. Purchases settle as a <strong>whole block</strong> (100 pixels).</li>
-        <li>Request a <strong>Devnet quote</strong>, then <strong>Review and buy in wallet</strong>.</li>
-        <li><strong>Approve</strong> in your wallet. Nothing is spent until you approve.</li>
-        <li>Check the Explorer link and your <a href="pages/profile.html">Profile</a> for holdings, history, and model PnL.</li>
+        <li><strong>Connect once</strong> (Phantom or Solflare on <strong>Devnet</strong>).</li>
+        <li>Open <a href="pages/grid.html">Grid</a> or <a href="pages/purchase.html">Pricing</a>.</li>
+        <li>Purchases settle as a <strong>whole block</strong> (100 pixels).</li>
+        <li>Get a quote → <strong>Review and buy in wallet</strong> → approve.</li>
+        <li>Check Explorer and <a href="pages/profile.html">Profile</a>.</li>
       </ol>
-      <p class="estimate-note">Devnet SOL/USDC have no real-world value. This is a test prototype, not an investment product.</p>
+      <p class="estimate-note">Devnet SOL/USDC have no real-world value.</p>
+    </div>
+
+    <div class="card" id="how-to-test">
+      <h2>How to test (Discord / free tier)</h2>
+      <ol style="color:#c4d0d7;line-height:1.8;padding-left:1.25rem;">
+        <li>Wallet on <strong>Devnet</strong> + free faucet SOL.</li>
+        <li><strong>Connect Wallet</strong> in the top nav.</li>
+        <li><a href="pages/purchase.html">Pricing</a> → budget → quote → approve.</li>
+        <li>If the network is busy, wait a minute and retry (public free RPC).</li>
+      </ol>
+      <p class="estimate-note">Mobile: use Phantom/Solflare <a href="pages/mobile.html">in-app browser</a>. Operator: Joseph Mushelle Nyingeh · <a href="mailto:jaymnyon@gmail.com">jaymnyon@gmail.com</a></p>
     </div>
 
     <div class="stats-grid">
-      <div class="stat-card">
-        <h3>Total Pixels</h3>
-        <div class="value">1 Trillion</div>
-        <div class="label">1,000,000,000,000 pixels</div>
-      </div>
-      <div class="stat-card">
-        <h3>Total Blocks</h3>
-        <div class="value">10 Billion</div>
-        <div class="label">10,000,000,000 blocks</div>
-      </div>
-      <div class="stat-card">
-        <h3>Pixels per Block</h3>
-        <div class="value">100</div>
-        <div class="label">10 × 10 grid</div>
-      </div>
-      <div class="stat-card">
-        <h3>Starting Price</h3>
-        <div class="value">$0.001</div>
-        <div class="label">Per block</div>
-      </div>
-      <div class="stat-card">
-        <h3>Target Price</h3>
-        <div class="value">$1,000.00</div>
-        <div class="label">Final block price</div>
-      </div>
-      <div class="stat-card">
-        <h3>Sale status</h3>
-        <div class="value" id="availableBlocks">Checking Devnet…</div>
-        <div class="label" id="saleStatusLabel">Reading verified supply from Solana Devnet</div>
-      </div>
-    </div>
-
-    <div class="card" id="about">
-      <h2>About Space Ledger</h2>
-      <p style="color: #c4d0d7; line-height: 1.7;">
-        Space Ledger is a shared canvas of 10 billion blocks and 1 trillion pixels, inspired by the Million Dollar Homepage format.
-        Test purchases on Solana Devnet record block ranges in on-chain receipts.
-        Connect a Solana wallet on Devnet to quote, approve, and view confirmed holdings. Transfers and resales are not enabled.
-      </p>
+      <div class="stat-card"><h3>Total Pixels</h3><div class="value">1 Trillion</div></div>
+      <div class="stat-card"><h3>Total Blocks</h3><div class="value">10 Billion</div></div>
+      <div class="stat-card"><h3>Starting Price</h3><div class="value">$0.001</div></div>
+      <div class="stat-card"><h3>Target Price</h3><div class="value">$1,000</div></div>
+      <div class="stat-card"><h3>Sale status</h3><div class="value" id="availableBlocks">Checking…</div><div class="label" id="saleStatusLabel">Devnet</div></div>
     </div>
 
     <div class="card">
-      <h2>What is live in this beta</h2>
-      <p style="color:#c4d0d7;line-height:1.7;">Supply, primary purchases, portfolio ranges, and holder rankings are read from confirmed Solana Devnet accounts. A wallet must approve each test purchase. Devnet tokens are for testing only.</p>
-      <p style="color:#c4d0d7;line-height:1.7;margin-top:12px;">Block ownership cannot currently be transferred or resold. The published curve is a primary-sale price model, not a secondary market.</p>
+      <h2>What is live</h2>
+      <p style="color:#c4d0d7;line-height:1.7;">Primary Devnet purchases, receipts, grid, leaderboard, profile. No transfers, no secondary market, no mainnet.</p>
     </div>
 
     <div class="card">
       <h2>Quick Actions</h2>
-      <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+      <div style="display:flex;gap:15px;flex-wrap:wrap;">
         <a href="pages/purchase.html" class="button">Buy on Devnet</a>
-        <a href="pages/grid.html" class="button">View Grid</a>
+        <a href="pages/grid.html" class="button">Grid</a>
         <a href="pages/profile.html" class="button">Profile</a>
-        <a href="pages/dashboard.html" class="button">Dashboard</a>
-        <a href="pages/leaderboard.html" class="button">Leaderboard</a>
-        <a href="pages/market.html" class="button">Live sale activity</a>
+        <a href="pages/market.html" class="button">Sale activity</a>
+        <a href="pages/mobile.html" class="button">Mobile guide</a>
       </div>
     </div>
   </main>
 
   <footer class="site-footer">
     <div class="site-footer-inner">
-      <div>
-        <p style="margin:0;font-size:0.85em;color:#c4d0d7;">
-          <strong>Devnet test prototype</strong> — Devnet SOL and Devnet USDC have no real-world value. No investment, no secondary market, no transfers.
-        </p>
-      </div>
+      <p style="margin:0;font-size:0.85em;color:#c4d0d7;">
+        <strong>Devnet test prototype</strong> — no real-world value. No investment, no secondary market.<br>
+        Operator: Joseph Mushelle Nyingeh · <a href="mailto:jaymnyon@gmail.com">jaymnyon@gmail.com</a> · Logo: operator AI-assisted original
+      </p>
       <nav aria-label="Footer navigation">
         <a href="pages/privacy.html">Privacy</a>
         <a href="pages/terms.html">Terms</a>
@@ -129,16 +102,16 @@
   </footer>
 
   <script>
-    fetch('/api/supply').then(response => response.json()).then(data => {
+    fetch('/api/supply').then(r => r.json()).then(data => {
       const sold = data.status === 'devnet_verified' ? BigInt(data.currentSupply) : null;
-      document.getElementById('availableBlocks').textContent = sold === null ? 'Devnet initializing' : (BigInt(data.totalSupply) - sold).toLocaleString();
-      document.getElementById('saleStatusLabel').textContent = sold === null ? 'Awaiting the first confirmed purchase' : sold.toLocaleString() + ' blocks sold on Devnet';
+      document.getElementById('availableBlocks').textContent = sold === null ? 'Initializing' : (BigInt(data.totalSupply) - sold).toLocaleString();
+      document.getElementById('saleStatusLabel').textContent = sold === null ? 'Awaiting first purchase' : sold.toLocaleString() + ' blocks sold';
     }).catch(() => {
-      document.getElementById('availableBlocks').textContent = 'Temporarily unavailable';
-      document.getElementById('saleStatusLabel').textContent = 'Could not reach Solana Devnet';
+      document.getElementById('availableBlocks').textContent = 'Unavailable';
+      document.getElementById('saleStatusLabel').textContent = 'Could not reach Devnet';
     });
   </script>
   <script src="js/wallet.js"></script>
-  <script src="js/walletModal.js?v=20261014"></script>
+  <script src="js/walletModal.js"></script>
 </body>
 </html>
