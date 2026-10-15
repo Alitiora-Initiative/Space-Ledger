@@ -88,9 +88,9 @@ async function getProgress() {
 
   let raisedSol = 0;
   const breakdown = {
-    solana: { address: SOL_ADDRESS, balance: sol, unit: 'SOL', towardGoalSol: 0 },
-    arbitrum: { address: ARB_ADDRESS, balance: eth, unit: 'ETH', towardGoalSol: 0 },
-    bitcoin: { address: BTC_ADDRESS, balance: btc, unit: 'BTC', towardGoalSol: 0 },
+    solana: { address: SOL_ADDRESS, balance: sol == null ? 0 : sol, unit: 'SOL', towardGoalSol: 0 },
+    arbitrum: { address: ARB_ADDRESS, balance: eth == null ? 0 : eth, unit: 'ETH', towardGoalSol: 0 },
+    bitcoin: { address: BTC_ADDRESS, balance: btc == null ? 0 : btc, unit: 'BTC', towardGoalSol: 0 },
   };
 
   if (sol != null && Number.isFinite(sol)) {
