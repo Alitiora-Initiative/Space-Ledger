@@ -63,7 +63,7 @@ test('wallet discovery registers compatible wallets dynamically and excludes uns
 
   const names = Array.from(harness.manager.getAvailableWallets(), item => item.name);
   assert.ok(names.includes('Example Wallet'));
-  assert.ok(names.includes('Mainnet Wallet')); // listed; sign path still uses Devnet
+  assert.ok(names.includes('Mainnet Wallet'));
 });
 
 test('Wallet Standard connect and sign-and-send preserve the Devnet legacy flow', async () => {
