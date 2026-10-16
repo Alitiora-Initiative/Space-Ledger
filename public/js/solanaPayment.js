@@ -16,6 +16,7 @@
   let lastSolLamports = null;
   let lastUsdcMicro = null;
   const SOL_FEE_RESERVE = 0.02;
+  const MIN_USD_VALUE = 0.0001; // Minimum purchase: $0.0001 USD
 
   const setStatus = message => { status.textContent = message; };
   const setQuoteText = message => { quoteOutput.textContent = message; };
@@ -230,6 +231,15 @@
       const response = await fetch('/api/solana/quote?asset=' + encodeURIComponent(asset) + '&amount=' + encodeURIComponent(String(amount)));
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || 'Devnet quote unavailable.');
+
+      // Validate minimum USD value ($0.0001)
+      const totalUsdValue = Number(data.priceMicroUsd) / 1e6;
+      if (totalUsdValue < MIN_USD_VALUE) {
+        activeQuote = null;
+        setQuoteText('Minimum purchase is $0.0001 USD. This quote is only $' + totalUsdValue.toFixed(6) + ' USD. Increase your budget to meet the minimum.');
+        if (window.SpaceLedgerToast) window.SpaceLedgerToast.show('Purchase amount below minimum ($0.0001 USD)', { error: true });
+        return;
+      }
 
       if (window.walletManager && window.walletManager.isConnected()) {
         const unitScale = data.asset === 'SOL' ? 1e9 : 1e6;

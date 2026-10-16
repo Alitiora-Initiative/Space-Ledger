@@ -90,3 +90,4 @@ npm audit   # should report 0 vulnerabilities with package overrides
 ## License
 
 MIT — see repository license file if present. Logo: operator-generated (AI-assisted) for this project.
+Operator: Alitiora Initiative. Review `ROADMAP.md` and `docs/MAINNET-MIGRATION-GUIDE.md` before proposing mainnet or marketplace features.
