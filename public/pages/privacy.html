@@ -1,66 +1,63 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Privacy Policy — Space Ledger</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Privacy notice for Space Ledger Devnet prototype.">
+  <title>Privacy — Space Ledger</title>
   <link rel="stylesheet" href="../css/styles.css">
   <script src="/js/site.js" defer></script>
 </head>
 <body>
-  <nav aria-label="Main navigation">
+  <nav>
     <div class="container">
-      <a href="/index.html" class="logo">Space Ledger</a>
+      <a href="/index.html" style="display:flex;align-items:center;gap:8px;text-decoration:none;">
+        <img src="/img/logo.jpg" alt="Space Ledger logo" width="32" height="32" style="border-radius:7px;object-fit:cover;">
+        <span class="logo">Space Ledger</span>
+      </a>
       <ul>
-        <li><a href="/index.html">Home</a></li>
-        <li><a href="/pages/privacy.html" aria-current="page">Privacy</a></li>
-        <li><a href="/pages/terms.html">Terms</a></li>
-        <li><a href="/pages/cookies.html">Cookies</a></li>
+        <li><a href="../index.html">Home</a></li>
+        <li><a href="purchase.html">Pricing</a></li>
+        <li><a href="privacy.html" aria-current="page">Privacy</a></li>
+        <li><a href="terms.html">Terms</a></li>
+        <li><button class="wallet-button" id="navWalletBtn" type="button">Connect Wallet</button></li>
       </ul>
     </div>
   </nav>
-  <main class="container legal-document">
+  <main class="container">
     <header class="hero">
-      <h1>Privacy Policy</h1>
-      <p>Last reviewed: 12 October 2026</p>
+      <h1>Privacy notice</h1>
+      <p class="estimate-note"><strong>Devnet test prototype — no real-world value.</strong> Devnet SOL and Devnet USDC are test tokens only. No investment, no secondary market, no transfers.</p>
     </header>
-    <aside class="legal-status" role="note">
-      <strong>Devnet test prototype — no real-world value.</strong> Space Ledger is currently a Devnet test prototype. Devnet SOL and Devnet USDC are test tokens with no real-world value. No investment, no secondary market, no transfers. This is not a financial service.
-    </aside>
-    <aside class="legal-status" role="note">
-      <strong>Publication status: incomplete.</strong> The project owner has identified Kenya as their home country, but this site does not yet publish the operator's legal name, postal contact, or a privacy email. Hosting and RPC provider retention terms also depend on the live deployment. Those details must be completed before this can serve as a final global privacy notice.
-    </aside>
-
-    <p>This policy describes the Space Ledger website and the code currently in this repository. It is a factual code review, not a certification that the service complies with every law in every country.</p>
-
-    <h2>Who operates Space Ledger</h2>
-    <p>Space Ledger is an individual project operated from Kenya. The operator's full legal name, service address, and privacy contact are not published in this build. A data controller's identity and contact details are required in some jurisdictions; this notice remains incomplete until the operator supplies them.</p>
-
-    <h2>Information the site handles</h2>
-    <ul>
-      <li><strong>Wallet details:</strong> if you choose a detected, compatible Solana wallet, it provides a public address to the page for the requested feature. The site does not request a recovery phrase or private key. Addresses and transactions written to a public blockchain can be visible permanently and may be linkable to a person.</li>
-      <li><strong>Feature requests:</strong> the site sends the wallet address, selected asset, amount, block range, or public chain query needed to provide a feature you request. A Devnet purchase flow, when configured, asks your wallet to review and sign a transaction; it does not move mainnet funds.</li>
-      <li><strong>Network metadata:</strong> the web host and network security services may process an IP address, requested URL, time, browser details, and error information to deliver and protect the site. The hosting provider and its retention period are not configured in this repository.</li>
-    </ul>
-
-    <h2>Why information is used</h2>
-    <p>Requests are processed to show public chain data, calculate estimates, prepare a Devnet transaction when available, respond to a wallet connection you initiate, and maintain the service. The operator must document the applicable lawful basis for each purpose and any security-log retention before public launch; this code review cannot choose a lawful basis for an unidentified controller.</p>
-
-    <h2>Blockchain and service providers</h2>
-    <p>Solana requests use the public Devnet endpoint by default. The network explorer sends requested, read-only EVM queries through the server to the RPC endpoints shown on that page. These services receive the query data needed to answer the request and may process their own connection metadata under their own terms. A wallet extension or wallet app is contacted only when you choose a wallet action. Solana Explorer is opened only when you follow a transaction link.</p>
-    <p>Public blockchain records are controlled by the network, not by this website. The site cannot remove or change a confirmed public transaction. Provider locations, transfer safeguards, and retention periods must be checked against the provider selected by the live deployment.</p>
-
-    <h2>Storage and analytics</h2>
-    <p>The current site code does not set cookies, use local or session storage, run advertising or analytics trackers, or build a browsing profile. It has no account database for wallet addresses. The application processes requested values in memory to answer requests. The deployed host may keep operational logs; its exact settings are not available in this repository.</p>
-
-    <h2>Retention and security</h2>
-    <p>The application code does not persist wallet addresses or browsing histories in a user database. Public blockchain data remains on the relevant network. Hosting and RPC providers may retain records under their own policies. No internet service can promise absolute security; the operator must publish deployment-specific retention and security contact details.</p>
-
-    <h2>Your rights and contact</h2>
-    <p>Depending on where you live, privacy law may give you rights to be informed, access or correct personal data, object to some processing, or request deletion where applicable. Kenya's <a href="https://new.kenyalaw.org/akn/ke/act/2019/24/eng%402019-11-15/source">Data Protection Act</a> sets out data-protection principles and data-subject rights; the <a href="https://www.odpc.go.ke/rights-of-a-data-subject/">Office of the Data Protection Commissioner</a> publishes information about those rights. Other countries have their own rules and regulators. This build does not provide a privacy email or postal address for requests. The operator must add a working private contact channel before launch. Do not post wallet or identity details in a public issue tracker.</p>
-
-    <h2>Changes</h2>
-    <p>If the site adds analytics, cookies, embeds, new wallet providers, or a new purpose for personal data, this policy and the site's controls must be reviewed before the feature is enabled.</p>
+    <div class="card">
+      <h2>Operator</h2>
+      <p style="color:#c4d0d7;line-height:1.7;">Space Ledger is operated by <strong>Joseph Mushelle Nyingeh</strong> (Kenya), under the Alitiora Initiative project name.</p>
+      <p style="color:#c4d0d7;line-height:1.7;">Privacy and support contact: <a href="mailto:jaymnyon@gmail.com">jaymnyon@gmail.com</a></p>
+      <p class="estimate-note">Site logo (<code>public/img/logo.jpg</code>): created by the operator with AI assistance for this project; not a third-party stock asset.</p>
+      <p class="estimate-note">This notice documents the current Devnet prototype. It is not legal advice. Formal counsel is still required before real-money or mainnet features.</p>
+    </div>
+    <div class="card">
+      <h2>What we process</h2>
+      <ul style="color:#c4d0d7;line-height:1.8;">
+        <li><strong>On your device:</strong> wallet connection state may be stored in session storage for reconnect in the same browser tab. No seed phrases or private keys are requested.</li>
+        <li><strong>On our server (Vercel free/hobby):</strong> API request metadata (IP for rate limits, timestamps), quote and purchase-build requests.</li>
+        <li><strong>On Solana Devnet:</strong> public purchase receipts and program state.</li>
+        <li><strong>RPC:</strong> public Devnet RPC by default; optional private server-side RPC if configured.</li>
+      </ul>
+      <p style="color:#c4d0d7;line-height:1.7;">No advertising cookies or third-party analytics in this build.</p>
+    </div>
+    <div class="card">
+      <h2>Contact</h2>
+      <p style="color:#c4d0d7;"><a href="mailto:jaymnyon@gmail.com">jaymnyon@gmail.com</a></p>
+    </div>
   </main>
+  <footer class="site-footer">
+    <div class="site-footer-inner">
+      <p style="margin:0;font-size:0.85em;color:#c4d0d7;">Operator: Joseph Mushelle Nyingeh · <a href="mailto:jaymnyon@gmail.com">jaymnyon@gmail.com</a> · Devnet only</p>
+      <nav aria-label="Footer"><a href="privacy.html">Privacy</a> <a href="terms.html">Terms</a> <a href="cookies.html">Cookies</a></nav>
+    </div>
+  </footer>
+  <script src="../js/wallet.js"></script>
+  <script src="../js/walletModal.js"></script>
 </body>
 </html>

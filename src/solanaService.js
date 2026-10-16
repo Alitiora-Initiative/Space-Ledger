@@ -330,15 +330,19 @@ async function buildPurchaseTransaction({ buyer: buyerValue, asset: assetValue, 
   };
 }
 
-async function listReceipts({ buyer, blockId } = {}) {
+async function listReceipts({ buyer, blockId, limit } = {}) {
   const { PublicKey } = web3();
   const state = await getState();
   if (!state.initialized) return [];
   const filters = [{ dataSize: 85 }];
   if (buyer) filters.push({ memcmp: { offset: 20, bytes: new PublicKey(buyer).toBase58() } });
   const accounts = await state.connection.getProgramAccounts(state.programId, { commitment: 'confirmed', filters });
-  return accounts.map(({ pubkey, account }) => decodePurchaseReceipt(pubkey, account, state.programId))
-    .filter(receipt => blockId === undefined || BigInt(blockId) >= BigInt(receipt.startBlock) && BigInt(blockId) <= BigInt(receipt.endBlock));
+  let rows = accounts.map(({ pubkey, account }) => decodePurchaseReceipt(pubkey, account, state.programId))
+    .filter(receipt => blockId === undefined || (BigInt(blockId) >= BigInt(receipt.startBlock) && BigInt(blockId) <= BigInt(receipt.endBlock)));
+  rows.sort((a, b) => b.settledAt - a.settledAt);
+  const cap = limit != null ? Math.min(Number(limit) || 100, 500) : undefined;
+  if (cap) rows = rows.slice(0, cap);
+  return rows;
 }
 
 async function publicConfig() {

@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mobile testing — Space Ledger</title>
+  <link rel="stylesheet" href="../css/styles.css">
+  <script src="/js/site.js" defer></script>
+</head>
+<body>
+  <nav>
+    <div class="container">
+      <a href="/index.html" style="display:flex;align-items:center;gap:8px;text-decoration:none;">
+        <img src="/img/logo.jpg" alt="Space Ledger logo" width="32" height="32" style="border-radius:7px;object-fit:cover;">
+        <span class="logo">Space Ledger</span>
+      </a>
+      <ul>
+        <li><a href="../index.html">Home</a></li>
+        <li><a href="purchase.html">Pricing</a></li>
+        <li><a href="mobile.html" aria-current="page">Mobile</a></li>
+        <li><button class="wallet-button" id="navWalletBtn" type="button">Connect Wallet</button></li>
+      </ul>
+    </div>
+  </nav>
+  <main class="container">
+    <header class="hero">
+      <h1>Mobile Devnet testing</h1>
+      <p>Wallet Standard only detects wallets injected in the current browser. On phones, use an in-app browser.</p>
+    </header>
+    <div class="card">
+      <h2>Recommended path (works today)</h2>
+      <ol style="color:#c4d0d7;line-height:1.8;">
+        <li>Install Phantom or Solflare from the official store.</li>
+        <li>Inside the wallet app, open the <strong>in-app browser / explore</strong>.</li>
+        <li>Go to <code>https://space-ledger-alitiora.vercel.app</code></li>
+        <li>Switch the wallet network to <strong>Devnet</strong>.</li>
+        <li>Connect → Pricing → quote → approve.</li>
+      </ol>
+      <p class="estimate-note">Full WalletConnect QR for Solana is not shipped in this beta (tracked as issue #8). Do not paste seed phrases anywhere.</p>
+    </div>
+    <div class="card">
+      <h2>Contact</h2>
+      <p style="color:#c4d0d7;">Joseph Mushelle Nyingeh · <a href="mailto:jaymnyon@gmail.com">jaymnyon@gmail.com</a></p>
+    </div>
+  </main>
+  <script src="../js/wallet.js"></script>
+  <script src="../js/walletModal.js"></script>
+</body>
+</html>

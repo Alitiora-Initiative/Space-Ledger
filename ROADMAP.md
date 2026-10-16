@@ -1,47 +1,32 @@
 # Space Ledger Roadmap
 
-This is a human-maintained checklist. The website does not create agents, edit its source, or deploy upgrades when someone visits. Each release requires a reviewed change and a deliberate deployment.
+Human-maintained checklist. Deployments require a deliberate Git push (and Vercel rebuild).
 
-## Done in This Update
+## Done (Devnet beta)
 
-- [x] Connect the app's wallet chooser and purchase path to dynamic Wallet Standard discovery; require Solana Devnet and legacy `signAndSendTransaction` support.
-- [x] Use generic wallet labels and user-controlled approval; retain Devnet transaction simulation before signing.
-- [x] Add deterministic wallet-registry/connect/sign tests.
-- [x] Remove disconnected EVM vesting/ownership code and old $10/PnL demos that contradicted the active $1,000 curve.
-- [x] Remove the unconnected Supabase schema, which was not used by the app and advertised public access to wallet records.
-- [x] Remove placeholder release artifacts and unused config, vesting, genesis, and stream routes.
-- [x] Refresh README/API documentation and publish and verify the detailed GitHub Wiki guide.
+- [x] Wallet Standard multi-wallet connect; Devnet-only purchase path; user must approve in wallet.
+- [x] Linear bonding curve on-chain; each buy advances supply and raises next price.
+- [x] Live Devnet purchases verified (program `EbP7vsnMXPonTfriPUFynco69d69JiXpWbKnwVmz8sgG`; supply and receipts readable via API).
+- [x] Rate limits on quote / purchase / read APIs; short TTL cache on config.
+- [x] Balance-aware quotes; insufficient-funds messaging; success toast + Explorer link.
+- [x] Grid deep-link to buy **whole blocks**; profile/dashboard model PnL % and history links.
+- [x] Operator contact on Privacy / Terms / Cookies: Joseph Mushelle Nyingeh · jaymnyon@gmail.com.
+- [x] Logo: operator-generated (AI-assisted); claimed as project asset by operator (no third-party stock license).
+- [x] Mobile testing path documented (`/pages/mobile.html`): Phantom/Solflare **in-app browser** on Devnet.
+- [x] Basic a11y: focus-visible, reduced-motion, logo alt, touch targets (further audit optional).
+- [x] Free-tier friendly: public Devnet RPC default; optional private RPC via `SOLANA_RPC_DEVNET` only on server.
 
-## Beta Release Gates
+## Still open (not required for Devnet demo)
 
-- [x] Add best-effort in-memory rate limits on `/api/solana/quote` (30/min/IP) and `POST /api/purchase` (10/min/IP). See issue #5.
-- [x] Basic accessibility pass: skip link, focus-visible styles, reduced-motion, logo alt text on home. Further page-by-page checks remain open (issue #7).
-- [x] Publish and verify the GitHub Wiki page at `Space-Ledger/wiki/Devnet-Beta-Guide`.
-- [x] Verify the Vercel production deployment, configured environment variables, and live API responses after publishing. (Live checks 2026-10-14: `/api/solana/config`, `/api/supply`, `/api/market` return 200 with Devnet data; security headers present. Operator should still confirm private env var names in the Vercel dashboard.)
-- [ ] Complete an explicitly approved test purchase on Solana Devnet, then verify the transaction and receipt in Solana Explorer. Never request or send a wallet transaction without the user's explicit approval.
-- [ ] Add transaction signatures to receipts or build a verified indexer that joins signatures to program receipts. (UI already surfaces the tx signature via Solana Explorer after confirmation; on-chain or off-chain persistence still open — see issue #4.)
-- [ ] Review the official MetaMask Connect Solana package license and obtain any needed commercial permission before deciding whether to bundle it; then test the SDK and mobile flow. Do not claim MetaMask support before then.
-- [ ] Test mobile wallet support. Wallet Standard discovery currently sees wallets exposed in the active browser; it does not implement QR, WalletConnect, or app handoff.
-- [ ] Complete responsive browser testing, keyboard-only use, screen-reader checks, zoom/reflow, forced-colors, reduced-motion, image-alt review, and measured contrast testing.
-- [ ] Review the Solana program, transaction construction, rate limits, RPC behavior, dependency health, and recovery process with independent reviewers before any public beta.
+- [ ] Optional free Helius Devnet RPC in Vercel for better concurrency under Discord spikes.
+- [ ] Persist tx signatures on-chain or in a dedicated indexer (UI already shows Explorer after buy).
+- [ ] Full WCAG / screen-reader specialist pass (issue #7 remainder).
+- [ ] WalletConnect QR / deep-link beyond in-app browser (issue #8 enhancement).
+- [ ] Pixel-level on-chain ownership (issue #10 — new program design).
+- [ ] Secondary market / transfers (issue #11 — program + legal + audit).
+- [ ] Independent program security review before any mainnet or real-value marketing.
+- [ ] Formal legal counsel for Kenya / target markets before mainnet.
 
-## Privacy, Rights, and Legal Readiness
+## Explicitly out of scope until funded
 
-- [ ] Add the operator's verified legal name, postal contact, and privacy contact to the legal pages.
-- [ ] Document the actual Vercel, RPC, and wallet-provider processing, log retention, service regions, and cross-border transfers.
-- [ ] Recheck the deployed domain for cookies, storage, embeds, and network requests; add consent controls before introducing any non-essential tracking or device storage where required.
-- [ ] Confirm the creator and redistribution rights for `public/img/logo.jpg`; retain third-party license notices for dependencies.
-- [ ] Obtain qualified review for Kenya and every intended target country before marketing or enabling real-value features. Current legal pages are drafts, not compliance certification.
-
-## Scale and Product Features
-
-- [ ] Build a receipt indexer with pagination and consistency checks before the on-chain account scan becomes a bottleneck.
-- [ ] Define block-detail and pixel-cluster interactions with keyboard, touch, and assistive-technology paths. Show ownership only when it is verifiable from receipts.
-- [ ] Keep trading, token issuance, transfers, region/GPS features, and third-party chart embeds disabled until their security, data, privacy, and legal requirements are reviewed.
-- [ ] If a real secondary market is ever approved, display only executed, sourced trades. Never present the primary-sale model or fabricated candles as market activity.
-
-## Delivery Checks
-
-- [ ] Run `npm test`, `cargo test --manifest-path programs/space-ledger/Cargo.toml`, and `npm run compile` for relevant changes.
-- [ ] Review the full diff and verify the target GitHub branch before pushing; never force-push.
-- [ ] Confirm the Vercel deployment reaches Ready and test production pages and API routes after the Git push.
+- Mainnet migration, paid RPC/indexer, MetaMask Connect (license review first), fabricated market charts.

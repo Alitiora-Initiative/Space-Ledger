@@ -5,40 +5,273 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Treasury status — Space Ledger</title>
   <link rel="stylesheet" href="../css/styles.css">
+  <link rel="stylesheet" href="../css/polish.css">
   <script src="/js/site.js" defer></script>
+  <style>
+    .support-bar {
+      position: fixed;
+      left: 12px;
+      right: 12px;
+      bottom: 12px;
+      z-index: 40;
+      max-width: 720px;
+      margin: 0 auto;
+      background: #0f1a20;
+      border: 1px solid #2a4a55;
+      border-radius: 12px;
+      box-shadow: 0 8px 28px rgba(0,0,0,.45);
+      padding: 14px 16px;
+      color: #c4d0d7;
+      font-size: 0.9rem;
+      line-height: 1.5;
+    }
+    .support-bar.is-hidden { display: none !important; }
+    .support-bar h2 { margin: 0 0 6px; font-size: 1rem; color: #85e8f2; }
+    .support-bar p { margin: 0 0 10px; }
+    .support-row {
+      display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
+      margin: 6px 0; word-break: break-all;
+    }
+    .support-row code {
+      flex: 1; min-width: 0; background: #16252c; padding: 6px 8px;
+      border-radius: 6px; font-size: 0.78rem; color: #e8f4f6;
+    }
+    .support-row button {
+      flex-shrink: 0; border: 1px solid #3a6a78; background: #1a3038;
+      color: #85e8f2; border-radius: 6px; padding: 6px 10px; cursor: pointer; font-size: 0.8rem;
+    }
+    .support-bar-actions { display: flex; justify-content: flex-end; margin-top: 10px; }
+    .support-bar-actions button {
+      border: 1px solid #3a6a78; background: #1a3038; color: #85e8f2;
+      border-radius: 6px; padding: 6px 12px; cursor: pointer; font-size: 0.85rem;
+    }
+    body.has-support-bar { padding-bottom: 240px; }
+    .goal-wrap { margin-top: 14px; }
+    .goal-meta {
+      display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+      margin-bottom: 8px; color: #c4d0d7; font-size: 0.9rem;
+    }
+    .goal-track {
+      height: 22px; border-radius: 999px; background: #16252c;
+      border: 1px solid #2a4a55; overflow: hidden; position: relative;
+    }
+    .goal-fill {
+      height: 100%; width: 0%; min-width: 0;
+      background: linear-gradient(90deg, #1a6b78, #85e8f2);
+      transition: width 0.6s ease;
+    }
+    .goal-fill.has-amount { min-width: 8px; }
+    .goal-pct { font-weight: 600; color: #85e8f2; font-variant-numeric: tabular-nums; }
+    .breakdown-table {
+      width: 100%; border-collapse: collapse; margin-top: 14px; font-size: 0.88rem;
+    }
+    .breakdown-table th, .breakdown-table td {
+      text-align: left; padding: 8px 6px; border-bottom: 1px solid #243840; color: #c4d0d7;
+    }
+    .breakdown-table th { color: #85e8f2; font-weight: 600; }
+    .breakdown-table code { font-size: 0.75rem; color: #e8f4f6; word-break: break-all; }
+    .mono { font-variant-numeric: tabular-nums; }
+    @media (max-width: 640px) {
+      body.has-support-bar { padding-bottom: 300px; }
+      .support-bar { left: 8px; right: 8px; bottom: 8px; }
+    }
+  </style>
 </head>
 <body>
   <nav><div class="container">
-    <a href="/index.html" style="display:flex;align-items:center;gap:8px;text-decoration:none;"><img src="/img/logo.jpg" alt="" style="width:32px;height:32px;border-radius:7px;object-fit:cover;"><span class="logo">Space Ledger</span></a>
+    <a href="/index.html" style="display:flex;align-items:center;gap:8px;text-decoration:none;"><img src="/img/logo.jpg" alt="Space Ledger logo" style="width:32px;height:32px;border-radius:7px;object-fit:cover;"><span class="logo">Space Ledger</span></a>
     <ul>
       <li><a href="../index.html">Home</a></li><li><a href="purchase.html">Pricing</a></li><li><a href="grid.html">Grid View</a></li><li><a class="active" aria-current="page" href="treasury.html">Treasury</a></li><li><a href="network.html">Network</a></li><li><a href="dashboard.html">Dashboard</a></li><li><a href="profile.html">Profile</a></li>
       <li><button class="wallet-button" id="navWalletBtn" type="button" onclick="window.openWalletModal()">Connect Wallet</button></li>
     </ul>
   </div></nav>
   <main class="container">
-    <header class="hero"><h1>Treasury</h1><p>Devnet payment destination and on-chain balances.</p></header>
+    <header class="hero">
+      <h1>Treasury</h1>
+      <p>Devnet sale destination (test tokens) and optional builder support (separate wallets).</p>
+    </header>
+
     <section class="card">
       <h2 id="treasuryStatus">Checking Devnet</h2>
-      <p class="feature-status" id="treasuryDescription" aria-live="polite">Loading the configured Devnet treasury and verified balances…</p>
+      <p class="feature-status" id="treasuryDescription" aria-live="polite">Loading the configured Devnet treasury…</p>
+      <p id="treasuryBalance" class="mono">—</p>
+      <p class="estimate-note" style="margin-top:10px;">This is the <strong>program treasury</strong> for Devnet purchases only. It is not the support addresses below.</p>
     </section>
-    <section class="card">
-      <h2>Payment destination configuration</h2>
-      <p id="treasuryBalance">Treasury balances are read from Solana Devnet.</p>
+
+    <section class="card" id="supportGoalCard">
+      <h2>Builder support goal</h2>
+      <p class="estimate-note">Optional. Helps the developer pay for tools and hosting. <strong>Not required</strong> to use the app. Not an investment. Not the Devnet sale treasury.</p>
+      <div class="goal-wrap">
+        <div class="goal-meta">
+          <span>Raised (approx): <strong id="goalRaised" class="mono">…</strong> / <strong id="goalTarget">10</strong> SOL-eq</span>
+          <span class="goal-pct" id="goalPercent">—%</span>
+        </div>
+        <div class="goal-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-label="Support progress toward 10 SOL" id="goalBar">
+          <div class="goal-fill" id="goalFill"></div>
+        </div>
+        <table class="breakdown-table" aria-label="Support balances by chain">
+          <thead>
+            <tr><th>Chain</th><th>Balance</th><th>Toward goal</th></tr>
+          </thead>
+          <tbody id="goalBreakdownBody">
+            <tr><td colspan="3">Loading…</td></tr>
+          </tbody>
+        </table>
+        <p class="estimate-note" id="goalNote" style="margin-top:12px;">Loading live balances…</p>
+      </div>
     </section>
   </main>
+
+  <footer class="site-footer">
+    <div class="site-footer-inner">
+      <p style="margin:0;font-size:0.85em;color:#c4d0d7;">
+        Devnet only · Operator: Joseph Mushelle Nyingeh ·
+        <a href="mailto:jaymnyon@gmail.com">jaymnyon@gmail.com</a>
+      </p>
+      <nav aria-label="Footer">
+        <a href="privacy.html">Privacy</a>
+        <a href="terms.html">Terms</a>
+        <a href="cookies.html">Cookies</a>
+      </nav>
+    </div>
+  </footer>
+
+  <aside id="supportBar" class="support-bar is-hidden" role="dialog" aria-label="Optional support addresses">
+    <h2>Optional support addresses</h2>
+    <p>Send only if you want to help. Copy an address carefully. Not required to test Space Ledger.</p>
+    <div class="support-row">
+      <span style="min-width:4.5rem;">Solana</span>
+      <code id="addrSol">ETuGxX6Znxr9q59THJtcYDJKt6RvCfN7wp79tRnbG1xG</code>
+      <button type="button" data-copy="addrSol">Copy</button>
+    </div>
+    <div class="support-row">
+      <span style="min-width:4.5rem;">Arbitrum</span>
+      <code id="addrArb">0x7CaC4214A4842c30D1E19adab492F62fAE449bed</code>
+      <button type="button" data-copy="addrArb">Copy</button>
+    </div>
+    <div class="support-row">
+      <span style="min-width:4.5rem;">Bitcoin</span>
+      <code id="addrBtc">bc1q9sadwz9aymgj9sw3xhfjxtw9zser6tgqp8xm8t</code>
+      <button type="button" data-copy="addrBtc">Copy</button>
+    </div>
+    <div class="support-bar-actions">
+      <button type="button" id="dismissSupport">Dismiss</button>
+    </div>
+  </aside>
+
   <script src="../js/wallet.js"></script>
   <script src="../js/walletModal.js"></script>
   <script>
-    fetch('/api/treasury').then(async response => {
-      const data = await response.json();
+    function fmtSol(n) {
+      var x = Number(n);
+      if (!Number.isFinite(x)) return '—';
+      if (x === 0) return '0';
+      if (x < 0.0001) return x.toFixed(9);
+      if (x < 1) return x.toFixed(6);
+      return x.toFixed(4);
+    }
+    function fmtAmt(n, digits) {
+      var x = Number(n);
+      if (!Number.isFinite(x)) return '—';
+      return x.toFixed(digits);
+    }
+
+    fetch('/api/treasury').then(async function (response) {
+      var data = await response.json();
       if (!response.ok) throw new Error(data.error || 'Treasury status unavailable.');
-      document.getElementById('treasuryStatus').textContent = data.verified ? 'Program live on Solana Devnet' : 'Devnet program deployed; awaiting initialization';
-      document.getElementById('treasuryDescription').textContent = `Fixed receiving wallet: ${data.walletAddress}. Program: ${data.contractAddress}.`;
-      document.getElementById('treasuryBalance').textContent = `Treasury balance: ${data.treasuryBalanceSol} Devnet SOL and ${data.treasuryBalanceUsdc} Devnet USDC.`;
-    }).catch(error => {
+      document.getElementById('treasuryStatus').textContent = data.verified
+        ? 'Program live on Solana Devnet'
+        : 'Devnet program deployed; awaiting initialization';
+      document.getElementById('treasuryDescription').textContent =
+        'Devnet receiving wallet: ' + data.walletAddress + ' · Program: ' + data.contractAddress;
+      document.getElementById('treasuryBalance').textContent =
+        'Devnet balances: ' + (data.treasuryBalanceSol || '0') + ' SOL · ' +
+        (data.treasuryBalanceUsdc || '0') + ' USDC (test tokens only)';
+    }).catch(function (error) {
       document.getElementById('treasuryStatus').textContent = 'Devnet status unavailable';
       document.getElementById('treasuryDescription').textContent = error.message;
+      document.getElementById('treasuryBalance').textContent = '';
     });
+
+    function refreshSupportGoal() {
+      fetch('/api/support-goal').then(async function (response) {
+        var data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Unavailable');
+        var raised = Number(data.raisedSolApprox) || 0;
+        var goal = Number(data.goalSol) || 10;
+        var pct = Number(data.percent) || 0;
+        document.getElementById('goalRaised').textContent = fmtSol(raised);
+        document.getElementById('goalTarget').textContent = String(goal);
+        document.getElementById('goalPercent').textContent = pct.toFixed(2) + '%';
+
+        var fill = document.getElementById('goalFill');
+        // Visual floor so tiny balances still show a sliver; label stays exact.
+        var visualPct = pct;
+        if (raised > 0 && visualPct < 1.5) visualPct = 1.5;
+        fill.style.width = Math.min(100, visualPct) + '%';
+        fill.classList.toggle('has-amount', raised > 0);
+        document.getElementById('goalBar').setAttribute('aria-valuenow', String(Math.round(pct)));
+
+        var b = data.breakdown || {};
+        var rows = [
+          { name: 'Solana', unit: 'SOL', dig: 6, row: b.solana },
+          { name: 'Arbitrum', unit: 'ETH', dig: 6, row: b.arbitrum },
+          { name: 'Bitcoin', unit: 'BTC', dig: 8, row: b.bitcoin }
+        ];
+        var tbody = document.getElementById('goalBreakdownBody');
+        tbody.innerHTML = rows.map(function (r) {
+          var bal = r.row && r.row.balance != null ? fmtAmt(r.row.balance, r.dig) + ' ' + r.unit : '—';
+          var toward = r.row && r.row.towardGoalSol != null ? fmtSol(r.row.towardGoalSol) + ' SOL-eq' : '—';
+          return '<tr><td>' + r.name + '</td><td class="mono">' + bal + '</td><td class="mono">' + toward + '</td></tr>';
+        }).join('');
+
+        document.getElementById('goalNote').textContent =
+          (data.note || 'Live from public RPCs.') +
+          (data.updatedAt ? ' Last update: ' + data.updatedAt : '');
+      }).catch(function (error) {
+        document.getElementById('goalNote').textContent = error.message || 'Could not load support progress.';
+        document.getElementById('goalBreakdownBody').innerHTML = '<tr><td colspan="3">Unavailable</td></tr>';
+      });
+    }
+    refreshSupportGoal();
+    setInterval(refreshSupportGoal, 45000);
+
+    (function supportBar() {
+      var bar = document.getElementById('supportBar');
+      var dismissBtn = document.getElementById('dismissSupport');
+      if (!bar || !dismissBtn) return;
+      var key = 'spaceLedger.supportBarDismissed';
+      function hide() {
+        bar.classList.add('is-hidden');
+        document.body.classList.remove('has-support-bar');
+        try { localStorage.setItem(key, '1'); } catch (e) {}
+      }
+      function show() {
+        bar.classList.remove('is-hidden');
+        document.body.classList.add('has-support-bar');
+      }
+      var dismissed = false;
+      try { dismissed = localStorage.getItem(key) === '1'; } catch (e) {}
+      if (dismissed) hide(); else show();
+      dismissBtn.addEventListener('click', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        hide();
+      });
+      document.querySelectorAll('[data-copy]').forEach(function (btn) {
+        btn.addEventListener('click', async function () {
+          var el = document.getElementById(btn.getAttribute('data-copy'));
+          var text = el ? el.textContent.trim() : '';
+          try {
+            await navigator.clipboard.writeText(text);
+            btn.textContent = 'Copied';
+            setTimeout(function () { btn.textContent = 'Copy'; }, 1500);
+          } catch (e) {
+            btn.textContent = 'Select & copy';
+          }
+        });
+      });
+    })();
   </script>
 </body>
 </html>

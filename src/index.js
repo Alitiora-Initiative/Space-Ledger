@@ -5,23 +5,36 @@ const bondingCurve = require('./bondingCurve');
 const rpcRouter = require('./rpcRouter');
 const blockIds = require('./blockId');
 const solanaService = require('./solanaService');
+const supportGoal = require('./supportGoal');
 const { createRateLimiter } = require('./rateLimit');
 
-// Best-effort per-instance limits for Devnet beta (see issue #5).
-const quoteRateLimit = createRateLimiter({ windowMs: 60_000, max: 30, name: 'quote' });
-const purchaseRateLimit = createRateLimiter({ windowMs: 60_000, max: 10, name: 'purchase' });
+const quoteRateLimit = createRateLimiter({ windowMs: 60_000, max: 20, name: 'quote' });
+const purchaseRateLimit = createRateLimiter({ windowMs: 60_000, max: 8, name: 'purchase' });
+const readRateLimit = createRateLimiter({ windowMs: 60_000, max: 60, name: 'read' });
 
 const PORT = Number.parseInt(process.env.PORT, 10) || 3000;
-// This release is deliberately pinned to Devnet. Mainnet must be a separately
-// reviewed migration, not an environment-variable flip.
 const SOLANA_NETWORK = 'devnet';
 const NOT_DEPLOYED = 'The Solana Devnet program is not configured.';
+
+const _cache = new Map();
+function withCache(key, ttlMs, fn) {
+  return async () => {
+    const hit = _cache.get(key);
+    const now = Date.now();
+    if (hit && now - hit.at < ttlMs) return hit.value;
+    const value = await fn();
+    _cache.set(key, { at: now, value });
+    return value;
+  };
+}
+const cachedConfig = withCache('config', 8_000, () => solanaService.publicConfig());
+const cachedSupportGoal = withCache('supportGoal', 30_000, () => supportGoal.getProgress());
 
 const app = express();
 app.disable('x-powered-by');
 app.use((_req, res, next) => {
   res.set({
-    'Content-Security-Policy': "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; img-src 'self' data:; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; font-src 'self' data:; connect-src 'self' https://api.devnet.solana.com wss://api.devnet.solana.com",
+    'Content-Security-Policy': "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; img-src 'self' data:; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; font-src 'self' data:; connect-src 'self' https://api.devnet.solana.com wss://api.devnet.solana.com https://*.helius-rpc.com https://devnet.helius-rpc.com https://rpc.ankr.com https://solana-devnet.g.alchemy.com https://api.mainnet-beta.solana.com https://arb1.arbitrum.io https://api.coingecko.com https://blockstream.info",
     'Permissions-Policy': 'camera=(), geolocation=(), microphone=()',
     'Referrer-Policy': 'strict-origin-when-cross-origin',
     'X-Content-Type-Options': 'nosniff',
@@ -32,11 +45,11 @@ app.use((_req, res, next) => {
 app.use(express.json({ limit: '16kb' }));
 app.use(express.static(path.join(__dirname, '../public')));
 
-app.get('/api/solana/config', async (_req, res) => {
+app.get('/api/solana/config', readRateLimit, async (_req, res) => {
   try {
-    res.json(await solanaService.publicConfig());
+    res.json(await cachedConfig());
   } catch (error) {
-    res.status(503).json({ error: error.message || PROGRAM_NOT_CONFIGURED, network: 'devnet' });
+    res.status(503).json({ error: error.message || NOT_DEPLOYED, network: 'devnet' });
   }
 });
 
@@ -48,7 +61,6 @@ app.get('/api/solana/quote', quoteRateLimit, async (req, res) => {
   }
 });
 
-// Bonding curve values are estimates from the published formula, not live sale quotes.
 app.get('/api/price/range', (req, res) => {
   const start = blockIds.parse(req.query.start ?? '');
   const requestedCount = Number.parseInt(req.query.count, 10);
@@ -72,7 +84,7 @@ app.get('/api/price/:blockId', (req, res) => {
   res.json({ blockId, blockLabel: blockIds.format(blockId), price: bondingCurve.calculatePrice(blockId), status: 'estimate', message: 'Model estimate only; use the Devnet quote endpoint before purchasing.' });
 });
 
-app.get('/api/supply', async (_req, res) => {
+app.get('/api/supply', readRateLimit, async (_req, res) => {
   if (!process.env.SOLANA_PROGRAM_ID) return res.json({ totalSupply: bondingCurve.TOTAL_SUPPLY, currentSupply: null, status: 'not_deployed', message: NOT_DEPLOYED });
   try {
     const state = await solanaService.getState();
@@ -82,13 +94,21 @@ app.get('/api/supply', async (_req, res) => {
   }
 });
 
-app.get('/api/treasury', async (_req, res) => {
+app.get('/api/treasury', readRateLimit, async (_req, res) => {
   if (!process.env.SOLANA_PROGRAM_ID) return res.json({ status: 'not_deployed', contractAddress: null, verified: false, message: NOT_DEPLOYED });
   try {
-    const config = await solanaService.publicConfig();
+    const config = await cachedConfig();
     res.json({ status: config.initialized ? 'devnet_verified' : 'awaiting_initialization', contractAddress: config.programId, walletAddress: config.treasury, verified: config.initialized, network: 'devnet', treasuryBalanceLamports: config.treasuryBalanceLamports, treasuryBalanceSol: config.treasuryBalanceSol, treasuryBalanceUsdc: config.treasuryBalanceUsdc });
   } catch (error) {
     res.status(503).json({ error: error.message });
+  }
+});
+
+app.get('/api/support-goal', readRateLimit, async (_req, res) => {
+  try {
+    res.json(await cachedSupportGoal());
+  } catch (error) {
+    res.status(503).json({ error: error.message || 'Support progress unavailable.' });
   }
 });
 
@@ -103,13 +123,13 @@ app.post('/api/rpc', async (req, res) => {
 
 app.get('/api/networks', (_req, res) => res.json(rpcRouter.getNetworks()));
 
-app.get('/api/grid', async (req, res) => {
+app.get('/api/grid', readRateLimit, async (req, res) => {
   const blockId = blockIds.parse(req.query.block ?? '');
   if (blockId === null || blockId >= bondingCurve.TOTAL_SUPPLY) {
     return res.status(400).json({ error: 'Block ID must be a valid label or number within the published supply.' });
   }
   try {
-    const receipts = process.env.SOLANA_PROGRAM_ID ? await solanaService.listReceipts({ blockId }) : [];
+    const receipts = process.env.SOLANA_PROGRAM_ID ? await solanaService.listReceipts({ blockId, limit: 5 }) : [];
     const grid = Array.from({ length: 10 }, (_, row) => Array.from({ length: 10 }, (_, column) => {
       const pixelIndex = row * 10 + column;
       return {
@@ -129,11 +149,11 @@ app.get('/api/grid', async (req, res) => {
   }
 });
 
-app.get('/api/stats', async (_req, res) => {
+app.get('/api/stats', readRateLimit, async (_req, res) => {
   if (!process.env.SOLANA_PROGRAM_ID) return res.json({ status: 'not_configured', totalSupply: bondingCurve.TOTAL_SUPPLY, currentSupply: null, totalFeesUsd: null, message: NOT_DEPLOYED });
   try {
     const state = await solanaService.getState();
-    const receipts = await solanaService.listReceipts();
+    const receipts = await solanaService.listReceipts({ limit: 500 });
     const totalFeesMicroUsd = receipts.reduce((sum, item) => sum + BigInt(item.feeMicroUsd), 0n);
     res.json({ status: state.initialized ? 'devnet_verified' : 'awaiting_initialization', network: 'devnet', totalSupply: bondingCurve.TOTAL_SUPPLY, currentSupply: state.currentSupply.toString(), blocksRemaining: (BigInt(bondingCurve.TOTAL_SUPPLY) - state.currentSupply).toString(), purchaseCount: receipts.length, totalFeesUsd: (Number(totalFeesMicroUsd) / 1_000_000).toFixed(6), message: 'Supply, purchase count, and modeled fees are derived from on-chain Devnet receipts.' });
   } catch (error) {
@@ -141,13 +161,14 @@ app.get('/api/stats', async (_req, res) => {
   }
 });
 
-app.get('/api/market', async (_req, res) => {
+app.get('/api/market', readRateLimit, async (req, res) => {
   if (!process.env.SOLANA_PROGRAM_ID) {
     return res.json({ status: 'not_configured', verified: false, network: 'devnet', marketType: 'primary_curve_model', message: NOT_DEPLOYED, latestReceipts: [] });
   }
   try {
     const state = await solanaService.getState();
-    const receipts = await solanaService.listReceipts();
+    const limit = Math.min(50, Math.max(1, Number(req.query.limit) || 20));
+    const receipts = await solanaService.listReceipts({ limit });
     const supply = Number(state.currentSupply);
     res.json({
       status: state.initialized ? 'devnet_verified' : 'awaiting_initialization',
@@ -157,18 +178,18 @@ app.get('/api/market', async (_req, res) => {
       currentSupply: state.currentSupply.toString(),
       nextBlockModelPriceUsd: supply < bondingCurve.TOTAL_SUPPLY ? bondingCurve.calculatePrice(supply) : null,
       confirmedPurchaseCount: receipts.length,
-      latestReceipts: receipts.sort((a, b) => b.settledAt - a.settledAt).slice(0, 30).map(({ buyer: _buyer, ...receipt }) => receipt),
-      message: 'The price is the published primary-sale model, not a traded market price. Receipts are confirmed Devnet purchases; resales and candlestick trading data are not available.',
+      latestReceipts: receipts.map(({ buyer: _buyer, ...receipt }) => receipt),
+      message: 'Primary-sale model only. Receipts are confirmed Devnet purchases; resales and candlesticks are not available.',
     });
   } catch (error) {
     res.status(503).json({ error: error.message });
   }
 });
 
-app.get('/api/leaderboard', async (_req, res) => {
+app.get('/api/leaderboard', readRateLimit, async (_req, res) => {
   if (!process.env.SOLANA_PROGRAM_ID) return res.status(503).json({ verified: false, network: 'devnet', holders: [], error: NOT_DEPLOYED });
   try {
-    const receipts = await solanaService.listReceipts();
+    const receipts = await solanaService.listReceipts({ limit: 500 });
     const holders = new Map();
     for (const receipt of receipts) {
       const holder = holders.get(receipt.buyer) || { address: receipt.buyer, blocksOwned: 0, purchaseCount: 0, lastPurchaseAt: 0 };
@@ -184,12 +205,12 @@ app.get('/api/leaderboard', async (_req, res) => {
   }
 });
 
-app.get('/api/block-owner/:blockId', async (req, res) => {
+app.get('/api/block-owner/:blockId', readRateLimit, async (req, res) => {
   if (!process.env.SOLANA_PROGRAM_ID) return res.status(503).json({ error: 'Ownership cannot be verified: no ownership contract or indexer is deployed.' });
   const blockId = blockIds.parse(req.params.blockId);
   if (blockId === null) return res.status(400).json({ error: 'Block ID must be a valid label or number.' });
   try {
-    const receipts = await solanaService.listReceipts({ blockId });
+    const receipts = await solanaService.listReceipts({ blockId, limit: 5 });
     const receipt = receipts[0];
     if (!receipt) {
       return res.json({ blockId, blockLabel: blockIds.format(blockId), owner: null, verified: true, status: 'unowned' });
@@ -197,7 +218,7 @@ app.get('/api/block-owner/:blockId', async (req, res) => {
     let signatures = [];
     try {
       signatures = await solanaService.signaturesForAccount(receipt.receipt, 5);
-    } catch (_) { /* signature lookup is best-effort */ }
+    } catch (_) {}
     res.json({
       blockId,
       blockLabel: blockIds.format(blockId),
@@ -216,7 +237,7 @@ app.get('/api/block-owner/:blockId', async (req, res) => {
   }
 });
 
-app.get('/api/receipt/:address/signatures', async (req, res) => {
+app.get('/api/receipt/:address/signatures', readRateLimit, async (req, res) => {
   if (!process.env.SOLANA_PROGRAM_ID) return res.status(503).json({ error: NOT_DEPLOYED });
   try {
     const signatures = await solanaService.signaturesForAccount(req.params.address, 10);
@@ -226,20 +247,20 @@ app.get('/api/receipt/:address/signatures', async (req, res) => {
   }
 });
 
-app.get('/api/blocks/:address', async (req, res) => {
+app.get('/api/blocks/:address', readRateLimit, async (req, res) => {
   if (!process.env.SOLANA_PROGRAM_ID) return res.status(503).json({ error: 'Wallet holdings cannot be verified: no ownership contract or indexer is deployed.' });
   try {
-    const receipts = await solanaService.listReceipts({ buyer: req.params.address });
+    const receipts = await solanaService.listReceipts({ buyer: req.params.address, limit: 100 });
     res.json({ address: req.params.address, verified: true, ranges: receipts });
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
 });
 
-app.get('/api/portfolio/:address', async (req, res) => {
+app.get('/api/portfolio/:address', readRateLimit, async (req, res) => {
   if (!process.env.SOLANA_PROGRAM_ID) return res.status(503).json({ error: 'Portfolio data is unavailable until verified ownership indexing is deployed.' });
   try {
-    const receipts = await solanaService.listReceipts({ buyer: req.params.address });
+    const receipts = await solanaService.listReceipts({ buyer: req.params.address, limit: 100 });
     const blocksOwned = receipts.reduce((sum, receipt) => sum + receipt.blockCount, 0);
     res.json({ address: req.params.address, verified: true, blocksOwned, purchaseCount: receipts.length, ranges: receipts });
   } catch (error) {

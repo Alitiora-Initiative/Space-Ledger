@@ -1,47 +1,41 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Cookie Policy — Space Ledger</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cookies — Space Ledger</title>
   <link rel="stylesheet" href="../css/styles.css">
   <script src="/js/site.js" defer></script>
 </head>
 <body>
-  <nav aria-label="Main navigation">
+  <nav>
     <div class="container">
-      <a href="/index.html" class="logo">Space Ledger</a>
+      <a href="/index.html" style="display:flex;align-items:center;gap:8px;text-decoration:none;">
+        <img src="/img/logo.jpg" alt="Space Ledger logo" width="32" height="32" style="border-radius:7px;object-fit:cover;">
+        <span class="logo">Space Ledger</span>
+      </a>
       <ul>
-        <li><a href="/index.html">Home</a></li>
-        <li><a href="/pages/privacy.html">Privacy</a></li>
-        <li><a href="/pages/terms.html">Terms</a></li>
-        <li><a href="/pages/cookies.html" aria-current="page">Cookies</a></li>
+        <li><a href="../index.html">Home</a></li>
+        <li><a href="cookies.html" aria-current="page">Cookies</a></li>
+        <li><button class="wallet-button" id="navWalletBtn" type="button">Connect Wallet</button></li>
       </ul>
     </div>
   </nav>
-  <main class="container legal-document">
+  <main class="container">
     <header class="hero">
-      <h1>Cookie Policy</h1>
-      <p>Last reviewed: 12 October 2026</p>
+      <h1>Cookies and local storage</h1>
+      <p class="estimate-note">Devnet prototype. No advertising cookies.</p>
     </header>
-    <aside class="legal-status" role="note">
-      <strong>Devnet test prototype — no real-world value.</strong> Space Ledger is currently a Devnet test prototype. Devnet SOL and Devnet USDC are test tokens with no real-world value. No investment, no secondary market, no transfers. This is not a financial service.
-    </aside>
-    <aside class="legal-status" role="note">
-      <strong>Code audit status.</strong> This describes the repository, not cookies or storage that a hosting platform may add in production. Recheck the deployed site and response headers before launch.
-    </aside>
-
-    <h2>Cookies and browser storage</h2>
-    <p>The current application code does not set or read cookies, local storage, or session storage. It does not load analytics, advertising pixels, or tracking scripts. On that basis, the application does not currently need a cookie-consent banner for its own code. This conclusion must be revisited if the host, a new script, or a future feature adds storage or tracking.</p>
-
-    <h2>External requests and embeds</h2>
-    <p>The site contains no embedded third-party frames or analytics scripts. Fonts and page code are served locally. When you use a blockchain feature, the server contacts the configured Solana Devnet or EVM RPC provider with the query needed for that feature. A detected wallet is contacted only after you choose a wallet action. Solana Explorer opens only if you follow a receipt link; it is not embedded in this page.</p>
-
-    <h2>Consent if the site changes</h2>
-    <p>If a future feature stores or reads non-essential information on your device, or adds tracking, the operator must check the rules that apply in each target country. Where prior consent is required, the feature should remain off until you make a clear choice, and refusing should be as easy as accepting. Essential security or delivery storage should still be explained where required. For example, the UK's <a href="https://ico.org.uk/for-organisations/direct-marketing-and-privacy-and-electronic-communications/guidance-on-the-use-of-storage-and-access-technologies/">ICO guidance</a> covers cookies and similar technologies under PECR; it is not a global rulebook.</p>
-
-    <h2>Changes and contact</h2>
-    <p>This policy should be updated whenever the deployed cookie, storage, analytics, or embed behavior changes. The operator has not yet provided a privacy contact for questions; that contact must be published before the privacy notice is complete.</p>
+    <div class="card">
+      <ul style="color:#c4d0d7;line-height:1.8;">
+        <li><strong>Cookies:</strong> no tracking or analytics cookies.</li>
+        <li><strong>Session storage:</strong> may store last wallet name for same-tab reconnect.</li>
+        <li><strong>Logo:</strong> operator-created with AI assistance for this project.</li>
+      </ul>
+      <p style="color:#c4d0d7;">Joseph Mushelle Nyingeh · <a href="mailto:jaymnyon@gmail.com">jaymnyon@gmail.com</a></p>
+    </div>
   </main>
+  <script src="../js/wallet.js"></script>
+  <script src="../js/walletModal.js"></script>
 </body>
 </html>

@@ -3,15 +3,15 @@
   "version": "1.0.0",
   "description": "A Solana Devnet pixel-canvas prototype with an Express API and on-chain purchase receipts.",
   "main": "src/index.js",
-  "type": "module",
   "scripts": {
     "start": "node src/index.js",
     "dev": "node src/index.js",
     "test": "node --test",
-    "compile": "cargo build-sbf --manifest-path programs/space-ledger/Cargo.toml"
+    "compile": "cargo build-sbf --manifest-path programs/space-ledger/Cargo.toml",
+    "audit": "npm audit --registry https://registry.npmjs.org/"
   },
   "keywords": [],
-  "author": "",
+  "author": "Joseph Mushelle Nyingeh",
   "license": "MIT",
   "dependencies": {
     "@solana/web3.js": "^1.99.0",
@@ -19,8 +19,14 @@
     "express": "^5.3.0"
   },
   "overrides": {
+    "uuid": "11.1.1",
+    "stream-json": "3.7.0",
     "rpc-websockets": {
-      "uuid": "11.1.0"
+      "uuid": "11.1.1"
+    },
+    "jayson": {
+      "uuid": "11.1.1",
+      "stream-json": "3.7.0"
     }
   }
 }

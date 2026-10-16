@@ -2,77 +2,92 @@
 
 Shared digital-canvas prototype on **Solana Devnet**: 10 billion blocks × 100 pixels = 1 trillion pixel positions.
 
-Live site: [space-ledger-alitiora.vercel.app](https://space-ledger-alitiora.vercel.app)
+| | |
+|---|---|
+| **Live site** | [space-ledger-alitiora.vercel.app](https://space-ledger-alitiora.vercel.app) |
+| **Network** | Solana **Devnet only** |
+| **Program** | `EbP7vsnMXPonTfriPUFynco69d69JiXpWbKnwVmz8sgG` |
+| **Operator** | Joseph Mushelle Nyingeh (Alitiora Initiative), Kenya |
+| **Contact** | [jaymnyon@gmail.com](mailto:jaymnyon@gmail.com) |
 
-## Overview
+Devnet SOL / Devnet USDC have **no real-world value**. This is not an investment product and not a secondary market.
 
-Space Ledger is a shared canvas inspired by the Million Dollar Homepage, scaled to 1 trillion pixels. Built on Solana's high-performance blockchain, it features transparent bonding-curve pricing, on-chain ownership verification, and immutable receipts for every purchase.
+## What works today
 
-### Key Features
-
-- **Transparent Pricing**: Linear bonding curve from $0.001 to $1,000 per block, mathematically predictable and fully on-chain
-- **On-Chain Ownership**: Every purchase recorded as an immutable Solana transaction receipt, verifiable by anyone
-- **Real-Time Supply**: Live Devnet data shows exact blocks sold, available inventory, and holder rankings
-- **Portfolio Tracking**: View your holdings, purchase history, and estimated model PnL in your profile
-- **Grid Exploration**: Interactive 10×10 pixel grid view for browsing and discovering available blocks
-- **Accessibility**: Keyboard navigation, screen reader support, and responsive design for all devices
-
-## What works on Devnet
-
-- **Linear primary-sale bonding curve**: `P(x) = m·x + $0.001`, rising toward **$1,000** over 10 billion blocks. **Each confirmed purchase advances on-chain supply and raises the price** for the next buyer.
-- Wallet Standard discovery (Phantom, Solflare, and other registered Solana wallets).
-- Quote → unsigned transaction → user approves in wallet → receipt account on Devnet.
-- Grid browse, market of confirmed receipts, leaderboard, profile/dashboard with **model PnL %** and transaction history links.
-- Rate limits on quote/purchase APIs; security headers on responses.
-- Accessibility improvements: ARIA labels, focus states, keyboard navigation, Devnet-only legal notices.
-
-Program ID (Devnet): `EbP7vsnMXPonTfriPUFynco69d69JiXpWbKnwVmz8sgG`
+- **Primary sale** on a linear bonding curve: each confirmed buy advances `current_supply` and raises the next price ($0.001 → $1,000 over 10B blocks).
+- **Wallet Standard** multi-wallet connect (Phantom, Solflare, and others exposed in the browser).
+- Flow: connect → quote (balance-aware) → wallet approve → on-chain **receipt** → Explorer link.
+- **Grid** (whole-block buy deep-link), market of receipts, leaderboard, profile / dashboard (model PnL %).
+- **Rate limits** + short config cache for free-tier hosting.
+- **Treasury page**: Devnet program balances + optional **builder support goal** (progress toward 10 SOL-eq from public chain balances).
+- Legal drafts: Privacy / Terms / Cookies with operator contact.
+- Mobile path: Phantom or Solflare **in-app browser** ([guide](https://space-ledger-alitiora.vercel.app/pages/mobile.html)).
 
 ## What is not included
 
-- Mainnet, secondary market, transfers, or pixel-level on-chain ownership (blocks only).
-- Guaranteed multi-wallet on mobile without an in-app browser / WalletConnect (tracked separately).
-- Legal contact details until the operator adds them.
+| Topic | Status |
+|--------|--------|
+| Mainnet | Not yet |
+| Pixel-level on-chain ownership | Whole **blocks** only |
+| Secondary market / transfers | Not in the program |
+| WalletConnect QR | Use in-app browser instead |
+| Paid audit | Future / grant-funded |
 
-Devnet SOL and Devnet USDC have **no real-world value**.
+## How to test (2 minutes)
 
-## How to buy (tester flow)
+1. Install Phantom or Solflare; switch network to **Devnet**.
+2. Get free Devnet SOL from a faucet.
+3. Open the [live site](https://space-ledger-alitiora.vercel.app) → **Connect Wallet** (top nav, once).
+4. **Pricing** → small budget or “Use available balance” → **Get Devnet quote** → approve in wallet.
+5. Confirm on [Solana Explorer](https://explorer.solana.com/?cluster=devnet) (cluster = Devnet).
 
-1. Connect once via **Connect Wallet** in the top nav (wallet network = **Devnet**).
-2. Open **Pricing** or **Grid** → request a quote (or use **Buy this block**).
-3. **Review and buy in wallet** → approve.
-4. Confirm on Solana Explorer (Devnet) and check **Profile**.
+If public RPC is busy, wait a minute and retry.
+
+## Optional builder support
+
+Separate from Devnet purchases. Progress bar on [Treasury](https://space-ledger-alitiora.vercel.app/pages/treasury.html) reads **live wallet balances** and converts Arbitrum ETH / Bitcoin to SOL-equivalent with public USD prices.
+
+| Chain | Address |
+|--------|---------|
+| Solana | `ETuGxX6Znxr9q59THJtcYDJKt6RvCfN7wp79tRnbG1xG` |
+| Arbitrum | `0x7CaC4214A4842c30D1E19adab492F62fAE449bed` |
+| Bitcoin | `bc1q9sadwz9aymgj9sw3xhfjxtw9zser6tgqp8xm8t` |
+
+Support is **optional**, not required to use the app, and not an investment.
+
+## Scale (Discord / free tier)
+
+- Default RPC is public Devnet. For heavier load, set Vercel env `SOLANA_RPC_DEVNET` to a free **Helius Devnet** URL (never mainnet; never expose API keys to the browser).
+- Approximate limits per instance: quote ~20/min/IP, purchase build ~8/min/IP, reads ~60/min/IP.
+- Receipt lists are capped; a full indexer is future work.
 
 ## Local development
 
 ```bash
 cp .env.example .env
-# Set SOLANA_PROGRAM_ID and optionally SOLANA_RPC_DEVNET (Helius Devnet URL)
+# Set SOLANA_PROGRAM_ID and optional SOLANA_RPC_DEVNET
 npm install
+npm test
 npm start
 ```
 
-Environment (server-side only):
+```bash
+npm audit   # should report 0 vulnerabilities with package overrides
+```
 
-| Variable | Purpose |
-|----------|---------|
-| `SOLANA_PROGRAM_ID` | Devnet program id |
-| `SOLANA_RPC_DEVNET` | RPC endpoint (prefer private Helius Devnet for ~100 concurrent testers) |
+## Security notes (free tooling)
 
-Never commit real API keys. Prefer `https://devnet.helius-rpc.com/?api-key=…` — not `beta.helius-rpc.com` (mainnet).
+- Client config always returns public Devnet RPC — private keys stay server-side.
+- Dependency overrides pin fixed `uuid` / `stream-json` versions.
+- Not a substitute for a professional Solana program audit.
 
 ## Docs
 
 - [Devnet Beta Guide](docs/Space-Ledger-Devnet-Beta-Guide.md)
-- [Beta verification notes](docs/BETA_VERIFICATION.md)
+- [Beta verification](docs/BETA_VERIFICATION.md)
 - [Roadmap](ROADMAP.md)
 
-## Pricing model (authoritative)
+## License
 
-- **Off-chain estimates**: `src/bondingCurve.js` — `calculatePrice(supply)`.
-- **On-chain settlement**: `programs/space-ledger` — `total_price_micro_usd(start, count)` using the same linear slope; `current_supply` increases after each purchase.
-- Quotes always read **live** `current_supply` from the program config account.
-
-## License / contribution
-
+MIT — see repository license file if present. Logo: operator-generated (AI-assisted) for this project.
 Operator: Alitiora Initiative. Review `ROADMAP.md` and `docs/MAINNET-MIGRATION-GUIDE.md` before proposing mainnet or marketplace features.
