@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>$SL — Space Ledger development coin</title>
+  <meta name="description" content="Live Space Ledger ($SL) market on Solana. The coin funds continued development of the Space Ledger website. Prices and trades are read from public APIs, not simulated.">
+  <link rel="stylesheet" href="../css/styles.css">
+  <link rel="stylesheet" href="../css/polish.css">
+  <script src="/js/site.js" defer></script>
+  <style>
+    .sl-hero { text-align: left; padding: 28px 0 10px; }
+    .sl-identity { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
+    .sl-identity img { width: 76px; height: 76px; border-radius: 18px; object-fit: cover; background: #102028; border: 1px solid rgba(0,212,255,.28); }
+    .sl-kicker { display: inline-block; margin: 0 0 8px; padding: 4px 10px; border-radius: 999px; border: 1px solid rgba(0,212,255,.35); color: #9aefff; font-size: .78rem; letter-spacing: .04em; text-transform: uppercase; }
+    .sl-price-row { display: flex; gap: 14px; align-items: baseline; flex-wrap: wrap; margin-top: 8px; }
+    .sl-price { font-size: 2.4rem; font-weight: 750; color: #f4fbff; font-variant-numeric: tabular-nums; }
+    .sl-change { font-weight: 700; font-variant-numeric: tabular-nums; }
+    .sl-change.up { color: #7dffa8; }
+    .sl-change.down { color: #ff9b9b; }
+    .up { color: #7dffa8; }
+    .down { color: #ff9b9b; }
+    .sl-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
+    .mint-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 14px; }
+    .mint-row code { flex: 1; min-width: 0; background: #101820; color: #e7f6fb; border-radius: 8px; padding: 8px 10px; word-break: break-all; font-size: .82rem; }
+    .mint-row button, .ghost {
+      border: 1px solid #3a6a78; background: #132228; color: #9aefff; border-radius: 8px; padding: 8px 12px; cursor: pointer; font: inherit;
+    }
+    .chart-card svg { width: 100%; height: auto; display: block; }
+    .chart-grid { fill: none; stroke: rgba(154,239,255,.16); stroke-width: 1; }
+    .chart-fill { fill: rgba(0,212,255,.16); stroke: none; }
+    .chart-line { fill: none; stroke: #7de7ff; stroke-width: 2.4; stroke-linejoin: round; stroke-linecap: round; }
+    .chart-dot { fill: #f4fbff; stroke: #7de7ff; stroke-width: 2; }
+    svg[data-trend="down"] .chart-line { stroke: #ffb0b0; }
+    svg[data-trend="down"] .chart-fill { fill: rgba(255,120,120,.14); }
+    svg[data-trend="down"] .chart-dot { stroke: #ffb0b0; }
+    .goal-track { height: 14px; border-radius: 999px; background: #121c24; border: 1px solid #24515c; overflow: hidden; }
+    .goal-fill { height: 100%; width: 0; background: linear-gradient(90deg, #0e6c78, #8af3ff); }
+    .trades { width: 100%; border-collapse: collapse; font-size: .92rem; }
+    .trades th, .trades td { text-align: left; padding: 8px 6px; border-bottom: 1px solid rgba(255,255,255,.08); color: #d5dee8; }
+    .trades th { color: #8aefff; font-weight: 650; }
+    .trades a { color: #9ad7ff; }
+    .sl-grid-2 { display: grid; grid-template-columns: 1.4fr .8fr; gap: 18px; }
+    .use-list { margin: 0; padding-left: 1.1rem; color: #d5dee8; line-height: 1.7; }
+    @media (max-width: 860px) {
+      .sl-grid-2 { grid-template-columns: 1fr; }
+      .sl-price { font-size: 2rem; }
+      .trades { display: block; overflow-x: auto; }
+    }
+  </style>
+</head>
+<body>
+  <nav aria-label="Main navigation">
+    <div class="container">
+      <a href="/index.html" style="display:flex;align-items:center;gap:8px;text-decoration:none;">
+        <img src="/img/logo.jpg" alt="Space Ledger logo" width="32" height="32" style="border-radius:7px;object-fit:cover;">
+        <span class="logo">Space Ledger</span>
+      </a>
+      <ul>
+        <li><a href="../index.html">Home</a></li>
+        <li><a href="purchase.html">Pricing</a></li>
+        <li><a href="grid.html">Grid View</a></li>
+        <li><a href="treasury.html">Treasury</a></li>
+        <li><a href="dashboard.html">Dashboard</a></li>
+        <li><a href="profile.html">Profile</a></li>
+        <li><a class="active" aria-current="page" href="/pages/token.html">$SL</a></li>
+        <li><button class="wallet-button" id="navWalletBtn" type="button">Connect Wallet</button></li>
+      </ul>
+    </div>
+  </nav>
+
+  <main class="container" style="display:block;">
+    <header class="hero sl-hero">
+      <p class="sl-kicker" id="slStatus">Loading live market…</p>
+      <div class="sl-identity">
+        <img id="slLogo" alt="Space Ledger token logo" width="76" height="76" src="/api/token/sl/image">
+        <div>
+          <h1 style="margin:0;"><span id="slName">Space Ledger</span> <span id="slSymbol" style="color:#8af3ff;">$SL</span></h1>
+          <p style="margin:6px 0 0;">Mainnet coin paired with <strong id="slPair">STONK</strong>. Built to fund continued work on this website — not a Devnet block and not equity.</p>
+          <div class="sl-price-row">
+            <div class="sl-price" id="slPrice">…</div>
+            <div class="sl-change" id="slChange">24h —</div>
+            <div class="estimate-note" id="slUpdated" style="margin:0;">Fetching StonkFun, Jupiter, GeckoTerminal, and Raydium…</div>
+          </div>
+        </div>
+      </div>
+      <div class="sl-actions">
+        <a class="button" href="https://www.stonkfun.xyz/token/42UNqmUTuKuKZ5mwo2r5y3cNoPv38P8fxAisqQLXdT6u" target="_blank" rel="noopener noreferrer">Buy on StonkFun</a>
+        <a class="button" href="https://solscan.io/token/42UNqmUTuKuKZ5mwo2r5y3cNoPv38P8fxAisqQLXdT6u" target="_blank" rel="noopener noreferrer">View on Solscan</a>
+        <a class="button" href="https://www.geckoterminal.com/solana/pools/EPAsaZjCvMZitE8d65KAR7yxpFbt8gAZo8zNzQk4YQsy" target="_blank" rel="noopener noreferrer">Chart on GeckoTerminal</a>
+      </div>
+      <div class="mint-row">
+        <code id="slMint">42UNqmUTuKuKZ5mwo2r5y3cNoPv38P8fxAisqQLXdT6u</code>
+        <button type="button" id="slCopy">Copy mint</button>
+      </div>
+    </header>
+
+    <section class="stats-grid" aria-label="Live token stats">
+      <div class="stat-card"><h3>Market cap</h3><div class="value" id="slMcap">…</div><div class="label">Median of live sources</div></div>
+      <div class="stat-card"><h3>24h volume</h3><div class="value" id="slVolume">…</div><div class="label" id="slTx">…</div></div>
+      <div class="stat-card"><h3>Reported liquidity</h3><div class="value" id="slLiquidity">…</div><div class="label">Jupiter / StonkFun</div></div>
+      <div class="stat-card"><h3>Curve reserve</h3><div class="value" id="slReserve">…</div><div class="label">Not the same as spendable liquidity</div></div>
+      <div class="stat-card"><h3>Peak market cap</h3><div class="value" id="slPeak">…</div><div class="label">StonkFun</div></div>
+      <div class="stat-card"><h3>Supply</h3><div class="value" id="slSupply">…</div><div class="label">Minted supply</div></div>
+    </section>
+
+    <div class="sl-grid-2">
+      <section class="card chart-card">
+        <h2>Live price</h2>
+        <svg id="slChart" role="img" aria-label="Live $SL price chart"></svg>
+        <p class="estimate-note" id="slChartNote">Waiting for candles…</p>
+      </section>
+      <section class="card">
+        <h2>Bonding curve</h2>
+        <p class="estimate-note">Graduation progress reported by StonkFun. At 100% the pool leaves the launch curve. This bar is the exchange’s figure, not a Space Ledger estimate.</p>
+        <div class="goal-track" id="slGradBar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-label="StonkFun graduation progress">
+          <div class="goal-fill" id="slGradFill"></div>
+        </div>
+        <p style="margin:10px 0 0;"><strong id="slGradLabel">…</strong></p>
+        <p class="estimate-note">Created <span id="slBorn">…</span></p>
+        <p class="estimate-note">Pool <span id="slPool" style="word-break:break-all;">…</span></p>
+        <p class="estimate-note">Creator <span id="slCreator" style="word-break:break-all;">…</span></p>
+      </section>
+    </div>
+
+    <section class="card">
+      <h2>Recent trades</h2>
+      <p class="estimate-note">Printed from GeckoTerminal’s public trade index for the SL/STONK pool. Refreshes every 15 seconds. Empty means the indexer has not posted a fill, not that a fake trade was hidden.</p>
+      <table class="trades">
+        <thead>
+          <tr><th>When</th><th>Side</th><th>USD</th><th>Size</th><th>Wallet</th></tr>
+        </thead>
+        <tbody id="slTrades">
+          <tr><td colspan="5">Loading live trades…</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <div class="sl-grid-2">
+      <section class="card">
+        <h2>Why this coin exists</h2>
+        <p style="color:#d5dee8;line-height:1.7;">$SL was launched by the Space Ledger operator so people who want the website and protocol to keep moving can do it in public, on Solana mainnet. Proceeds the creator actually receives — trading-fee share from the StonkFun / Raydium LaunchLab curve, and any tokens the creator sells — are intended for development.</p>
+        <ul class="use-list">
+          <li>Hosting and production deploys for this site</li>
+          <li>Solana RPC so quotes, grid, and receipts stay fast</li>
+          <li>Interface, mobile, and wallet work</li>
+          <li>Security review before any mainnet canvas</li>
+          <li>Ongoing open-source work in the GitHub repository</li>
+        </ul>
+        <p class="estimate-note">That spending intent is not a smart-contract escrow. The token does not pay dividends, does not grant canvas blocks, and does not give equity in Alitiora Initiative. Devnet purchases on the rest of this site are still test tokens with no real-world value.</p>
+      </section>
+      <section class="card">
+        <h2>Read this before you buy</h2>
+        <ul class="use-list">
+          <li>$SL can go to zero. A new bonding-curve coin is speculative.</li>
+          <li>This page is not financial, legal, or tax advice.</li>
+          <li>Space Ledger never asks for a seed phrase and does not execute the swap. Buys happen on StonkFun in your own wallet.</li>
+          <li>Market figures below are other people’s public APIs. If a source is down, that row says so instead of a made-up number.</li>
+          <li>Reported liquidity on a fresh curve is often tiny. Market cap is not cash you can withdraw.</li>
+        </ul>
+        <p class="estimate-note" id="slSources">Sources loading…</p>
+      </section>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="site-footer-inner">
+      <p style="margin:0;font-size:0.85em;color:#c4d0d7;">
+        $SL is a mainnet StonkFun coin. The canvas remains a Devnet beta.<br>
+        Operator: Joseph Mushelle Nyingeh · <a href="mailto:jaymnyon@gmail.com">jaymnyon@gmail.com</a>
+      </p>
+      <nav aria-label="Footer navigation">
+        <a href="privacy.html">Privacy</a>
+        <a href="terms.html">Terms</a>
+        <a href="cookies.html">Cookies</a>
+      </nav>
+    </div>
+  </footer>
+  <script src="../js/tokenPage.js"></script>
+  <script src="../js/wallet.js"></script>
+  <script src="../js/walletModal.js"></script>
+</body>
+</html>
