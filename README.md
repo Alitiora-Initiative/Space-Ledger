@@ -5,6 +5,7 @@ Shared digital-canvas prototype on **Solana Devnet**: 10 billion blocks × 100 p
 | | |
 |---|---|
 | **Live site** | [space-ledger-alitiora.vercel.app](https://space-ledger-alitiora.vercel.app) |
+| **$SL market** | [Live $SL page](https://space-ledger-alitiora.vercel.app/pages/token.html) · mint `42UNqmUTuKuKZ5mwo2r5y3cNoPv38P8fxAisqQLXdT6u` |
 | **Network** | Solana **Devnet only** |
 | **Program** | `EbP7vsnMXPonTfriPUFynco69d69JiXpWbKnwVmz8sgG` |
 | **Operator** | Joseph Mushelle Nyingeh (Alitiora Initiative), Kenya |
@@ -42,6 +43,19 @@ Devnet SOL / Devnet USDC have **no real-world value**. This is not an investment
 5. Confirm on [Solana Explorer](https://explorer.solana.com/?cluster=devnet) (cluster = Devnet).
 
 If public RPC is busy, wait a minute and retry.
+
+
+## $SL development coin
+
+[Space Ledger ($SL)](https://space-ledger-alitiora.vercel.app/pages/token.html) is a **Solana mainnet** coin on [StonkFun](https://www.stonkfun.xyz/token/42UNqmUTuKuKZ5mwo2r5y3cNoPv38P8fxAisqQLXdT6u), paired with STONK. The operator launched it so trading activity can help fund continued work on this website and protocol (hosting, RPC, interface, and review). It is separate from Devnet block purchases.
+
+| | |
+|---|---|
+| Mint | `42UNqmUTuKuKZ5mwo2r5y3cNoPv38P8fxAisqQLXdT6u` |
+| Pool | `EPAsaZjCvMZitE8d65KAR7yxpFbt8gAZo8zNzQk4YQsy` |
+| Page | [/pages/token.html](https://space-ledger-alitiora.vercel.app/pages/token.html) |
+
+The page’s `/api/token/sl` route reads StonkFun, Jupiter, GeckoTerminal, and Raydium on each request (short server cache). It does not simulate price, volume, or trades. $SL is speculative, not equity, and not a claim on canvas blocks.
 
 ## Optional builder support
 

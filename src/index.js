@@ -6,6 +6,7 @@ const rpcRouter = require('./rpcRouter');
 const blockIds = require('./blockId');
 const solanaService = require('./solanaService');
 const supportGoal = require('./supportGoal');
+const slToken = require('./slToken');
 const { createRateLimiter } = require('./rateLimit');
 
 const quoteRateLimit = createRateLimiter({ windowMs: 60_000, max: 20, name: 'quote' });
@@ -101,6 +102,35 @@ app.get('/api/treasury', readRateLimit, async (_req, res) => {
     res.json({ status: config.initialized ? 'devnet_verified' : 'awaiting_initialization', contractAddress: config.programId, walletAddress: config.treasury, verified: config.initialized, network: 'devnet', treasuryBalanceLamports: config.treasuryBalanceLamports, treasuryBalanceSol: config.treasuryBalanceSol, treasuryBalanceUsdc: config.treasuryBalanceUsdc });
   } catch (error) {
     res.status(503).json({ error: error.message });
+  }
+});
+
+app.get('/api/token/sl', readRateLimit, async (_req, res) => {
+  try {
+    const data = await slToken.getSnapshot();
+    res.set('Cache-Control', 'public, max-age=10');
+    res.json(data);
+  } catch (error) {
+    res.status(503).json({
+      live: false,
+      simulated: false,
+      error: error.message || 'Token market data unavailable.',
+      sources: error.sources || null,
+    });
+  }
+});
+
+app.get('/api/token/sl/image', async (_req, res) => {
+  try {
+    const image = await slToken.getImage();
+    res.set({
+      'Content-Type': image.contentType,
+      'Cache-Control': 'public, max-age=3600',
+      'X-Content-Type-Options': 'nosniff',
+    });
+    res.send(image.body);
+  } catch (error) {
+    res.status(404).json({ error: error.message || 'Token image unavailable.' });
   }
 });
 

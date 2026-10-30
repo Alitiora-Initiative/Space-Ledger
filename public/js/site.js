@@ -125,6 +125,19 @@
     document.head.append(icon);
   }
   if (nav && list && brand) {
+    if (!list.querySelector('a[href="/pages/token.html"]')) {
+      const tokenItem = document.createElement('li');
+      const tokenLink = document.createElement('a');
+      tokenLink.href = '/pages/token.html';
+      tokenLink.textContent = '$SL';
+      if (window.location.pathname.endsWith('/pages/token.html')) {
+        tokenLink.className = 'active';
+        tokenLink.setAttribute('aria-current', 'page');
+      }
+      tokenItem.append(tokenLink);
+      const tokenWallet = list.querySelector('.wallet-button, #navWalletBtn')?.closest('li');
+      list.insertBefore(tokenItem, tokenWallet || null);
+    }
     if (!list.querySelector('a[href="/pages/leaderboard.html"]')) {
       const item = document.createElement('li');
       const link = document.createElement('a');
