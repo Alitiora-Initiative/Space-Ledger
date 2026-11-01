@@ -29,7 +29,7 @@ Devnet SOL / Devnet USDC have **no real-world value**. This is not an investment
 | Topic | Status |
 |--------|--------|
 | Mainnet | Not yet (out of scope until funded & audited) |
-| Pixel & Grid Efficiency | In architectural design (virtualized canvas + chunk API) |
+| Pixel & Grid Efficiency | Complete (virtualized 2D canvas viewport + `/api/grid/chunk`) |
 | Two-way Market (Buy & Sell) | In architectural design (two-way bonding curve AMM) |
 | Real Movement Chart | In design (Lightweight-Charts with live on-chain history) |
 | WalletConnect QR | Use in-app browser instead |

@@ -179,6 +179,42 @@ app.get('/api/grid', readRateLimit, async (req, res) => {
   }
 });
 
+app.get('/api/grid/chunk', readRateLimit, async (req, res) => {
+  const startBlock = blockIds.parse(req.query.start ?? req.query.block ?? '0');
+  const count = Math.min(100, Math.max(1, parseInt(req.query.count, 10) || 10));
+  if (startBlock === null || startBlock >= bondingCurve.TOTAL_SUPPLY) {
+    return res.status(400).json({ error: 'Start block must be a valid label or number within the published supply.' });
+  }
+  try {
+    const endBlock = Math.min(bondingCurve.TOTAL_SUPPLY - 1, startBlock + count - 1);
+    const actualCount = endBlock - startBlock + 1;
+    let receipts = [];
+    if (process.env.SOLANA_PROGRAM_ID) {
+      receipts = await solanaService.listReceipts({ limit: 100 });
+    }
+    const blocks = [];
+    for (let i = 0; i < actualCount; i++) {
+      const bId = startBlock + i;
+      const receipt = receipts.find(r => BigInt(bId) >= BigInt(r.startBlock) && BigInt(bId) <= BigInt(r.endBlock));
+      blocks.push({
+        blockId: bId,
+        blockLabel: blockIds.format(bId),
+        owned: Boolean(receipt),
+        owner: receipt ? receipt.buyer : null,
+      });
+    }
+    res.json({
+      startBlock,
+      count: actualCount,
+      blocks,
+      network: 'devnet',
+      ownershipStatus: process.env.SOLANA_PROGRAM_ID ? 'devnet_verified' : 'unverified',
+    });
+  } catch (error) {
+    res.status(503).json({ error: error.message });
+  }
+});
+
 app.get('/api/stats', readRateLimit, async (_req, res) => {
   if (!process.env.SOLANA_PROGRAM_ID) return res.json({ status: 'not_configured', totalSupply: bondingCurve.TOTAL_SUPPLY, currentSupply: null, totalFeesUsd: null, message: NOT_DEPLOYED });
   try {

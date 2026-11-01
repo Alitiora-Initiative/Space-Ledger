@@ -55,7 +55,7 @@ Human-maintained checklist. Deployments require a deliberate Git push (and Verce
 ## Phased Implementation Plan
 
 - **Phase 1 (Design & Scope - Complete)**: Update `ROADMAP.md` and `README.md` with explicit architecture alternatives, constraints, and acceptance criteria.
-- **Phase 2 (Grid Optimization)**: Virtualized canvas viewport prototype + chunk API.
+- **Phase 2 (Grid Optimization - Complete)**: Virtualized 2D canvas viewport for `/pages/grid.html` eliminating DOM thrashing + `/api/grid/chunk` spatial query API.
 - **Phase 3 (Live Movement Chart)**: TradingView Lightweight Charts integration with real transaction history API.
 - **Phase 4 (Two-Way Bonding Curve)**: Anchor program `sell_blocks` instruction, unit tests (`cargo test`), and frontend sell UI.
 
