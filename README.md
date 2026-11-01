@@ -24,15 +24,27 @@ Devnet SOL / Devnet USDC have **no real-world value**. This is not an investment
 - Legal drafts: Privacy / Terms / Cookies with operator contact.
 - Mobile path: Phantom or Solflare **in-app browser** ([guide](https://space-ledger-alitiora.vercel.app/pages/mobile.html)).
 
-## What is not included
+## What is not included / Next Upgrades
 
 | Topic | Status |
 |--------|--------|
-| Mainnet | Not yet |
-| Pixel-level on-chain ownership | Whole **blocks** only |
-| Secondary market / transfers | Not in the program |
+| Mainnet | Not yet (out of scope until funded & audited) |
+| Pixel & Grid Efficiency | In architectural design (virtualized canvas + chunk API) |
+| Two-way Market (Buy & Sell) | In architectural design (two-way bonding curve AMM) |
+| Real Movement Chart | In design (Lightweight-Charts with live on-chain history) |
 | WalletConnect QR | Use in-app browser instead |
 | Paid audit | Future / grant-funded |
+
+## Roadmap & Architecture Upgrades
+
+Per operator scope update (2026-11-01), the team is designing three key system enhancements:
+1. **Grid & Pixel Efficiency**: Virtualized viewport rendering (LOD canvas) and chunked API endpoints to handle scale without client memory lag.
+2. **Buy & Sell Two-Way Orders**: Extending the on-chain bonding curve to support two-way redemption (`sell_blocks`) so users can exit positions directly back to the curve.
+3. **Real Movement Charting**: Time-series price and supply charts backed purely by on-chain transaction history (no simulated prices or fake ticks).
+
+See [ROADMAP.md](ROADMAP.md) for detailed architecture comparisons, trade-offs, and acceptance tests.
+
+
 
 ## How to test (2 minutes)
 
