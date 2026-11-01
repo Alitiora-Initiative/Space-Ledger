@@ -21,7 +21,7 @@ Secrets must be set in the **Vercel project dashboard** then **Redeploy**. Do no
 
 | Route | Expected |
 |-------|----------|
-| `GET /api/solana/config` | 200, `network: "devnet"`, `initialized: true` |
+| `GET /api/solana/config` | 200, `network: "devnet"`, `initialized: true`, `rpcProvider` (`public-devnet` or `helius-devnet`) |
 | `GET /api/supply` | 200, supply fields |
 | `GET /api/market` | 200, includes `nextBlockModelPriceUsd` |
 | `GET /api/leaderboard` | 200 |

@@ -137,9 +137,9 @@ test('Express app serves pages and live API endpoints while rejecting removed fe
   assert.match(responses.get('/'), /About Space Ledger/);
   assert.match(responses.get('/'), /<h1>Space Ledger<\/h1>/);
   assert.doesNotMatch(responses.get('/'), /Spatial Ledger Protocol/);
-  assert.match(responses.get('/pages/privacy.html'), /Publication status: incomplete/);
-  assert.match(responses.get('/pages/terms.html'), /Terms and Conditions/);
-  assert.match(responses.get('/pages/cookies.html'), /does not currently need a cookie-consent banner/);
+  assert.match(responses.get('/pages/privacy.html'), /Devnet test prototype — no real-world value/);
+  assert.match(responses.get('/pages/terms.html'), /Terms of use \(Devnet prototype\)/);
+  assert.match(responses.get('/pages/cookies.html'), /No advertising cookies/);
   assert.match(responses.get('/pages/leaderboard.html'), /confirmed Devnet purchase receipts/);
   assert.match(responses.get('/pages/market.html'), /Not a trading market/);
   assert.match(responses.get('/pages/profile.html'), /id="purchaseHistory" hidden/);
