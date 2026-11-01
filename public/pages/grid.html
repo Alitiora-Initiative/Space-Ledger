@@ -6,46 +6,30 @@
   <title>Space Ledger — Grid</title>
   <link rel="stylesheet" href="../css/styles.css">
   <style>
-    .grid-cell {
-      border: 1px solid rgba(0,212,255,0.35);
-      border-radius: 2px;
-      image-rendering: pixelated;
-      width: 100%;
-      min-width: 28px;
-      min-height: 36px;
-      height: 36px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 0.65em;
-      color: #e8edf4;
-      background: rgba(0, 40, 60, 0.55);
-      position: relative;
-      z-index: 1;
-      -webkit-tap-highlight-color: rgba(0,212,255,0.35);
-      touch-action: manipulation;
-      user-select: none;
-    }
-    .grid-cell:hover, .grid-cell:focus {
-      outline: 2px solid #00d4ff;
-      outline-offset: 1px;
-      background: rgba(0, 80, 110, 0.75);
-    }
-    #pixelGrid {
-      display: grid !important;
-      grid-template-columns: repeat(10, minmax(28px, 1fr));
-      gap: 3px;
+    #pixelCanvas {
+      display: block;
       width: 100%;
       max-width: 420px;
-      position: relative;
-      z-index: 2;
+      aspect-ratio: 1 / 1;
+      border: 1px solid rgba(0,212,255,0.35);
+      border-radius: 4px;
+      background: rgba(0, 40, 60, 0.55);
+      cursor: crosshair;
+      touch-action: none;
+      image-rendering: pixelated;
+    }
+    #pixelCanvas:focus {
+      outline: 2px solid #00d4ff;
+      outline-offset: 2px;
     }
     .grid-scroll {
       overflow: auto;
       padding: 8px 0;
       position: relative;
       z-index: 2;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
     }
     @keyframes flash {
       0%,100% { opacity: 1; }
@@ -112,9 +96,9 @@
     </div>
 
     <div class="card">
-      <h2>10 × 10 Pixel Grid</h2>
+      <h2>10 × 10 Pixel Grid (Virtualized Viewport)</h2>
       <p style="color:#c4d0d7;margin-bottom:15px;">
-        Tap any cell to inspect it. Purchases buy the <strong>whole block</strong> (100 pixels). Opening the purchase page does not spend tokens until you approve in your wallet.
+        Tap or click any pixel cell on the virtual canvas to inspect it. Purchases buy the <strong>whole block</strong> (100 pixels). Opening the purchase page does not spend tokens until you approve in your wallet.
       </p>
       <div style="display:flex;gap:8px;margin-bottom:10px;">
         <button class="button" type="button" aria-label="Set grid zoom to 1×" aria-pressed="true" onclick="setZoom(1)">1×</button>
@@ -122,7 +106,7 @@
         <button class="button" type="button" aria-label="Set grid zoom to 4×" aria-pressed="false" onclick="setZoom(4)">4×</button>
       </div>
       <div class="grid-scroll" tabindex="0" aria-label="Scrollable pixel grid">
-        <div class="grid-container" id="pixelGrid" role="group" aria-label="Pixels in selected block"></div>
+        <canvas id="pixelCanvas" width="400" height="400" tabindex="0" role="img" aria-label="Interactive 10x10 pixel grid viewport"></canvas>
       </div>
     </div>
 
@@ -161,19 +145,143 @@
   <script src="../js/block-id.js"></script>
   <script>
     let currentBlockId = 0;
+    let currentZoom = 1;
+    let currentOwnership = { verified: false, owner: null };
+    let currentBlockPrice = 0.001;
+    let selectedPixel = null;
+    let hoveredPixel = null;
+
+    const canvas = document.getElementById('pixelCanvas');
+    const ctx = canvas.getContext('2d');
+    const tooltip = document.getElementById('tooltip');
 
     function setZoom(level) {
-      const g = document.getElementById('pixelGrid');
-      const size = 28 * level;
-      g.style.gridTemplateColumns = 'repeat(10, minmax(' + size + 'px, 1fr))';
-      g.querySelectorAll('.grid-cell').forEach(cell => {
-        cell.style.minHeight = size + 'px';
-        cell.style.height = size + 'px';
-      });
+      currentZoom = level;
+      const size = 320 * level;
+      canvas.style.maxWidth = Math.min(size, 640) + 'px';
       document.querySelectorAll('[aria-label^="Set grid zoom"]').forEach(button => {
         button.setAttribute('aria-pressed', String(button.textContent.trim() === level + '×'));
       });
+      drawCanvas();
     }
+
+    function drawCanvas() {
+      const width = canvas.width;
+      const height = canvas.height;
+      ctx.clearRect(0, 0, width, height);
+
+      const cols = 10;
+      const rows = 10;
+      const cellW = width / cols;
+      const cellH = height / rows;
+
+      const isOwned = currentOwnership.verified && Boolean(currentOwnership.owner);
+
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          const idx = r * 10 + c;
+          const x = c * cellW;
+          const y = r * cellH;
+
+          if (isOwned) {
+            ctx.fillStyle = 'rgba(0, 212, 255, 0.45)';
+          } else if (currentOwnership.verified) {
+            ctx.fillStyle = 'rgba(0, 40, 60, 0.65)';
+          } else {
+            ctx.fillStyle = 'rgba(20, 25, 35, 0.7)';
+          }
+
+          if (hoveredPixel === idx) {
+            ctx.fillStyle = 'rgba(0, 180, 240, 0.85)';
+          }
+          if (selectedPixel === idx) {
+            ctx.fillStyle = '#00d4ff';
+          }
+
+          ctx.fillRect(x + 1, y + 1, cellW - 2, cellH - 2);
+
+          ctx.strokeStyle = selectedPixel === idx ? '#ffffff' : 'rgba(0, 212, 255, 0.25)';
+          ctx.lineWidth = selectedPixel === idx ? 2 : 1;
+          ctx.strokeRect(x + 1, y + 1, cellW - 2, cellH - 2);
+
+          ctx.fillStyle = selectedPixel === idx ? '#050c14' : '#e8edf4';
+          ctx.font = '10px monospace';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(String(idx), x + cellW / 2, y + cellH / 2);
+        }
+      }
+    }
+
+    function getCellFromCoords(e) {
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = canvas.width / rect.width;
+      const scaleY = canvas.height / rect.height;
+      const clientX = e.clientX ?? (e.touches && e.touches[0] ? e.touches[0].clientX : 0);
+      const clientY = e.clientY ?? (e.touches && e.touches[0] ? e.touches[0].clientY : 0);
+      const x = (clientX - rect.left) * scaleX;
+      const y = (clientY - rect.top) * scaleY;
+      const col = Math.floor(x / (canvas.width / 10));
+      const row = Math.floor(y / (canvas.height / 10));
+      if (col >= 0 && col < 10 && row >= 0 && row < 10) {
+        return { col, row, pixelIndex: row * 10 + col };
+      }
+      return null;
+    }
+
+    canvas.addEventListener('mousemove', function (e) {
+      const cell = getCellFromCoords(e);
+      if (!cell) {
+        hoveredPixel = null;
+        tooltip.style.display = 'none';
+        drawCanvas();
+        return;
+      }
+      hoveredPixel = cell.pixelIndex;
+      drawCanvas();
+      const blockLabel = BlockId.format(currentBlockId);
+      const ownershipLabel = currentOwnership.verified ? (currentOwnership.owner ? 'owned by ' + currentOwnership.owner : 'available') : 'unverified';
+      tooltip.style.display = 'block';
+      tooltip.style.left = (e.clientX + 14) + 'px';
+      tooltip.style.top = (e.clientY + 14) + 'px';
+      tooltip.textContent = 'Pixel: ' + cell.pixelIndex + '\nBlock: ' + blockLabel + '\n' + ownershipLabel;
+    });
+
+    canvas.addEventListener('mouseleave', function () {
+      hoveredPixel = null;
+      tooltip.style.display = 'none';
+      drawCanvas();
+    });
+
+    canvas.addEventListener('click', function (e) {
+      const cell = getCellFromCoords(e);
+      if (!cell) return;
+      selectedPixel = cell.pixelIndex;
+      const globalPixelId = currentBlockId * 100 + cell.pixelIndex;
+      showPixelDetails(cell.pixelIndex, globalPixelId, cell.row, cell.col, currentBlockPrice);
+      drawCanvas();
+    });
+
+    canvas.addEventListener('keydown', function (e) {
+      if (selectedPixel === null) selectedPixel = 0;
+      let row = Math.floor(selectedPixel / 10);
+      let col = selectedPixel % 10;
+      if (e.key === 'ArrowRight' && col < 9) col++;
+      else if (e.key === 'ArrowLeft' && col > 0) col--;
+      else if (e.key === 'ArrowDown' && row < 9) row++;
+      else if (e.key === 'ArrowUp' && row > 0) row--;
+      else if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        const globalPixelId = currentBlockId * 100 + selectedPixel;
+        showPixelDetails(selectedPixel, globalPixelId, row, col, currentBlockPrice);
+        return;
+      } else return;
+      e.preventDefault();
+      selectedPixel = row * 10 + col;
+      const globalPixelId = currentBlockId * 100 + selectedPixel;
+      showPixelDetails(selectedPixel, globalPixelId, row, col, currentBlockPrice);
+      drawCanvas();
+    });
 
     async function loadGrid() {
       const input = document.getElementById('blockId');
@@ -193,50 +301,46 @@
     }
 
     async function renderGrid() {
-      const gridContainer = document.getElementById('pixelGrid');
       const blockInfo = document.getElementById('blockInfo');
-      gridContainer.innerHTML = '';
       try {
         const blockLabel = BlockId.format(currentBlockId);
         const priceRes = await fetch('/api/price/' + encodeURIComponent(blockLabel));
         const priceData = await priceRes.json();
         if (!priceRes.ok) throw new Error(priceData.error || 'Could not load this estimate.');
-        const blockPrice = priceData.price;
-        let ownership = { verified: false };
+        currentBlockPrice = priceData.price;
+
+        currentOwnership = { verified: false, owner: null };
         try {
-          const ownershipResponse = await fetch('/api/block-owner/' + encodeURIComponent(currentBlockId));
-          ownership = await ownershipResponse.json();
-          if (!ownershipResponse.ok) ownership = { verified: false };
-        } catch (e) { ownership = { verified: false }; }
-        const ownershipLabel = ownership.verified ? (ownership.owner ? 'owned by ' + ownership.owner : 'available') : 'unverified';
-        document.getElementById('currentBlockDisplay').textContent = blockLabel;
-        document.getElementById('blockPriceDisplay').textContent = '$' + blockPrice.toFixed(6);
-        blockInfo.textContent = 'Block ' + blockLabel + ' · estimated model price $' + blockPrice.toFixed(6) + ' · ' + ownershipLabel;
-        const tooltip = document.getElementById('tooltip');
-        for (let row = 0; row < 10; row++) {
-          for (let col = 0; col < 10; col++) {
-            const pixelIndex = row * 10 + col;
-            const globalPixelId = currentBlockId * 100 + pixelIndex;
-            const cell = document.createElement('button');
-            cell.type = 'button';
-            cell.dataset.pixelIndex = String(pixelIndex);
-            cell.tabIndex = 0;
-            cell.className = 'grid-cell ' + (ownership.verified ? (ownership.owner ? 'owned' : 'available') : 'unverified');
-            cell.textContent = String(pixelIndex);
-            cell.setAttribute('aria-label', 'Block ' + blockLabel + ', pixel ' + (pixelIndex + 1) + ', ' + ownershipLabel);
-            cell.addEventListener('click', function () {
-              showPixelDetails(pixelIndex, globalPixelId, row, col, blockPrice);
-            });
-            cell.addEventListener('mousemove', function (e) {
-              tooltip.style.display = 'block';
-              tooltip.style.left = (e.clientX + 14) + 'px';
-              tooltip.style.top = (e.clientY + 14) + 'px';
-              tooltip.textContent = 'Pixel: ' + pixelIndex + '\nBlock: ' + blockLabel + '\n' + ownershipLabel;
-            });
-            cell.addEventListener('mouseleave', function () { tooltip.style.display = 'none'; });
-            gridContainer.appendChild(cell);
+          const chunkRes = await fetch('/api/grid/chunk?start=' + encodeURIComponent(String(currentBlockId)) + '&count=1');
+          if (chunkRes.ok) {
+            const chunkData = await chunkRes.json();
+            if (chunkData.blocks && chunkData.blocks[0]) {
+              const b = chunkData.blocks[0];
+              currentOwnership = {
+                verified: chunkData.ownershipStatus === 'devnet_verified',
+                owner: b.owned ? b.owner : null
+              };
+            }
+          } else {
+            const ownerRes = await fetch('/api/block-owner/' + encodeURIComponent(currentBlockId));
+            const ownerData = await ownerRes.json();
+            if (ownerRes.ok) {
+              currentOwnership = {
+                verified: Boolean(ownerData.verified),
+                owner: ownerData.owner || null
+              };
+            }
           }
+        } catch (e) {
+          currentOwnership = { verified: false, owner: null };
         }
+
+        const ownershipLabel = currentOwnership.verified ? (currentOwnership.owner ? 'owned by ' + currentOwnership.owner : 'available') : 'unverified';
+        document.getElementById('currentBlockDisplay').textContent = blockLabel;
+        document.getElementById('blockPriceDisplay').textContent = '$' + currentBlockPrice.toFixed(6);
+        blockInfo.textContent = 'Block ' + blockLabel + ' · estimated model price $' + currentBlockPrice.toFixed(6) + ' · ' + ownershipLabel;
+
+        drawCanvas();
       } catch (error) {
         blockInfo.textContent = 'Error loading grid: ' + (error.message || 'unknown');
       }

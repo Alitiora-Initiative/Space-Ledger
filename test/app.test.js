@@ -161,6 +161,11 @@ test('Express app serves pages and live API endpoints while rejecting removed fe
   const namedGrid = await namedGridResponse.json();
   assert.equal(namedGrid.blockId, 26_000);
   assert.equal(namedGrid.blockLabel, '000AA');
+  const chunkResponse = await fetch(`${baseUrl}/api/grid/chunk?start=0&count=5`);
+  assert.equal(chunkResponse.status, 200);
+  const chunk = await chunkResponse.json();
+  assert.equal(chunk.blocks.length, 5);
+  assert.equal(chunk.startBlock, 0);
   assert.equal(responses.get('/api/market').verified, false);
   assert.deepEqual(responses.get('/api/market').latestReceipts, []);
   const paymentScript = fs.readFileSync(path.join(root, 'public', 'js', 'solanaPayment.js'), 'utf8');
