@@ -64,3 +64,13 @@ test('purchase receipt decoder validates owner, discriminator, bounds, asset, an
   invalidRange.writeBigUInt64LE(10_000_000_000n, 8);
   assert.throws(() => service.decodePurchaseReceipt(receipt, { owner: programId, data: invalidRange }, programId), /failed validation/);
 });
+
+test('detectRpcProvider categorizes host class without exposing credentials', () => {
+  assert.equal(service.detectRpcProvider('https://api.devnet.solana.com'), 'public-devnet');
+  assert.equal(service.detectRpcProvider('https://devnet.helius-rpc.com/?api-key=secret-key-12345'), 'helius-devnet');
+  assert.equal(service.detectRpcProvider('https://mainnet.helius-rpc.com/?api-key=xyz'), 'helius-devnet');
+  assert.equal(service.detectRpcProvider('https://other-rpc.example.com'), 'public-devnet');
+  assert.equal(service.detectRpcProvider('invalid-url'), 'public-devnet');
+  assert.equal(service.detectRpcProvider(undefined), 'public-devnet');
+});
+

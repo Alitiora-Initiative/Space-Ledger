@@ -345,6 +345,14 @@ async function listReceipts({ buyer, blockId, limit } = {}) {
   return rows;
 }
 
+function detectRpcProvider(rpcUrl) {
+  try {
+    const parsed = new URL(rpcUrl);
+    if (parsed.hostname.toLowerCase().endsWith('helius-rpc.com')) return 'helius-devnet';
+  } catch {}
+  return 'public-devnet';
+}
+
 async function publicConfig() {
   const programId = configuredProgramId();
   const state = await getState(programId);
@@ -359,6 +367,7 @@ async function publicConfig() {
   return {
     network: 'devnet',
     rpc: 'https://api.devnet.solana.com',
+    rpcProvider: detectRpcProvider(DEVNET_RPC),
     programId: programId.toBase58(),
     treasury: TREASURY,
     usdcMint: USDC_MINT,
@@ -393,6 +402,7 @@ module.exports = {
   buildPurchaseTransaction,
   configPda,
   decodePurchaseReceipt,
+  detectRpcProvider,
   getState,
   listReceipts,
   parsePythSolUsd,
