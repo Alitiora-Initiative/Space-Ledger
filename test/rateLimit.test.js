@@ -61,6 +61,23 @@ test('rate limiter returns 429 after the max within the window', () => {
   assert.match(blocked.body.error, /Too many purchase requests/i);
 });
 
+test('rate limiter ignores spoofed X-Forwarded-For and uses the resolved IP', () => {
+  const limiter = createRateLimiter({ windowMs: 60_000, max: 1, name: 'rpc' });
+  const firstRequest = mockReq('203.0.113.10');
+  firstRequest.headers['x-forwarded-for'] = '198.51.100.1';
+  const firstResponse = mockRes();
+  limiter(firstRequest, firstResponse, () => {});
+  assert.equal(firstResponse.statusCode, 200);
+
+  const secondRequest = mockReq('203.0.113.10');
+  secondRequest.headers['x-forwarded-for'] = '198.51.100.2';
+  const secondResponse = mockRes();
+  let nextCalled = false;
+  limiter(secondRequest, secondResponse, () => { nextCalled = true; });
+  assert.equal(nextCalled, false);
+  assert.equal(secondResponse.statusCode, 429);
+});
+
 test('rate limiter isolates different client keys', () => {
   const limiter = createRateLimiter({ windowMs: 60_000, max: 1, name: 'quote' });
   const first = mockRes();

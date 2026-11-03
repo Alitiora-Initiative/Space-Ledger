@@ -712,3 +712,192 @@ nav a { color: #dce6eb; }
 @media (max-width: 520px) {
   .site-footer-inner { flex-direction: row; align-items: center; flex-wrap: wrap; justify-content: space-between; }
 }
+
+
+/* Compact responsive site chrome and accessible navigation. */
+body {
+  padding-bottom: calc(50px + env(safe-area-inset-bottom));
+}
+
+nav {
+  min-height: 46px;
+  padding: 5px 18px;
+  border-bottom-width: 1px;
+}
+
+nav .container {
+  position: relative;
+  max-width: 1260px;
+  padding: 0;
+  margin: 0 auto;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 12px;
+}
+
+nav .container > a {
+  flex: 0 0 auto;
+  min-width: 0;
+}
+
+nav .container > a img {
+  width: 28px !important;
+  height: 28px !important;
+}
+
+nav .logo {
+  font-size: 1.12rem;
+  letter-spacing: 0.01em;
+}
+
+nav ul {
+  flex-wrap: nowrap;
+  column-gap: clamp(8px, 1.1vw, 16px);
+  row-gap: 4px;
+}
+
+nav a {
+  padding: 5px 0;
+  font-size: 0.72rem;
+  white-space: nowrap;
+}
+
+.wallet-button {
+  min-height: 34px;
+  padding: 6px 10px;
+  border-radius: 7px;
+  font-size: 0.74rem;
+}
+
+.nav-toggle {
+  width: 36px;
+  height: 36px;
+  border-radius: 9px;
+}
+
+.skip-link {
+  position: fixed !important;
+  top: 8px;
+  left: 8px;
+  z-index: 2001 !important;
+  display: inline-flex;
+  padding: 10px 14px;
+  transform: translateY(-160%);
+  border: 1px solid #7dddea;
+  border-radius: 8px;
+  background: #07141c;
+  color: #fff;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.skip-link:focus {
+  transform: translateY(0);
+}
+
+.site-footer-inner {
+  min-height: 42px;
+  padding: 4px 16px;
+  gap: 12px;
+}
+
+.site-footer-inner > span {
+  color: #b8c7d0;
+  font-size: 0.72rem;
+  white-space: nowrap;
+}
+
+.site-footer nav {
+  gap: 12px;
+}
+
+.site-footer a {
+  padding: 3px 0;
+  font-size: 0.72rem;
+}
+
+.support-bar {
+  bottom: calc(54px + env(safe-area-inset-bottom)) !important;
+}
+
+body.has-support-bar {
+  padding-bottom: calc(300px + env(safe-area-inset-bottom));
+}
+
+@media (max-width: 1080px) and (min-width: 901px) {
+  nav .logo { font-size: 1rem; }
+  nav ul { column-gap: 8px; }
+  nav a { font-size: 0.68rem; }
+  .wallet-button { font-size: 0.7rem; padding-inline: 8px; }
+}
+
+@media (max-width: 900px) {
+  nav {
+    padding: 5px 14px;
+  }
+
+  nav .container {
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 10px;
+  }
+
+  nav ul,
+  nav ul.nav-open {
+    width: min(340px, calc(100vw - 28px));
+    max-height: calc(100dvh - 78px);
+    overflow-y: auto;
+    position: absolute;
+    top: calc(100% + 7px);
+    right: 0;
+    left: auto;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 2px;
+    padding: 8px;
+    border: 1px solid rgba(113, 197, 214, 0.32);
+    border-radius: 12px;
+    background: #080f18;
+    box-shadow: 0 18px 44px rgba(0, 0, 0, 0.5);
+  }
+
+  nav ul { display: none; }
+  nav ul.nav-open { display: flex; }
+  nav ul li { width: 100%; }
+  nav ul a {
+    display: flex;
+    align-items: center;
+    min-height: 38px;
+    padding: 8px 10px;
+    font-size: 0.82rem;
+  }
+  nav ul .wallet-button {
+    width: 100%;
+    min-height: 40px;
+    margin-top: 4px;
+  }
+  .nav-toggle {
+    display: inline-flex;
+    flex: 0 0 36px;
+    margin-left: auto;
+  }
+}
+
+@media (max-width: 600px) {
+  body { padding-bottom: calc(48px + env(safe-area-inset-bottom)); }
+  .container { padding: 16px 14px 24px; }
+  .hero { padding: 32px 10px 24px; }
+  .hero h1 { font-size: clamp(2rem, 8vw, 3rem); }
+  .card { padding: 16px; border-radius: 12px; }
+  .site-footer-inner { min-height: 40px; padding: 3px 10px; gap: 8px; }
+  .site-footer-inner > span { font-size: 0.65rem; }
+  .site-footer nav { gap: 8px; }
+  .site-footer a { font-size: 0.66rem; }
+}
+
+@media (max-width: 360px) {
+  .site-footer-inner > span { display: none; }
+  .site-footer-inner { justify-content: center; }
+}

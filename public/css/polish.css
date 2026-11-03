@@ -11,7 +11,6 @@ th, td { padding: 8px 10px; text-align: left; }
 .site-footer a, .card a { text-underline-offset: 2px; }
 button:disabled, .button:disabled { opacity: 0.55; cursor: not-allowed; }
 @media (max-width: 640px) {
-  nav ul { flex-wrap: wrap; gap: 6px; }
   .card { padding: 14px; }
   input, select, button, .button { min-height: 44px; }
 }

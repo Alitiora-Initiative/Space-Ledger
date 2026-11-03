@@ -12,6 +12,7 @@ const { createRateLimiter } = require('./rateLimit');
 const quoteRateLimit = createRateLimiter({ windowMs: 60_000, max: 20, name: 'quote' });
 const purchaseRateLimit = createRateLimiter({ windowMs: 60_000, max: 8, name: 'purchase' });
 const readRateLimit = createRateLimiter({ windowMs: 60_000, max: 60, name: 'read' });
+const rpcRateLimit = createRateLimiter({ windowMs: 60_000, max: 30, name: 'rpc' });
 
 const PORT = Number.parseInt(process.env.PORT, 10) || 3000;
 const SOLANA_NETWORK = 'devnet';
@@ -32,6 +33,10 @@ const cachedConfig = withCache('config', 8_000, () => solanaService.publicConfig
 const cachedSupportGoal = withCache('supportGoal', 30_000, () => supportGoal.getProgress());
 
 const app = express();
+// Vercel terminates the public connection before the Express function.
+// Trust its immediate proxy hop so req.ip resolves to the visitor address.
+// Local development keeps Express's default (no proxy trust).
+if (process.env.VERCEL === '1') app.set('trust proxy', 1);
 app.disable('x-powered-by');
 app.use((_req, res, next) => {
   res.set({
@@ -142,7 +147,7 @@ app.get('/api/support-goal', readRateLimit, async (_req, res) => {
   }
 });
 
-app.post('/api/rpc', async (req, res) => {
+app.post('/api/rpc', rpcRateLimit, async (req, res) => {
   const { networkId, method, params } = req.body || {};
   try {
     res.json(await rpcRouter.routeRequest(networkId, method, params));
@@ -190,7 +195,7 @@ app.get('/api/grid/chunk', readRateLimit, async (req, res) => {
     const actualCount = endBlock - startBlock + 1;
     let receipts = [];
     if (process.env.SOLANA_PROGRAM_ID) {
-      receipts = await solanaService.listReceipts({ limit: 100 });
+      receipts = await solanaService.listReceipts();
     }
     const blocks = [];
     for (let i = 0; i < actualCount; i++) {
@@ -219,7 +224,7 @@ app.get('/api/stats', readRateLimit, async (_req, res) => {
   if (!process.env.SOLANA_PROGRAM_ID) return res.json({ status: 'not_configured', totalSupply: bondingCurve.TOTAL_SUPPLY, currentSupply: null, totalFeesUsd: null, message: NOT_DEPLOYED });
   try {
     const state = await solanaService.getState();
-    const receipts = await solanaService.listReceipts({ limit: 500 });
+    const receipts = await solanaService.listReceipts();
     const totalFeesMicroUsd = receipts.reduce((sum, item) => sum + BigInt(item.feeMicroUsd), 0n);
     res.json({ status: state.initialized ? 'devnet_verified' : 'awaiting_initialization', network: 'devnet', totalSupply: bondingCurve.TOTAL_SUPPLY, currentSupply: state.currentSupply.toString(), blocksRemaining: (BigInt(bondingCurve.TOTAL_SUPPLY) - state.currentSupply).toString(), purchaseCount: receipts.length, totalFeesUsd: (Number(totalFeesMicroUsd) / 1_000_000).toFixed(6), message: 'Supply, purchase count, and modeled fees are derived from on-chain Devnet receipts.' });
   } catch (error) {
@@ -234,7 +239,8 @@ app.get('/api/market', readRateLimit, async (req, res) => {
   try {
     const state = await solanaService.getState();
     const limit = Math.min(50, Math.max(1, Number(req.query.limit) || 20));
-    const receipts = await solanaService.listReceipts({ limit });
+    const allReceipts = await solanaService.listReceipts();
+    const receipts = allReceipts.slice(0, limit);
     const supply = Number(state.currentSupply);
     res.json({
       status: state.initialized ? 'devnet_verified' : 'awaiting_initialization',
@@ -243,7 +249,7 @@ app.get('/api/market', readRateLimit, async (req, res) => {
       marketType: 'primary_curve_model',
       currentSupply: state.currentSupply.toString(),
       nextBlockModelPriceUsd: supply < bondingCurve.TOTAL_SUPPLY ? bondingCurve.calculatePrice(supply) : null,
-      confirmedPurchaseCount: receipts.length,
+      confirmedPurchaseCount: allReceipts.length,
       latestReceipts: receipts.map(({ buyer: _buyer, ...receipt }) => receipt),
       message: 'Primary-sale model only. Receipts are confirmed Devnet purchases; resales and candlesticks are not available.',
     });
@@ -255,7 +261,7 @@ app.get('/api/market', readRateLimit, async (req, res) => {
 app.get('/api/leaderboard', readRateLimit, async (_req, res) => {
   if (!process.env.SOLANA_PROGRAM_ID) return res.status(503).json({ verified: false, network: 'devnet', holders: [], error: NOT_DEPLOYED });
   try {
-    const receipts = await solanaService.listReceipts({ limit: 500 });
+    const receipts = await solanaService.listReceipts();
     const holders = new Map();
     for (const receipt of receipts) {
       const holder = holders.get(receipt.buyer) || { address: receipt.buyer, blocksOwned: 0, purchaseCount: 0, lastPurchaseAt: 0 };
@@ -316,7 +322,7 @@ app.get('/api/receipt/:address/signatures', readRateLimit, async (req, res) => {
 app.get('/api/blocks/:address', readRateLimit, async (req, res) => {
   if (!process.env.SOLANA_PROGRAM_ID) return res.status(503).json({ error: 'Wallet holdings cannot be verified: no ownership contract or indexer is deployed.' });
   try {
-    const receipts = await solanaService.listReceipts({ buyer: req.params.address, limit: 100 });
+    const receipts = await solanaService.listReceipts({ buyer: req.params.address });
     res.json({ address: req.params.address, verified: true, ranges: receipts });
   } catch (error) {
     res.status(400).json({ error: error.message });
@@ -326,7 +332,7 @@ app.get('/api/blocks/:address', readRateLimit, async (req, res) => {
 app.get('/api/portfolio/:address', readRateLimit, async (req, res) => {
   if (!process.env.SOLANA_PROGRAM_ID) return res.status(503).json({ error: 'Portfolio data is unavailable until verified ownership indexing is deployed.' });
   try {
-    const receipts = await solanaService.listReceipts({ buyer: req.params.address, limit: 100 });
+    const receipts = await solanaService.listReceipts({ buyer: req.params.address });
     const blocksOwned = receipts.reduce((sum, receipt) => sum + receipt.blockCount, 0);
     res.json({ address: req.params.address, verified: true, blocksOwned, purchaseCount: receipts.length, ranges: receipts });
   } catch (error) {
