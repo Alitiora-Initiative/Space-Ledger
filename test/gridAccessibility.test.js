@@ -10,7 +10,7 @@ const gridPath = path.join(__dirname, '..', 'public', 'pages', 'grid.html');
 test('grid provides a text alternative to the canvas for all 100 positions', () => {
   const html = fs.readFileSync(gridPath, 'utf8');
 
-  assert.match(html, /<details id="accessiblePixelTextAlternative">/);
+  assert.match(html, /<details id="accessiblePixelTextAlternative"(?:\s|>)/);
   assert.match(html, /<label for="accessiblePixelSelect">Pixel position<\/label>/);
   assert.match(html, /id="inspectAccessiblePixelBtn"/);
   assert.match(html, /<caption id="accessiblePixelCaption"[^>]*aria-live="polite"/);
