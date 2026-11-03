@@ -28,7 +28,9 @@
   }
  }
  if('serviceWorker'in navigator&&(location.protocol==='https:'||location.hostname==='localhost')){
-  window.addEventListener('load',()=>navigator.serviceWorker.register('/sw.js').catch(()=>{}),{once:true});
+  const registerWorker=()=>navigator.serviceWorker.register('/sw.js').catch(()=>{});
+  if(document.readyState==='complete')registerWorker();
+  else window.addEventListener('load',registerWorker,{once:true});
  }
  let installPrompt=null;
  window.addEventListener('beforeinstallprompt',event=>{
