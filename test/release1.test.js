@@ -16,3 +16,21 @@ test('phone tier is read-only for purchases while tablet remains full workspace'
  assert.match(purchase,/id="devnetPurchase" data-desktop-workspace/);
  assert.match(grid,/id="buyCurrentBlockBtn" data-desktop-workspace/);
 });
+
+
+test('service worker uses a new cache version and prefers current assets over stale cache',()=>{
+ const sw=fs.readFileSync(path.join(root,'public','sw.js'),'utf8');
+ assert.match(sw,/space-ledger-shell-v2/);
+ assert.match(sw,/startsWith\(CACHE_PREFIX\)/);
+ const fetchSection=sw.slice(sw.indexOf("if(/\\\\.(?:js"),sw.length);
+ assert.ok(fetchSection.indexOf("fetch(request)") < fetchSection.indexOf("caches.match(request)"),'network must be checked before offline cache fallback');
+ assert.ok(!sw.includes("filter(key=>key!==CACHE).map(key=>caches.delete(key))"),'activation must not wipe unrelated origin caches');
+});
+test('homepage and grid load the final visual theme from parser-discovered stylesheets',()=>{
+ const home=fs.readFileSync(path.join(root,'public','index.html'),'utf8');
+ const grid=fs.readFileSync(path.join(root,'public','pages','grid.html'),'utf8');
+ for(const html of [home,grid]){
+  assert.match(html,/css\\/universe\\.css/);
+  assert.match(html,/css\\/release1\\.css/);
+ }
+});
