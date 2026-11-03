@@ -30,7 +30,7 @@ test('homepage and grid load the final visual theme from parser-discovered style
  const home=fs.readFileSync(path.join(root,'public','index.html'),'utf8');
  const grid=fs.readFileSync(path.join(root,'public','pages','grid.html'),'utf8');
  for(const html of [home,grid]){
-  assert.match(html,/css\\/universe\\.css/);
-  assert.match(html,/css\\/release1\\.css/);
+  assert.ok(html.includes('css/universe.css'));
+  assert.ok(html.includes('css/release1.css'));
  }
 });
