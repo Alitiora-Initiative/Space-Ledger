@@ -113,3 +113,13 @@ test('wallet rejection detection does not mistake RPC failures for user rejectio
   assert.equal(recovery.isUserRejected({ message:'RPC timeout' }), false);
   assert.equal(recovery.isUserRejected(null), false);
 });
+
+
+test('unknown version 2 intent remains persistable when wallet returned no signature', () => {
+  const storage = memoryStorage();
+  const store = recovery.createPendingTransactionStore(storage, 'unknown-intent');
+  const intent = validRecord({ version:2, stage:'unknown', signature:null });
+  assert.equal(store.save(intent), true);
+  assert.equal(store.load().stage, 'unknown');
+  assert.equal(store.load().signature, null);
+});
