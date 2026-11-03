@@ -135,7 +135,9 @@ Configuration notes:
 
 ## Continuous integration
 
-The GitHub Actions workflow [Rust](.github/workflows/rust.yml) runs `cargo build` and `cargo test` for the Anchor program on pushes to `main` and pull requests targeting `main`. The workflow does not run the Node.js test suite; run `npm test` locally and report its actual result.
+The GitHub Actions workflow [Rust](.github/workflows/rust.yml) runs `npm ci`, `npm test`, `cargo build` and `cargo test` on pushes to `main` and pull requests targeting `main`.
+
+**Important build distinction:** the CI `cargo build` is a host Rust build, not a Solana SBF build artifact. The documented `npm run compile` command runs `cargo build-sbf` and requires the Solana program build toolchain. Do not treat a passing host build/test job as proof that a deployable SBF binary matches the on-chain program. The current repository also does not include a root `Anchor.toml` or an Anchor/SVM instruction integration suite; see [security review preparation](docs/SECURITY-REVIEW-PREPARATION.md).
 
 ## Security and data integrity
 

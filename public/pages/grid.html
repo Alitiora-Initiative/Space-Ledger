@@ -108,6 +108,28 @@
       <div class="grid-scroll" tabindex="0" aria-label="Scrollable pixel grid">
         <canvas id="pixelCanvas" width="400" height="400" tabindex="0" role="img" aria-label="Interactive 10x10 pixel grid viewport"></canvas>
       </div>
+      <details id="accessiblePixelTextAlternative" style="margin-top:14px;">
+        <summary>Text alternative: browse all 100 pixel positions</summary>
+        <p id="accessiblePixelInstructions" style="color:#c4d0d7;line-height:1.6;">
+          Choose a position from the list and select Inspect pixel. The ownership status applies to the entire block. Individual pixel ownership is not implemented.
+        </p>
+        <div style="display:flex;gap:10px;align-items:end;flex-wrap:wrap;margin:12px 0;">
+          <div class="input-group" style="margin:0;min-width:220px;flex:1;">
+            <label for="accessiblePixelSelect">Pixel position</label>
+            <select id="accessiblePixelSelect" aria-describedby="accessiblePixelInstructions"></select>
+          </div>
+          <button class="button" id="inspectAccessiblePixelBtn" type="button">Inspect selected pixel</button>
+        </div>
+        <div style="overflow-x:auto;">
+          <table class="table" id="accessiblePixelTable">
+            <caption id="accessiblePixelCaption" style="text-align:left;padding:8px 0;" aria-live="polite"></caption>
+            <thead>
+              <tr><th scope="col">Pixel</th><th scope="col">Row</th><th scope="col">Column</th><th scope="col">Verified block status</th></tr>
+            </thead>
+            <tbody id="accessiblePixelRows"></tbody>
+          </table>
+        </div>
+      </details>
     </div>
 
     <div class="card">
@@ -256,10 +278,7 @@
     canvas.addEventListener('click', function (e) {
       const cell = getCellFromCoords(e);
       if (!cell) return;
-      selectedPixel = cell.pixelIndex;
-      const globalPixelId = currentBlockId * 100 + cell.pixelIndex;
-      showPixelDetails(cell.pixelIndex, globalPixelId, cell.row, cell.col, currentBlockPrice);
-      drawCanvas();
+      selectPixel(cell.pixelIndex);
     });
 
     canvas.addEventListener('keydown', function (e) {
@@ -272,15 +291,11 @@
       else if (e.key === 'ArrowUp' && row > 0) row--;
       else if (e.key === 'Enter' || e.key === ' ') {
         e.preventDefault();
-        const globalPixelId = currentBlockId * 100 + selectedPixel;
-        showPixelDetails(selectedPixel, globalPixelId, row, col, currentBlockPrice);
+        selectPixel(selectedPixel);
         return;
       } else return;
       e.preventDefault();
-      selectedPixel = row * 10 + col;
-      const globalPixelId = currentBlockId * 100 + selectedPixel;
-      showPixelDetails(selectedPixel, globalPixelId, row, col, currentBlockPrice);
-      drawCanvas();
+      selectPixel(row * 10 + col);
     });
 
     async function loadGrid() {
@@ -291,7 +306,10 @@
         return;
       }
       currentBlockId = parsed;
+      selectedPixel = null;
+      hoveredPixel = null;
       input.value = BlockId.format(currentBlockId);
+      updateAccessiblePixelList();
       await renderGrid();
       const buyBtn = document.getElementById('buyCurrentBlockBtn');
       if (buyBtn) {
@@ -302,6 +320,8 @@
 
     async function renderGrid() {
       const blockInfo = document.getElementById('blockInfo');
+      currentOwnership = { verified: false, owner: null };
+      updateAccessiblePixelList();
       try {
         const blockLabel = BlockId.format(currentBlockId);
         const priceRes = await fetch('/api/price/' + encodeURIComponent(blockLabel));
@@ -336,6 +356,7 @@
         }
 
         const ownershipLabel = currentOwnership.verified ? (currentOwnership.owner ? 'owned by ' + currentOwnership.owner : 'available') : 'unverified';
+        updateAccessiblePixelList();
         document.getElementById('currentBlockDisplay').textContent = blockLabel;
         document.getElementById('blockPriceDisplay').textContent = '$' + currentBlockPrice.toFixed(6);
         blockInfo.textContent = 'Block ' + blockLabel + ' · estimated model price $' + currentBlockPrice.toFixed(6) + ' · ' + ownershipLabel;
@@ -364,6 +385,70 @@
       panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
     window.showPixelDetails = showPixelDetails;
+
+    function updateAccessiblePixelList() {
+      const selector = document.getElementById('accessiblePixelSelect');
+      const rows = document.getElementById('accessiblePixelRows');
+      const caption = document.getElementById('accessiblePixelCaption');
+      if (!selector || !rows || !caption) return;
+
+      const blockStatus = currentOwnership.verified
+        ? (currentOwnership.owner ? 'Whole block owned by ' + currentOwnership.owner : 'Whole block unowned')
+        : 'Ownership unverified';
+      const label = BlockId.format(currentBlockId);
+      caption.textContent = 'Block ' + label + ': ' + blockStatus
+        + '. This same block-level status applies to all 100 positions; individual pixel ownership is not implemented.';
+
+      if (rows.dataset.initialized !== 'true') {
+        const rowFragment = document.createDocumentFragment();
+        const optionFragment = document.createDocumentFragment();
+        for (let pixelIndex = 0; pixelIndex < 100; pixelIndex += 1) {
+          const rowNumber = Math.floor(pixelIndex / 10) + 1;
+          const columnNumber = (pixelIndex % 10) + 1;
+          const option = document.createElement('option');
+          option.value = String(pixelIndex);
+          option.textContent = 'Pixel ' + pixelIndex + ', row ' + rowNumber + ', column ' + columnNumber;
+          optionFragment.append(option);
+
+          const row = document.createElement('tr');
+          row.dataset.pixelIndex = String(pixelIndex);
+          [String(pixelIndex), String(rowNumber), String(columnNumber), 'Same as whole block'].forEach(value => {
+            const cell = document.createElement('td');
+            cell.textContent = value;
+            row.append(cell);
+          });
+          rowFragment.append(row);
+        }
+        selector.replaceChildren(optionFragment);
+        rows.replaceChildren(rowFragment);
+        rows.dataset.initialized = 'true';
+      }
+
+      if (selectedPixel !== null) selector.value = String(selectedPixel);
+      Array.from(rows.children).forEach(row => {
+        const isSelected = Number(row.dataset.pixelIndex) === selectedPixel;
+        row.setAttribute('aria-current', isSelected ? 'true' : 'false');
+      });
+    }
+
+    function selectPixel(pixelIndex) {
+      if (!Number.isInteger(pixelIndex) || pixelIndex < 0 || pixelIndex >= 100) return;
+      selectedPixel = pixelIndex;
+      const row = Math.floor(pixelIndex / 10);
+      const col = pixelIndex % 10;
+      const globalPixelId = currentBlockId * 100 + pixelIndex;
+      showPixelDetails(pixelIndex, globalPixelId, row, col, currentBlockPrice);
+      updateAccessiblePixelList();
+      drawCanvas();
+    }
+
+    const accessiblePixelSelect = document.getElementById('accessiblePixelSelect');
+    const inspectAccessiblePixelBtn = document.getElementById('inspectAccessiblePixelBtn');
+    if (inspectAccessiblePixelBtn && accessiblePixelSelect) {
+      inspectAccessiblePixelBtn.addEventListener('click', function () {
+        selectPixel(Number(accessiblePixelSelect.value));
+      });
+    }
 
     function previousBlock() {
       if (currentBlockId > 0) {

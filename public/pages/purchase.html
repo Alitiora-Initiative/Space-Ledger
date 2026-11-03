@@ -63,6 +63,8 @@
       <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:14px;">
         <button class="button" id="buyBlocksBtn" type="button" disabled>Connect wallet to buy</button>
         <a id="purchaseExplorerLink" class="button" href="#" hidden target="_blank" rel="noopener noreferrer">View on Explorer</a>
+        <button class="button" id="checkPendingPurchaseBtn" type="button" hidden>Check previous transaction</button>
+        <button class="button" id="dismissExpiredPurchaseBtn" type="button" hidden>Dismiss after checking Explorer</button>
       </div>
     </div>
 
@@ -87,6 +89,7 @@
   <script src="../js/walletModal.js"></script>
   <script src="../js/vendor/solana-web3.js" defer></script>
   <script src="../js/toast.js"></script>
+  <script src="../js/transactionRecovery.js" defer></script>
   <script src="../js/solanaPayment.js" defer></script>
   <script src="../js/purchaseDeepLink.js" defer></script>
   <script>

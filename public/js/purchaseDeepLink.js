@@ -31,27 +31,6 @@
       }
     } catch (_) {}
   }
-  function softSim() {
-    const Conn = window.solanaWeb3 && window.solanaWeb3.Connection;
-    if (!Conn || Conn.prototype.__spaceLedgerSoftSim) return;
-    const original = Conn.prototype.simulateTransaction;
-    if (typeof original !== 'function') return;
-    Conn.prototype.simulateTransaction = async function () {
-      try {
-        const result = await original.apply(this, arguments);
-        if (result && result.value && result.value.err) {
-          return { value: { err: null, logs: result.value.logs || [], unitsConsumed: result.value.unitsConsumed } };
-        }
-        return result;
-      } catch (error) {
-        return { value: { err: null, logs: [], unitsConsumed: 0 } };
-      }
-    };
-    Conn.prototype.__spaceLedgerSoftSim = true;
-  }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', applyQuery);
   else applyQuery();
-  softSim();
-  setTimeout(softSim, 500);
-  setTimeout(applyQuery, 600);
 })();
