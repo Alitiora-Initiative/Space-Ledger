@@ -36,6 +36,25 @@
     themeColor.content = '#030814';
     document.head.appendChild(themeColor);
   }
+  if (!document.querySelector('link[data-release1-styles]')) {
+    const releaseStyles = document.createElement('link');
+    releaseStyles.rel = 'stylesheet';
+    releaseStyles.href = (location.pathname.includes('/pages/') ? '../css/' : 'css/') + 'release1.css';
+    releaseStyles.dataset.release1Styles = '1';
+    document.head.appendChild(releaseStyles);
+  }
+  if (!document.querySelector('link[rel="manifest"]')) {
+    const manifest = document.createElement('link');
+    manifest.rel = 'manifest';
+    manifest.href = '/manifest.webmanifest';
+    document.head.appendChild(manifest);
+  }
+  if (!document.querySelector('meta[name="theme-color"]')) {
+    const themeColor = document.createElement('meta');
+    themeColor.name = 'theme-color';
+    themeColor.content = '#030814';
+    document.head.appendChild(themeColor);
+  }
   // Preserve keyboard access and give every page a consistent main landmark.
   const main = document.querySelector('main');
   if (main) {
@@ -247,6 +266,14 @@
     footer.className = 'site-footer';
     footer.innerHTML = '<div class="site-footer-inner"><span>Space Ledger · Solana Devnet beta</span><nav aria-label="Legal information"><a href="/pages/privacy.html">Privacy</a><a href="/pages/terms.html">Terms</a><a href="/pages/cookies.html">Cookies</a></nav></div>';
     document.body.append(footer);
+  }
+
+  if (!document.querySelector('script[data-mobile-support]')) {
+    const support = document.createElement('script');
+    support.src = (location.pathname.includes('/pages/') ? '../js/' : 'js/') + 'mobileSupport.js';
+    support.defer = true;
+    support.dataset.mobileSupport = '1';
+    document.head.appendChild(support);
   }
 
   if (!document.querySelector('script[data-mobile-support]')) {
