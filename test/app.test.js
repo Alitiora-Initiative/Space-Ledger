@@ -9,7 +9,8 @@ const root = path.resolve(__dirname, '..');
 
 test('shared sticky navigation stays above scrolling content', () => {
   const styles = fs.readFileSync(path.join(root, 'public', 'css', 'styles.css'), 'utf8');
-  const navStart = styles.lastIndexOf('\nnav {');
+  const navStart = styles.indexOf('\nnav {\n  position: sticky !important;');
+  assert.notEqual(navStart, -1, 'sticky navigation rule must exist');
   const navRule = styles.slice(navStart, styles.indexOf('}', navStart));
   assert.match(navRule, /position:\s*sticky !important/);
   assert.match(navRule, /z-index:\s*1000 !important/);
