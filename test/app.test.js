@@ -70,6 +70,21 @@ test('purchase preflight fails closed and unresolved transactions can be recover
   assert.match(purchasePage, /id="dismissExpiredPurchaseBtn"/);
 });
 
+test('confirmed purchase success is not reversed by optional balance or config refresh errors', () => {
+  const purchaseFlow = fs.readFileSync(path.join(root, 'public', 'js', 'solanaPayment.js'), 'utf8');
+  const verifiedIndex = purchaseFlow.indexOf('if (!receiptVerified)');
+  const successIndex = purchaseFlow.indexOf('const confirmedMessage =', verifiedIndex);
+  const balanceRefreshIndex = purchaseFlow.indexOf('try {\\n        const solAfter', successIndex);
+  const configRefreshIndex = purchaseFlow.indexOf('try {\\n        await loadConfig();', successIndex);
+
+  assert.notEqual(verifiedIndex, -1);
+  assert.ok(successIndex > verifiedIndex, 'success must only follow verified receipt validation');
+  assert.ok(balanceRefreshIndex > successIndex, 'balance refresh must follow the success state');
+  assert.ok(configRefreshIndex > successIndex, 'config refresh must follow the success state');
+  assert.match(purchaseFlow, /The purchase receipt is verified\. The latest wallet balance could not be refreshed/);
+  assert.match(purchaseFlow, /Purchase confirmed and receipt verified\. The latest ledger summary could not be refreshed/);
+});
+
 test('receipt-derived APIs do not silently discard older records', () => {
   const source = fs.readFileSync(path.join(root, 'src', 'index.js'), 'utf8');
   assert.match(source, /receipts = await solanaService\.listReceipts\(\);/);
