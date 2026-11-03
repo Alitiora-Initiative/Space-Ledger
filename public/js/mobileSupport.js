@@ -19,7 +19,7 @@
   if(main){
    const aside=document.createElement('aside');aside.className='sl-mobile-lite-notice';aside.setAttribute('aria-label','Mobile Lite experience');
    const heading=document.createElement('strong');heading.textContent='Mobile Lite';
-   const copy=document.createElement('p');copy.textContent='Browse the universe, inspect blocks, view confirmed activity and check holdings. For the full workspace, use a Windows or macOS computer, or an iPad/tablet.';
+   const copy=document.createElement('p');copy.textContent='Browse the universe, inspect blocks, view confirmed activity and check holdings. Purchases and creator/workspace tools are desktop/tablet-only for now. Use a Windows or macOS computer, or an iPad/tablet, for the full workspace.';
    const actions=document.createElement('div');actions.className='sl-mobile-wallet-actions';
    const links=browseLinks();
    [['Open in Phantom',links.phantom],['Open in Solflare',links.solflare]].forEach(([label,href])=>{const link=document.createElement('a');link.href=href;link.rel='noopener noreferrer';link.className='button';link.textContent=label;actions.append(link);});
