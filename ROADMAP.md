@@ -17,60 +17,64 @@ Human-maintained checklist. Deployments require a deliberate Git push (and Verce
 - [x] Free-tier friendly: public Devnet RPC default; optional private RPC via `SOLANA_RPC_DEVNET` only on server.
 - [x] Exposed `rpcProvider` host class (`public-devnet` / `helius-devnet`) on `GET /api/solana/config` without secrets.
 
-## Active Architecture & Feature Scope (User Request 2026-11-01)
+## Active Architecture & Feature Scope
 
-### 1. Efficient Grid & Block-Pixel Rendering
-- **Goal**: Make rendering and state queries for 10 billion blocks / 100 pixels per block responsive on desktop and mobile without DOM thrashing or memory bloat.
-- **Alternative A (Recommended - Virtualized WebGL / Canvas + Chunk API)**: 
-  - Viewport-based LOD (Level of Detail) rendering using HTML5 2D Canvas or PixiJS.
-  - Divide grid into spatial chunks (e.g. 64x64 blocks per chunk).
-  - API endpoint `GET /api/grid/chunk?x=...&y=...` returning compact binary bitmasks/run-length encoded state of purchased blocks.
-  - Zero simulated pixels: unpurchased blocks render procedural base texture; purchased blocks render confirmed receipt states.
-- **Alternative B (Solana State Compression / Compressed NFTs - Bubblegum)**:
-  - Mint pixel ownership records to concurrent Merkle trees on Solana.
-  - Downside: Requires dedicated DAS indexer (Helius/Triton) to read state, which exceeds zero-cost free-tier default.
-- **Acceptance check**: 60 FPS viewport panning/zooming; viewport memory <50MB; chunk fetch latency <100ms; zero fabricated pixels.
+This section describes the current implementation and the actual future protocol decisions. The measurable performance targets below are targets only until a reproducible benchmark is published.
 
-### 2. Two-Way Market: Buy and Sell Orders
-- **Goal**: Allow users to both buy and sell blocks / positions, transforming the primary-only issuance into a continuous two-way market.
-- **Alternative A (Recommended - On-Chain Two-Way Bonding Curve AMM)**:
-  - Add `sell_blocks` instruction to Anchor program `programs/space-ledger/src/lib.rs`.
-  - Selling burns the receipt account / returns blocks to pool, refunding Devnet SOL/USDC along the exact linear bonding curve formula minus a small fee.
-  - Guaranteed instant execution without counterparty matching; preserves mathematical pricing invariant.
-- **Alternative B (Decentralized Orderbook / OpenBook v2 on Devnet)**:
-  - Deploy an orderbook market where users place discrete limit buy and sell orders.
-  - Downside: Liquidity fragmentation and higher transaction compute/rent overhead for users on Devnet.
-- **Acceptance check**: `cargo test` verifying both buy (supply advances, price rises) and sell (supply retreats, SOL refunded, receipt closed/burned); `simulated: false` across all market endpoints.
+### 1. Grid rendering and confirmed ownership queries
 
-### 3. Real-Time Movement Charts (No Simulated Data)
-- **Goal**: Visual chart displaying price and supply movement over time without synthetic or random data.
-- **Alternative A (Recommended - Lightweight-Charts fed by Live On-Chain Event History)**:
-  - Embed TradingView Lightweight Charts on `/pages/market.html` and `/pages/token.html`.
-  - Feed real event timestamps and prices from Solana program transaction signatures (`/api/receipt/:address/signatures` and program event logs).
-  - For $SL token: feed live Raydium/StonkFun OHLCV data from GeckoTerminal / DexScreener public APIs.
-- **Alternative B (Server-Side Micro-Indexer)**:
-  - SQLite/Postgres log of confirmed purchase/sell events queried by `/api/chart/history`.
-- **Acceptance check**: Chart renders real time-series points; displays empty/awaiting state when no trades exist in range; 0 fake or simulated ticks.
+**Current state:** the application has a virtualized grid experience and `GET /api/grid/chunk` for bounded grid queries. The underlying sale/receipt model is still whole-block based. The 100 positions inside a block are not separately owned assets.
 
-## Phased Implementation Plan
+**Next work:**
+- Keep viewport rendering and chunk queries bounded; measure rather than claim a fixed frame rate or latency.
+- Use confirmed receipt-derived owner information; never generate random ownership or fake trades to fill the canvas.
+- Publish benchmark method, viewport size, device/browser, data size, memory and measured results before claiming FPS, memory or latency targets.
+- The current receipt API still queries Solana program accounts on demand. Track the durable indexer separately in [issue #20](https://github.com/Alitiora-Initiative/Space-Ledger/issues/20).
 
-- **Phase 1 (Design & Scope - Complete)**: Update `ROADMAP.md` and `README.md` with explicit architecture alternatives, constraints, and acceptance criteria.
-- **Phase 2 (Grid Optimization - Complete)**: Virtualized 2D canvas viewport for `/pages/grid.html` eliminating DOM thrashing + `/api/grid/chunk` spatial query API.
-- **Phase 3 (Live Movement Chart)**: TradingView Lightweight Charts integration with real transaction history API.
-- **Phase 4 (Two-Way Bonding Curve)**: Anchor program `sell_blocks` instruction, unit tests (`cargo test`), and frontend sell UI.
+### 2. Pixel-level ownership — design first
 
-## Still open (Backlog & Audits)
+**Current state:** not implemented. Each purchase receipt identifies a contiguous range of whole blocks. There are 100 theoretical pixel positions per block, but those positions do not currently have independent owners or transfer semantics.
 
-- [ ] Optional free Helius Devnet RPC in Vercel for better concurrency under Discord spikes.
-- [ ] Persist tx signatures on-chain or in a dedicated indexer (UI already shows Explorer after buy).
-- [ ] Full WCAG / screen-reader specialist pass (issue #7 remainder).
-- [ ] WalletConnect QR / deep-link beyond in-app browser (issue #8 enhancement).
-- [ ] Independent program security review before any mainnet or real-value marketing.
-- [ ] Formal legal counsel for Kenya / target markets before mainnet.
+**Options to benchmark before choosing:**
+- **Packed bitmap/tile state:** represent 100 pixel occupancy/ownership slots in compact bounded state. Measure account rent, write contention, transaction size and query costs.
+- **Tile PDAs:** partition pixel data into independently addressable bounded accounts. Measure rent, account count, write costs and account initialization.
+- **Bubblegum V2 compressed assets:** Merkle-tree-backed cNFT leaves can scale asset records, but retrieval/proofs depend on an RPC provider with the Metaplex DAS API and a durable indexer.
+- **Hybrid:** preserve whole-block primary-sale receipts and add a versioned pixel-claim layer only after migration and atomicity are specified.
 
-## Explicitly out of scope until funded
+Do not mint one ordinary account/NFT for every position in a theoretical trillion-pixel canvas. Do not say pixel ownership exists until the program records and verifies it.
 
-- Mainnet migration, paid RPC/indexer, MetaMask Connect (license review first), fabricated market charts.
+Research and acceptance criteria: [issue #10](https://github.com/Alitiora-Initiative/Space-Ledger/issues/10), [Bubblegum V2](https://www.metaplex.com/docs/smart-contracts/bubblegum-v2), [DAS indexing model](https://www.metaplex.com/docs/smart-contracts/bubblegum-v2/stored-nft-data).
+
+### 3. Transfers and secondary market — separate from curve redemption
+
+**Current state:** not implemented. A purchase receipt is historical purchase evidence; it is not currently a transferable asset with an owner field that can be safely reassigned.
+
+A future market must choose and implement an explicit asset/ownership model. Evaluate:
+- escrowed listings with seller authorization, atomic buyer payment and ownership transfer;
+- direct fixed-price listing/transfer with replay and double-fill protection;
+- Bubblegum V2 `transferV2` only if the pixel/block asset model is built on compressed assets and DAS proofs can be obtained.
+
+A curve buyback/redemption is not a peer-to-peer secondary market. Do not implement a simplistic `sell_blocks` instruction that decrements global supply and refunds funds without proving current ownership, preventing replay, and reconciling all supply/curve invariants.
+
+Design, threat model, legal review and acceptance tests: [issue #11](https://github.com/Alitiora-Initiative/Space-Ledger/issues/11).
+
+### 4. Verifiable time-series charts
+
+Charts must be constructed from confirmed on-chain events/receipts for the Devnet canvas, or explicitly separate market-data APIs for the unrelated Mainnet $SL token. Keep those datasets and labels separate. Display an empty, delayed or unavailable state when there are no verified points. Do not fabricate ticks, prices, volume or holder counts.
+
+### 5. Delivery order
+
+1. **Transaction reliability:** remove preflight error suppression and add signature recovery — [issue #22](https://github.com/Alitiora-Initiative/Space-Ledger/issues/22).
+2. **Receipt indexing:** build a durable, replayable Devnet receipt indexer — [issue #20](https://github.com/Alitiora-Initiative/Space-Ledger/issues/20).
+3. **Program assurance:** expand SVM instruction tests, prepare evidence and commission a real independent audit — [issue #21](https://github.com/Alitiora-Initiative/Space-Ledger/issues/21).
+4. **Usability:** complete the WCAG 2.2 AA/device audit and add standards-based mobile wallet support — [issues #23](https://github.com/Alitiora-Initiative/Space-Ledger/issues/23) and [#24](https://github.com/Alitiora-Initiative/Space-Ledger/issues/24).
+5. **New asset features:** decide and build pixel ownership, then transfers/market settlement — [issues #10](https://github.com/Alitiora-Initiative/Space-Ledger/issues/10) and [#11](https://github.com/Alitiora-Initiative/Space-Ledger/issues/11).
+
+### 6. Programme tracker
+
+The complete dependency order and project-wide definition of reliable are in [issue #25](https://github.com/Alitiora-Initiative/Space-Ledger/issues/25).
+
+**Network and cost boundary:** Devnet only. Do not change program/treasury/mint IDs, payment instructions, curve economics or migrate to Mainnet without explicit maintainer approval. Do not enable paid RPC, indexer or hosted database services without an agreed cost and approval.
 
 ---
 
