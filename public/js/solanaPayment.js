@@ -125,6 +125,38 @@
   }
 
   async function inspectSubmittedTransaction(connection, record) {
+    if (!record.signature) {
+      let ownership = null;
+      try {
+        const response = await fetch('/api/block-owner/' + encodeURIComponent(record.startBlock));
+        ownership = await response.json();
+      } catch (_) {}
+      const receiptExists = Boolean(ownership && ownership.verified
+        && ownership.owner === record.buyer
+        && String(ownership.startBlock) === record.startBlock
+        && Number(ownership.blockCount) === record.blockCount
+        && Array.isArray(ownership.signatures)
+        && ownership.signatures.some(item => item && !item.err && typeof item.signature === 'string'));
+      if (receiptExists) {
+        const signature = ownership.signatures.find(item => item && !item.err)?.signature || null;
+        return { state:'confirmed', signature };
+      }
+      const [height, supplyResponse] = await Promise.all([
+        connection.getBlockHeight('confirmed'),
+        fetch('/api/supply')
+      ]);
+      const supply = await supplyResponse.json();
+      return {
+        state:window.SpaceLedgerTxRecovery.classifyUnsignedIntent({
+          currentBlockHeight:height,
+          lastValidBlockHeight:record.lastValidBlockHeight,
+          currentSupply:supply.currentSupply,
+          startBlock:record.startBlock,
+          receiptVerified:false
+        }),
+        error:null
+      };
+    }
     let status = null;
     let currentBlockHeight = null;
     let lookupError = null;
@@ -161,13 +193,15 @@
   async function verifyPendingReceipt(record) {
     const response = await fetch('/api/block-owner/' + encodeURIComponent(record.startBlock));
     const ownership = await response.json();
-    return Boolean(response.ok
-      && ownership.verified
+    const matches = response.ok && ownership.verified
       && ownership.owner === record.buyer
       && String(ownership.startBlock) === record.startBlock
       && Number(ownership.blockCount) === record.blockCount
-      && Array.isArray(ownership.signatures)
-      && ownership.signatures.some(item => item && item.signature === record.signature));
+      && Array.isArray(ownership.signatures);
+    if (!matches) return false;
+    return record.signature
+      ? ownership.signatures.some(item => item && item.signature === record.signature && !item.err)
+      : ownership.signatures.some(item => item && typeof item.signature === 'string' && !item.err);
   }
 
   async function recoverPendingPurchase() {
@@ -186,12 +220,18 @@
     pendingOutcome = null;
     activeQuote = null;
     setBusy(false);
-    explorerLink.href = 'https://explorer.solana.com/tx/' + encodeURIComponent(record.signature) + '?cluster=devnet';
-    explorerLink.hidden = false;
+    if (record.signature) {
+      explorerLink.href = 'https://explorer.solana.com/tx/' + encodeURIComponent(record.signature) + '?cluster=devnet';
+      explorerLink.hidden = false;
+    } else {
+      explorerLink.hidden = true;
+    }
     if (checkPendingButton) checkPendingButton.hidden = false;
     if (dismissExpiredButton) dismissExpiredButton.hidden = true;
     setStatus('A previous Devnet purchase was submitted. Checking its actual on-chain status; do not submit another purchase yet.');
-    setQuoteText('Recovering transaction ' + record.signature + '…');
+    setQuoteText(record.signature
+      ? 'Recovering transaction ' + record.signature + '…'
+      : 'Checking whether the wallet approved or submitted the saved purchase intent…');
 
     try {
       const connection = new window.solanaWeb3.Connection(appConfig.rpc, 'confirmed');
@@ -207,13 +247,19 @@
         setStatus('The previous Devnet transaction is confirmed failed. No purchase receipt was created by that transaction.');
         setQuoteText('Previous transaction failed on-chain. You may request a fresh quote.');
       } else if (inspection.state === 'confirmed') {
-        const verified = await verifyPendingReceipt(record);
+        const verified = record.signature
+          ? await verifyPendingReceipt(record)
+          : Boolean(inspection.signature && await verifyPendingReceipt({ ...record, signature:inspection.signature }));
         if (verified) {
           clearPendingRecord(record.signature);
           pendingRecovery = false;
           pendingOutcome = null;
           if (checkPendingButton) checkPendingButton.hidden = true;
           if (dismissExpiredButton) dismissExpiredButton.hidden = true;
+          if (inspection.signature) {
+            explorerLink.href = 'https://explorer.solana.com/tx/' + encodeURIComponent(inspection.signature) + '?cluster=devnet';
+            explorerLink.hidden = false;
+          }
           setStatus('The previous Devnet transaction and its ownership receipt are verified.');
           setQuoteText('Previous purchase confirmed: ' + record.blockCount.toLocaleString() + ' blocks from block ' + record.startBlock + '.');
         } else {
@@ -224,8 +270,12 @@
       } else if (inspection.state === 'expired') {
         pendingRecovery = true;
         if (dismissExpiredButton) dismissExpiredButton.hidden = false;
-        setStatus('The transaction blockhash expired and the RPC cannot currently find a result. This is not proof of success. Check the signature in Explorer before dismissing this warning.');
-        setQuoteText('Outcome not verified. Do not retry until you have independently checked the signature in Solana Explorer.');
+        setStatus(record.signature
+          ? 'The transaction blockhash expired and the RPC cannot currently find a result. Check this exact signature in Explorer before clearing the warning.'
+          : 'No signature was returned. The blockhash expired and Devnet supply is unchanged at this block, so the saved intent can be cleared safely.');
+        setQuoteText(record.signature
+          ? 'Outcome not verified. Do not retry until you have checked the signature in Solana Explorer.'
+          : 'This intent did not consume the block range. Clear the expired intent before requesting a fresh quote.');
       } else {
         pendingRecovery = true;
         setStatus('The previous transaction is still pending or the RPC cannot establish its status. Do not submit again. Use Check previous transaction to recheck.');
@@ -479,23 +529,52 @@
       const simulationFailure = window.SpaceLedgerTxRecovery.formatSimulationFailure(simulation);
       if (simulationFailure) throw new Error(simulationFailure);
       setQuoteText(quoteSummary(activeQuote) + '\n\nPreflight passed. Review network, recipient, block count, and spend in your wallet before approving.');
-      const signature = await window.walletManager.signAndSendTransaction(transaction, { preflightCommitment: 'confirmed' });
-      if (!signature) throw new Error('The wallet did not return a transaction signature.');
-
       const pendingRecord = {
-        version: 1,
-        network: 'devnet',
-        signature,
-        blockhash: transactionData.blockhash,
-        lastValidBlockHeight: transactionData.lastValidBlockHeight,
-        buyer: wallet.address,
-        startBlock: transactionData.startBlock,
-        blockCount: transactionData.blockCount,
-        asset: activeQuote.asset,
-        submittedAt: Date.now()
+        version:2,
+        network:'devnet',
+        stage:'awaiting_wallet',
+        signature:null,
+        blockhash:transactionData.blockhash,
+        lastValidBlockHeight:transactionData.lastValidBlockHeight,
+        buyer:wallet.address,
+        startBlock:transactionData.startBlock,
+        blockCount:transactionData.blockCount,
+        asset:activeQuote.asset,
+        submittedAt:Date.now()
       };
       pendingRecordInMemory = pendingRecord;
       const store = getPendingStore();
+      const persistedIntent = Boolean(store && store.save(pendingRecord));
+      if (!persistedIntent) setStatus('Browser storage is unavailable. Keep this page open while wallet approval is in progress.');
+
+      let signature;
+      try {
+        signature = await window.walletManager.signAndSendTransaction(transaction, { preflightCommitment:'confirmed' });
+      } catch (walletError) {
+        if (window.SpaceLedgerTxRecovery.isUserRejected(walletError)) {
+          clearPendingRecord(null);
+          pendingRecordInMemory = null;
+          pendingRecovery = false;
+          throw new Error('The wallet request was rejected. No purchase was submitted.');
+        }
+        pendingRecovery = true;
+        pendingOutcome = 'unknown';
+        pendingRecord.stage = 'unknown';
+        if (store) store.save(pendingRecord);
+        if (checkPendingButton) checkPendingButton.hidden = false;
+        throw new Error('The wallet did not return a conclusive result. The purchase intent is saved; do not submit again while recovery checks the chain. ' + (walletError.message || 'Wallet response unavailable.'));
+      }
+      if (typeof signature !== 'string' || !signature) {
+        pendingRecovery = true;
+        pendingOutcome = 'unknown';
+        pendingRecord.stage = 'unknown';
+        if (store) store.save(pendingRecord);
+        if (checkPendingButton) checkPendingButton.hidden = false;
+        throw new Error('The wallet returned no transaction signature. The original intent is preserved; do not submit another purchase until recovery finishes.');
+      }
+      pendingRecord.stage = 'submitted';
+      pendingRecord.signature = signature;
+      pendingRecordInMemory = pendingRecord;
       const persisted = Boolean(store && store.save(pendingRecord));
       setQuoteText('Transaction submitted to Solana Devnet. Waiting for confirmation…');
       explorerLink.href = 'https://explorer.solana.com/tx/' + encodeURIComponent(signature) + '?cluster=devnet';

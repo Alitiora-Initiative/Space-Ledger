@@ -5,30 +5,24 @@
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   if (root) root.SpaceLedgerTxRecovery = api;
 }(typeof window !== 'undefined' ? window : globalThis, function () {
-  const STORAGE_VERSION = 1;
+  const STORAGE_VERSION = 2;
 
   function isValidRecord(record) {
-    return Boolean(record
-      && record.version === STORAGE_VERSION
-      && record.network === 'devnet'
-      && typeof record.signature === 'string'
-      && record.signature.length >= 32
-      && record.signature.length <= 128
-      && /^[1-9A-HJ-NP-Za-km-z]+$/.test(record.signature)
-      && typeof record.blockhash === 'string'
-      && record.blockhash.length >= 32
-      && record.blockhash.length <= 64
-      && typeof record.buyer === 'string'
-      && record.buyer.length >= 32
-      && record.buyer.length <= 44
-      && /^\d+$/.test(record.startBlock)
-      && Number.isSafeInteger(record.blockCount)
-      && record.blockCount > 0
-      && ['SOL', 'USDC'].includes(record.asset)
-      && Number.isSafeInteger(record.lastValidBlockHeight)
-      && record.lastValidBlockHeight >= 0
-      && Number.isSafeInteger(record.submittedAt)
-      && record.submittedAt > 0);
+    if (!record || record.network !== 'devnet'
+      || typeof record.blockhash !== 'string' || record.blockhash.length < 32 || record.blockhash.length > 64
+      || typeof record.buyer !== 'string' || record.buyer.length < 32 || record.buyer.length > 44
+      || !/^\d+$/.test(record.startBlock)
+      || !Number.isSafeInteger(record.blockCount) || record.blockCount < 1
+      || !['SOL', 'USDC'].includes(record.asset)
+      || !Number.isSafeInteger(record.lastValidBlockHeight) || record.lastValidBlockHeight < 0
+      || !Number.isSafeInteger(record.submittedAt) || record.submittedAt < 1) return false;
+    const signatureValid = typeof record.signature === 'string'
+      && record.signature.length >= 32 && record.signature.length <= 128
+      && /^[1-9A-HJ-NP-Za-km-z]+$/.test(record.signature);
+    if (record.version === 1) return signatureValid;
+    if (record.version !== STORAGE_VERSION) return false;
+    if (record.stage === 'awaiting_wallet') return record.signature === null;
+    return ['submitted', 'unknown'].includes(record.stage) && signatureValid;
   }
 
   function createPendingTransactionStore(storage, key) {
@@ -53,6 +47,7 @@
       const normalized = {
         version: record?.version,
         network: record?.network,
+        stage: record?.stage,
         signature: record?.signature,
         blockhash: record?.blockhash,
         lastValidBlockHeight: record?.lastValidBlockHeight,
@@ -100,6 +95,23 @@
     return 'unknown';
   }
 
+  function classifyUnsignedIntent({ currentBlockHeight, lastValidBlockHeight, currentSupply, startBlock, receiptVerified }) {
+    if (receiptVerified) return 'confirmed';
+    if (!Number.isSafeInteger(currentBlockHeight) || !Number.isSafeInteger(lastValidBlockHeight)) return 'unknown';
+    if (currentBlockHeight <= lastValidBlockHeight) return 'pending';
+    try {
+      return BigInt(currentSupply) === BigInt(startBlock) ? 'expired' : 'unknown';
+    } catch (_) {
+      return 'unknown';
+    }
+  }
+
+  function isUserRejected(error) {
+    if (!error || typeof error !== 'object') return false;
+    if (Number(error.code) === 4001) return true;
+    return /user (?:rejected|denied|declined) (?:the )?request/i.test(String(error.message || ''));
+  }
+
   function formatSimulationFailure(simulation) {
     const value = simulation && simulation.value;
     if (!value || !Object.prototype.hasOwnProperty.call(value, 'err')) {
@@ -118,6 +130,8 @@
   return Object.freeze({
     createPendingTransactionStore,
     classifySignatureStatus,
+    classifyUnsignedIntent,
+    isUserRejected,
     formatSimulationFailure,
     isValidRecord
   });
