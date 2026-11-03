@@ -22,7 +22,7 @@ test('service worker uses a new cache version and prefers current assets over st
  const sw=fs.readFileSync(path.join(root,'public','sw.js'),'utf8');
  assert.match(sw,/space-ledger-shell-v2/);
  assert.match(sw,/startsWith\(CACHE_PREFIX\)/);
- const fetchSection=sw.slice(sw.indexOf("if(/\\\\.(?:js"),sw.length);
+ const fetchSection=sw.slice(sw.indexOf("if(/\\.(?:js"),sw.length);
  assert.ok(fetchSection.indexOf("fetch(request)") < fetchSection.indexOf("caches.match(request)"),'network must be checked before offline cache fallback');
  assert.ok(!sw.includes("filter(key=>key!==CACHE).map(key=>caches.delete(key))"),'activation must not wipe unrelated origin caches');
 });
