@@ -45,6 +45,14 @@ test('site script preserves skip navigation and does not duplicate the homepage 
   assert.equal((home.match(/class="site-footer"/g) || []).length, 1);
 });
 
+test('receipt-derived APIs do not silently discard older records', () => {
+  const source = fs.readFileSync(path.join(root, 'src', 'index.js'), 'utf8');
+  assert.match(source, /receipts = await solanaService\.listReceipts\(\);/);
+  assert.match(source, /confirmedPurchaseCount: allReceipts\.length/);
+  assert.match(source, /if \(process\.env\.VERCEL === '1'\) app\.set\('trust proxy', 1\)/);
+  assert.doesNotMatch(source, /listReceipts\(\{\s*limit:\s*(100|500)\s*\}\)/);
+});
+
 test('Vercel applies security headers to static assets and functions', () => {
   const config = JSON.parse(fs.readFileSync(path.join(root, 'vercel.json'), 'utf8'));
   const wildcard = config.headers.find(rule => rule.source === '/(.*)');
