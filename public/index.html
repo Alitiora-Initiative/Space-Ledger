@@ -12,6 +12,7 @@
   <link rel="stylesheet" href="/css/polish.css">
   <link rel="stylesheet" href="/css/home.css">
   <script src="/js/site.js" defer></script>
+  <script src="/js/space-world.js" defer></script>
   <script src="/js/home.js" defer></script>
 </head>
 <body class="home-page">
@@ -181,7 +182,10 @@
     </section>
 
     <section class="token-section" id="sl-fund" aria-labelledby="token-title">
-      <div class="token-orbit" aria-hidden="true"><span>$SL</span></div>
+      <div class="token-orbit" aria-hidden="true">
+        <canvas id="slGlobeCanvas" class="sl-globe-canvas" width="180" height="180"></canvas>
+        <span>$SL</span>
+      </div>
       <div class="token-copy">
         <p class="section-kicker">A SEPARATE ASSET / SOLANA MAINNET</p>
         <h2 id="token-title">Space Ledger <span>($SL)</span></h2>

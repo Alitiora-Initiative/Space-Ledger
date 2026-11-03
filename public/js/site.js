@@ -9,6 +9,14 @@
     polish.setAttribute('data-polish', '1');
     document.head.appendChild(polish);
   }
+  // Shared orbital-glass theme for every application page.
+  if (!document.querySelector('link[data-universe-styles]')) {
+    const theme = document.createElement('link');
+    theme.rel = 'stylesheet';
+    theme.href = (location.pathname.includes('/pages/') ? '../css/' : 'css/') + 'universe.css';
+    theme.dataset.universeStyles = '1';
+    document.head.appendChild(theme);
+  }
   // Preserve keyboard access and give every page a consistent main landmark.
   const main = document.querySelector('main');
   if (main) {

@@ -675,3 +675,13 @@
     transition-duration: 0.01ms !important;
   }
 }
+
+
+/* Live $SL globe follows the orbital phase sequence. */
+.home-page .token-orbit{width:148px;height:148px;border-color:rgba(148,169,255,.26);background:radial-gradient(circle,rgba(44,73,152,.12),rgba(10,18,43,.02) 68%,transparent 70%);box-shadow:0 0 36px rgba(70,116,240,.13),inset 0 0 30px rgba(107,120,255,.12);isolation:isolate}
+.home-page .sl-globe-canvas{position:absolute;inset:-8%;display:block;width:116%;height:116%;pointer-events:none;filter:saturate(1.16) drop-shadow(0 0 12px rgba(76,153,255,.35))}
+.home-page .token-orbit>span{position:relative;z-index:2;padding:8px 10px;border:1px solid rgba(195,215,255,.19);border-radius:999px;background:rgba(4,12,29,.54);color:#eff2ff;text-shadow:0 0 12px rgba(111,183,255,.8);backdrop-filter:blur(4px)}
+.home-page .token-orbit::before{animation:sl-orbit-turn 18s linear infinite}.home-page .token-orbit::after{animation:sl-orbit-turn-reverse 23s linear infinite}
+@keyframes sl-orbit-turn{to{transform:rotate(326deg)}}@keyframes sl-orbit-turn-reverse{to{transform:rotate(-302deg)}}
+@media(max-width:680px){.home-page .token-orbit{width:102px;height:102px}.home-page .sl-globe-canvas{inset:-10%;width:120%;height:120%}}
+@media(prefers-reduced-motion:reduce){.home-page .token-orbit::before,.home-page .token-orbit::after{animation:none!important}}
