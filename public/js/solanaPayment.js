@@ -253,18 +253,18 @@
   async function refreshWalletStatus() {
     const wallet = window.walletManager && window.walletManager.getWalletInfo();
     if (!wallet || !wallet.connected) {
-      buyButton.disabled = busy || !activeQuote;
+      buyButton.disabled = busy || pendingRecovery || !activeQuote;
       buyButton.textContent = 'Connect wallet to buy';
       balanceStatus.textContent = 'Connect a Solana Devnet wallet to show balance and size the quote to what you can afford.';
       if (useMaxBtn) useMaxBtn.disabled = true;
       return;
     }
-    if (useMaxBtn) useMaxBtn.disabled = busy;
+    if (useMaxBtn) useMaxBtn.disabled = busy || pendingRecovery;
     await refreshBalances();
     const solTxt = lastSolLamports != null ? lamportsText(lastSolLamports) : 'unknown';
     const usdcTxt = lastUsdcMicro != null ? usdcFromMicro(lastUsdcMicro).toFixed(6) + ' USDC' : '0 USDC';
     if (window.walletManager.canSignDevnet()) {
-      buyButton.disabled = busy || !activeQuote;
+      buyButton.disabled = busy || pendingRecovery || !activeQuote;
       buyButton.textContent = activeQuote ? 'Review and buy in wallet' : 'Get a quote to buy';
       setStatus('Connected: ' + wallet.wallet + ' · ' + wallet.address + '. Quotes respect your Devnet balance.');
       balanceStatus.textContent = wallet.wallet + ' — Devnet SOL: ' + solTxt + '; Devnet USDC: ' + usdcTxt +
