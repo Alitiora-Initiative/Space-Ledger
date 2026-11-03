@@ -31,6 +31,16 @@ function createSupabaseStore(env = process.env, fetchImpl = globalThis.fetch) {
       const q=new URLSearchParams({select:'*',network:'eq.devnet',program_id:'eq.'+programId,limit:'1'});
       const rows=await request('indexer_state',q.toString());return rows[0]||null;
     },
+    async listReceipts({programId,limit=20,beforeSlot,beforeSignature}={}) {
+      const count=Math.max(1,Math.min(100,Number(limit)||20));
+      const filters={select:'*',network:'eq.devnet',order:'slot.desc,signature.desc',limit:String(count+1)};
+      if(programId) filters.program_id='eq.'+programId;
+      if(beforeSlot!==undefined&&beforeSlot!==null) {
+        if(!Number.isSafeInteger(Number(beforeSlot))||Number(beforeSlot)<0||!beforeSignature) throw new Error('Both a valid slot and signature are required for the receipt cursor.');
+        filters.or='(slot.lt.'+Number(beforeSlot)+',and(slot.eq.'+Number(beforeSlot)+',signature.lt.'+beforeSignature+'))';
+      }
+      return request('purchase_receipts',new URLSearchParams(filters).toString());
+    },
     async getExistingReceiptAddresses(addresses) {
       if (!addresses.length) return [];
       const q=new URLSearchParams({select:'receipt_address',network:'eq.devnet',receipt_address:'in.('+addresses.join(',')+')'});
