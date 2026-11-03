@@ -1,5 +1,5 @@
 (() => {
-  // Presentability layer (cards, metrics, hide skip-link) — does not change app logic.
+  // Shared presentation, responsive navigation and accessibility enhancements.
   const hasPolishStylesheet = Array.from(document.querySelectorAll('link[rel="stylesheet"]'))
     .some(link => /(?:^|\/)polish\.css(?:\?|$)/.test(link.getAttribute('href') || ''));
   if (!document.querySelector('link[data-polish]') && !hasPolishStylesheet) {
@@ -169,7 +169,7 @@
       list.insertBefore(item, walletItem || null);
     }
     // Use one consistent active-page state across all static pages.
-    const normalisePath = value => value.replace(/\\/index\\.html$/, '/');
+    const normalisePath = value => value.replace(/\/index\.html$/, '/');
     const currentPath = normalisePath(window.location.pathname);
     list.querySelectorAll('a[href]').forEach(link => {
       try {
@@ -204,7 +204,6 @@
     document.addEventListener('keydown', event => {
       if (event.key === 'Escape' && list.classList.contains('nav-open')) {
         setNavigationOpen(false);
-        toggle.focus();
         toggle.focus();
       }
     });
