@@ -319,3 +319,23 @@ test('indexer status reports not configured without private Supabase credentials
   assert.equal(value.status,'not_configured');
   assert.equal(value.network,'devnet');
 });
+
+test('indexed receipt endpoint gives explicit disabled state when not configured',async t=>{
+ const port=await findFreePort(),base='http://127.0.0.1:'+port;
+ const child=spawn(process.execPath,[path.join(root,'src','index.js')],{cwd:root,env:{...process.env,PORT:String(port),NODE_ENV:'test',SOLANA_PROGRAM_ID:'',SUPABASE_URL:'',SUPABASE_SECRET_KEY:'',SUPABASE_SERVICE_ROLE_KEY:''},stdio:['ignore','pipe','pipe']});
+ t.after(async()=>{if(child.exitCode===null){child.kill();await new Promise(resolve=>child.once('exit',resolve));}});
+ await waitForServer(base,child);
+ const response=await fetch(base+'/api/indexer/receipts');
+ assert.equal(response.status,503);
+ const value=await response.json();
+ assert.equal(value.verified,false);
+ assert.deepEqual(value.receipts,[]);
+});
+test('indexed receipt pagination validates a complete cursor pair',async t=>{
+ const port=await findFreePort(),base='http://127.0.0.1:'+port;
+ const child=spawn(process.execPath,[path.join(root,'src','index.js')],{cwd:root,env:{...process.env,PORT:String(port),NODE_ENV:'test',SOLANA_PROGRAM_ID:'',SUPABASE_URL:'',SUPABASE_SECRET_KEY:'',SUPABASE_SERVICE_ROLE_KEY:''},stdio:['ignore','pipe','pipe']});
+ t.after(async()=>{if(child.exitCode===null){child.kill();await new Promise(resolve=>child.once('exit',resolve));}});
+ await waitForServer(base,child);
+ const response=await fetch(base+'/api/indexer/receipts?beforeSlot=123');
+ assert.equal(response.status,400);
+});
