@@ -1,0 +1,29 @@
+/* Release 1 responsive device tiers and accessibility. */
+.sl-mobile-lite-notice{margin:0 0 18px;padding:14px;border:1px solid rgba(110,223,240,.28);border-radius:14px;background:linear-gradient(140deg,rgba(11,46,71,.86),rgba(17,20,55,.9));box-shadow:0 10px 26px rgba(0,0,0,.2)}
+.sl-mobile-lite-notice>strong{display:block;color:#d9f9ff;font-size:.9rem;letter-spacing:.08em;text-transform:uppercase}
+.sl-mobile-lite-notice p{margin:8px 0 12px;color:#c0d1e4;font-size:.88rem;line-height:1.55}
+.sl-mobile-wallet-actions{display:flex;gap:8px;flex-wrap:wrap}
+.sl-mobile-wallet-actions .button{min-height:44px;flex:1 1 140px;text-align:center}
+.sl-mobile-guide-link{display:inline-block;margin-top:10px;color:#b5ddff;text-underline-offset:4px}
+[data-install-space-ledger]{display:none}
+.sl-install-available [data-install-space-ledger]{display:inline-flex}
+:focus-visible{outline:3px solid #83eaff!important;outline-offset:3px!important}
+button,a,input,select,textarea{scroll-margin-block:90px}
+@media(max-width:767px){
+ body[data-device-tier="phone"]>main.container{width:calc(100% - 20px);padding:16px 0 78px}
+ body[data-device-tier="phone"] nav ul{gap:10px}
+ body[data-device-tier="phone"] .galaxy-canvas{opacity:.48}
+ body[data-device-tier="phone"] .sl-desktop-workspace,body[data-device-tier="phone"] .sl-mobile-optional{display:none!important}
+ body[data-device-tier="phone"] #pixelCanvas{max-height:62vh}
+}
+@media(min-width:768px){
+ body[data-device-tier="tablet"]>main.container{width:min(1100px,calc(100% - 28px))}
+ body[data-device-tier="tablet"] .sl-mobile-lite-notice{display:none}
+}
+@media(forced-colors:active){
+ :focus-visible{outline:3px solid Highlight!important}
+ .sl-mobile-lite-notice,.card,.button{border:1px solid CanvasText}
+}
+@media(prefers-reduced-motion:reduce){
+ .sl-mobile-lite-notice *,*,*::before,*::after{scroll-behavior:auto!important;transition:none!important;animation:none!important}
+}
