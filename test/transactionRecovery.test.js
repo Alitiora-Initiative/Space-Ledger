@@ -74,6 +74,8 @@ test('signature status distinguishes failed, confirmed, pending and expired outc
 
 test('simulation errors preserve the RPC failure and useful program logs', () => {
   assert.equal(recovery.formatSimulationFailure({ value: { err: null, logs: [] } }), null);
+  assert.match(recovery.formatSimulationFailure(null), /invalid simulation response/);
+  assert.match(recovery.formatSimulationFailure({ value: {} }), /invalid simulation response/);
   const message = recovery.formatSimulationFailure({
     value: {
       err: { InstructionError: [1, 'Custom'] },
@@ -82,5 +84,4 @@ test('simulation errors preserve the RPC failure and useful program logs', () =>
   });
   assert.match(message, /InstructionError/);
   assert.match(message, /Program failed: custom error/);
-  assert.equal(recovery.formatSimulationFailure(null), null);
 });
