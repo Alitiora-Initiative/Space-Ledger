@@ -75,7 +75,7 @@ The $SL token has a separate Solana Mainnet mint and liquidity pool. It is not t
 
 ## Grant proposal milestones and beta targets
 
-The project operator reports that a $1,000 USD-equivalent funding application has been submitted to the Solana Foundation. Submission does not mean that funding has been awarded or received.
+The project operator confirms that a $1,000 USD-equivalent funding application was submitted to the Solana Foundation on **2026-11-03**. Submission does not mean that funding has been awarded or received; no award or disbursement has been confirmed.
 
 The proposed milestone allocation is:
 
