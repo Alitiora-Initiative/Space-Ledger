@@ -139,7 +139,7 @@
           commitment: 'confirmed',
           maxSupportedTransactionVersion: 0
         });
-        if (transaction) state = transaction.meta && transaction.meta.err ? 'failed' : 'confirmed';
+        if (transaction && transaction.meta) state = transaction.meta.err ? 'failed' : 'confirmed';
       } catch (error) {
         if (!lookupError) lookupError = error;
       }
@@ -323,6 +323,7 @@
 
   form.addEventListener('submit', async function (event) {
     event.preventDefault();
+    if (pendingRecovery) return setQuoteText('Resolve the previously submitted transaction before requesting another quote.');
     if (!appConfig) return setQuoteText('The Devnet program is unavailable.');
     setBusy(true);
     activeQuote = null;
