@@ -9,6 +9,10 @@ This document contains a historical verification record and a repeatable checkli
 
 > The Space Ledger canvas application remains Devnet-only. The separate $SL token is on Solana Mainnet and must not be confused with the canvas program or its Devnet usage metrics. Devnet SOL and Devnet USDC have no real-world value.
 
+## Funding application status
+
+The project operator confirms that the $1,000 USD-equivalent Solana Foundation funding application was submitted on **2026-11-03**. No funding award or disbursement has been confirmed. The milestone amounts below are proposed allocations, not received funds.
+
 ## Program and environment
 
 | Item | Value |
@@ -68,6 +72,10 @@ The current limiter configuration in `src/index.js` is:
 | Read endpoints using the read limiter | 60 requests per minute per IP |
 
 These are application-level, per-instance limits; deployment/runtime behaviour can vary. The values in this table must be updated if the source configuration changes.
+
+## Continuous integration
+
+The repository's GitHub Actions workflow [Rust](../.github/workflows/rust.yml) runs `cargo build` and `cargo test` for the Anchor program on pushes to `main` and pull requests targeting `main`. It does not run the Node.js test suite.
 
 ## Local automated checks
 
