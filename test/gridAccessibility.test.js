@@ -35,3 +35,32 @@ test('accessible grid status is derived from verified whole-block ownership only
   assert.match(html, /block-level status applies to all 100 positions/);
   assert.doesNotMatch(html, /pixelOwners|pixelOwnershipMap|Math\.random\(\)/);
 });
+
+
+test('grid reveals the voxel canvas only after its first renderer frame is ready', () => {
+  const html = require('node:fs').readFileSync(gridPath, 'utf8');
+  const shellStyles = html.slice(html.indexOf('.grid-world-shell{'), html.indexOf('#pixelCanvas:focus'));
+  const mountStart = html.indexOf("window.SpaceLedgerGridEngine = window.SpaceLedgerWorld.mountGrid");
+  const readyIndex = html.indexOf("shell.classList.add('is-ready')", mountStart);
+  assert.match(shellStyles, /#pixelCanvas[^}]*opacity:0/);
+  assert.match(shellStyles, /\.grid-world-shell:not\(\.is-ready\)::after/);
+  assert.ok(mountStart >= 0 && readyIndex > mountStart, 'renderer must mount before the shell is revealed');
+  assert.match(html, /WORLD SEQUENCE|SEQUENCE \\/ 8 VISUAL PHASES/);
+});
+
+test('grid zoom uses fit and two bounded enlargement levels', () => {
+  const html = require('node:fs').readFileSync(gridPath, 'utf8');
+  assert.match(html, /const allowed = \[1, 1\.5, 2\]/);
+  assert.match(html, /Math\.min\(1600, Math\.round\(fitWidth \* currentZoom\)\)/);
+  assert.match(html, /data-grid-zoom="1\.5"/);
+  assert.match(html, /data-grid-zoom="2"/);
+});
+
+test('grid uses one pointer path for hover and touch without duplicating engine hover events', () => {
+  const html = require('node:fs').readFileSync(gridPath, 'utf8');
+  assert.match(html, /canvas\.addEventListener\('pointermove'/);
+  assert.match(html, /window\.SpaceLedgerGridEngine\.setHover\(e\)/);
+  assert.match(html, /e\.pointerType === 'touch'/);
+  assert.doesNotMatch(html, /canvas\.addEventListener\('mousemove'/);
+  assert.doesNotMatch(html, /canvas\.addEventListener\('pointermove',[\\s\\S]*?canvas\.addEventListener\('pointermove'/);
+});
