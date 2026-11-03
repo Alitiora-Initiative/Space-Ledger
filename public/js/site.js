@@ -1,13 +1,30 @@
 (() => {
   // Presentability layer (cards, metrics, hide skip-link) — does not change app logic.
-  if (!document.querySelector('link[data-polish]')) {
+  const hasPolishStylesheet = Array.from(document.querySelectorAll('link[rel="stylesheet"]'))
+    .some(link => /(?:^|\/)polish\.css(?:\?|$)/.test(link.getAttribute('href') || ''));
+  if (!document.querySelector('link[data-polish]') && !hasPolishStylesheet) {
     const polish = document.createElement('link');
     polish.rel = 'stylesheet';
     polish.href = (location.pathname.includes('/pages/') ? '../css/' : 'css/') + 'polish.css';
     polish.setAttribute('data-polish', '1');
     document.head.appendChild(polish);
   }
-  document.querySelectorAll('a.skip-link').forEach(el => { el.remove(); });
+  // Preserve keyboard access and give every page a consistent main landmark.
+  const main = document.querySelector('main');
+  if (main) {
+    if (!main.id) main.id = 'main-content';
+    if (!main.hasAttribute('tabindex')) main.setAttribute('tabindex', '-1');
+    let skipLink = document.querySelector('a.skip-link');
+    if (!skipLink) {
+      skipLink = document.createElement('a');
+      skipLink.className = 'skip-link';
+      skipLink.href = '#main-content';
+      skipLink.textContent = 'Skip to main content';
+      document.body.insertBefore(skipLink, document.body.firstChild);
+    } else {
+      skipLink.href = '#main-content';
+    }
+  }
 
   const canvas = document.createElement('canvas');
   canvas.className = 'galaxy-canvas';
@@ -151,49 +168,60 @@
       const walletItem = list.querySelector('.wallet-button, #navWalletBtn')?.closest('li');
       list.insertBefore(item, walletItem || null);
     }
+    // Use one consistent active-page state across all static pages.
+    const normalisePath = value => value.replace(/\\/index\\.html$/, '/');
+    const currentPath = normalisePath(window.location.pathname);
+    list.querySelectorAll('a[href]').forEach(link => {
+      try {
+        const url = new URL(link.href, window.location.href);
+        if (url.origin === window.location.origin && normalisePath(url.pathname) === currentPath) {
+          link.classList.add('active');
+          link.setAttribute('aria-current', 'page');
+        }
+      } catch (_) { /* ignore malformed navigation links */ }
+    });
+
+    if (!list.id) list.id = 'primary-navigation';
     const toggle = document.createElement('button');
     toggle.className = 'nav-toggle';
     toggle.type = 'button';
     toggle.setAttribute('aria-label', 'Open navigation');
     toggle.title = 'Open navigation';
     toggle.setAttribute('aria-expanded', 'false');
+    toggle.setAttribute('aria-controls', list.id);
     toggle.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>';
-    toggle.addEventListener('click', () => {
-      const open = list.classList.toggle('nav-open');
+    const setNavigationOpen = open => {
+      list.classList.toggle('nav-open', open);
       toggle.setAttribute('aria-expanded', String(open));
       toggle.setAttribute('aria-label', open ? 'Close navigation' : 'Open navigation');
       toggle.title = open ? 'Close navigation' : 'Open navigation';
+    };
+    toggle.addEventListener('click', () => {
+      setNavigationOpen(!list.classList.contains('nav-open'));
     });
     nav.querySelector('.container').insertBefore(toggle, list);
     nav.setAttribute('aria-label', 'Main navigation');
     document.addEventListener('keydown', event => {
       if (event.key === 'Escape' && list.classList.contains('nav-open')) {
-        list.classList.remove('nav-open');
-        toggle.setAttribute('aria-expanded', 'false');
-        toggle.setAttribute('aria-label', 'Open navigation');
-        toggle.title = 'Open navigation';
+        setNavigationOpen(false);
+        toggle.focus();
         toggle.focus();
       }
     });
     list.addEventListener('click', event => {
       if (event.target.closest('a')) {
-        list.classList.remove('nav-open');
-        toggle.setAttribute('aria-expanded', 'false');
-        toggle.setAttribute('aria-label', 'Open navigation');
-        toggle.title = 'Open navigation';
+        setNavigationOpen(false);
       }
     });
   }
 
-  if (window.location.hash === '#main-content') {
-    window.history.replaceState(window.history.state, '', `${window.location.pathname}${window.location.search}`);
-    window.scrollTo(0, 0);
+  // Pages with their own footer keep it; pages without one receive the shared compact footer.
+  if (!document.querySelector('.site-footer')) {
+    const footer = document.createElement('footer');
+    footer.className = 'site-footer';
+    footer.innerHTML = '<div class="site-footer-inner"><span>Space Ledger · Solana Devnet beta</span><nav aria-label="Legal information"><a href="/pages/privacy.html">Privacy</a><a href="/pages/terms.html">Terms</a><a href="/pages/cookies.html">Cookies</a></nav></div>';
+    document.body.append(footer);
   }
-
-  const footer = document.createElement('footer');
-  footer.className = 'site-footer';
-  footer.innerHTML = '<div class="site-footer-inner"><span>Space Ledger</span><nav aria-label="Legal information"><a href="/pages/privacy.html">Privacy</a><a href="/pages/terms.html">Terms</a><a href="/pages/cookies.html">Cookies</a></nav></div>';
-  document.body.append(footer);
 
   if (!document.querySelector('script[data-wallet-reconnect]')) {
     const s = document.createElement('script');
