@@ -18,6 +18,7 @@
   let pendingRecovery = false;
   let pendingOutcome = null;
   let pendingStore = null;
+  let pendingRecordInMemory = null;
   const checkPendingButton = document.getElementById('checkPendingPurchaseBtn');
   const dismissExpiredButton = document.getElementById('dismissExpiredPurchaseBtn');
   const SOL_FEE_RESERVE = 0.02;
@@ -113,6 +114,16 @@
     return pendingStore;
   }
 
+  function clearPendingRecord(signature) {
+    const store = getPendingStore();
+    const cleared = Boolean(store && store.clear(signature));
+    if (pendingRecordInMemory && pendingRecordInMemory.signature === signature) {
+      pendingRecordInMemory = null;
+      return true;
+    }
+    return cleared;
+  }
+
   async function inspectSubmittedTransaction(connection, record) {
     let status = null;
     let currentBlockHeight = null;
@@ -161,7 +172,7 @@
 
   async function recoverPendingPurchase() {
     const store = getPendingStore();
-    const record = store && store.load();
+    const record = (store && store.load()) || pendingRecordInMemory;
     if (!record) {
       pendingRecovery = false;
       pendingOutcome = null;
@@ -188,7 +199,7 @@
       pendingOutcome = inspection.state;
 
       if (inspection.state === 'failed') {
-        store.clear(record.signature);
+        clearPendingRecord(record.signature);
         pendingRecovery = false;
         pendingOutcome = null;
         if (checkPendingButton) checkPendingButton.hidden = true;
@@ -198,7 +209,7 @@
       } else if (inspection.state === 'confirmed') {
         const verified = await verifyPendingReceipt(record);
         if (verified) {
-          store.clear(record.signature);
+          clearPendingRecord(record.signature);
           pendingRecovery = false;
           pendingOutcome = null;
           if (checkPendingButton) checkPendingButton.hidden = true;
@@ -483,6 +494,7 @@
         asset: activeQuote.asset,
         submittedAt: Date.now()
       };
+      pendingRecordInMemory = pendingRecord;
       const store = getPendingStore();
       const persisted = Boolean(store && store.save(pendingRecord));
       setQuoteText('Transaction submitted to Solana Devnet. Waiting for confirmation…');
@@ -502,7 +514,7 @@
       } catch (confirmationError) {
         const inspection = await inspectSubmittedTransaction(connection, pendingRecord);
         if (inspection.state === 'failed') {
-          if (store) store.clear(signature);
+          clearPendingRecord(signature);
           throw new Error('The Devnet transaction is confirmed failed. No ownership was recorded.');
         }
         if (inspection.state !== 'confirmed') {
@@ -515,25 +527,22 @@
         confirmation = { value: { err: null } };
       }
       if (confirmation.value.err) {
-        if (store) store.clear(signature);
+        clearPendingRecord(signature);
         throw new Error('The Devnet transaction failed on-chain. No ownership was recorded.');
       }
-      const firstBlockResponse = await fetch('/api/block-owner/' + encodeURIComponent(transactionData.startBlock));
-      const ownership = await firstBlockResponse.json();
-      const receiptVerified = firstBlockResponse.ok
-        && ownership.verified
-        && ownership.owner === wallet.address
-        && String(ownership.startBlock) === transactionData.startBlock
-        && Number(ownership.blockCount) === transactionData.blockCount
-        && Array.isArray(ownership.signatures)
-        && ownership.signatures.some(item => item && item.signature === signature);
+      let receiptVerified = false;
+      try {
+        receiptVerified = await verifyPendingReceipt(pendingRecord);
+      } catch (_) {
+        receiptVerified = false;
+      }
       if (!receiptVerified) {
         pendingRecovery = true;
         pendingOutcome = 'confirmed';
         if (checkPendingButton) checkPendingButton.hidden = false;
         throw new Error('Payment is confirmed, but the matching ownership receipt is not yet verifiable. Do not submit again; use Check previous transaction. Signature: ' + signature);
       }
-      if (store) store.clear(signature);
+      clearPendingRecord(signature);
       pendingRecovery = false;
       pendingOutcome = null;
       if (checkPendingButton) checkPendingButton.hidden = true;
@@ -570,8 +579,8 @@
   if (dismissExpiredButton) dismissExpiredButton.addEventListener('click', function () {
     if (pendingOutcome !== 'expired' || !window.confirm('Only continue after you independently checked this exact signature in Solana Explorer and are satisfied that it did not land. Clear the local recovery warning?')) return;
     const store = getPendingStore();
-    const record = store && store.load();
-    if (!record || !store.clear(record.signature)) return;
+    const record = (store && store.load()) || pendingRecordInMemory;
+    if (!record || !clearPendingRecord(record.signature)) return;
     pendingRecovery = false;
     pendingOutcome = null;
     dismissExpiredButton.hidden = true;
