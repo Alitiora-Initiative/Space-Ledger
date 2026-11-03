@@ -21,9 +21,22 @@ test('shared footer stays fixed without covering page content', () => {
   const styles = fs.readFileSync(path.join(root, 'public', 'css', 'styles.css'), 'utf8');
   assert.match(styles, /\.site-footer\s*\{[^}]*position:\s*fixed !important/);
   assert.match(styles, /\.site-footer\s*\{[^}]*bottom:\s*0/);
-  assert.match(styles, /body\s*\{[^}]*padding-bottom:\s*calc\(82px/);
+  assert.match(styles, /body\s*\{[^}]*padding-bottom:\s*calc\(50px/);
   assert.match(styles, /\.site-footer nav\s*\{\s*position:\s*static !important/);
-  assert.match(styles, /column-gap:\s*34px/);
+  assert.match(styles, /nav \.container\s*\{[^}]*padding:\s*0/);
+  assert.match(styles, /site-footer-inner\s*\{[^}]*min-height:\s*42px/);
+  assert.match(styles, /nav ul\.nav-open\s*\{\s*display:\s*flex/);
+  assert.match(styles, /\.skip-link:focus\s*\{\s*transform:\s*translateY\(0\)/);
+});
+
+test('site script preserves skip navigation and does not duplicate the homepage footer', () => {
+  const script = fs.readFileSync(path.join(root, 'public', 'js', 'site.js'), 'utf8');
+  const home = fs.readFileSync(path.join(root, 'public', 'index.html'), 'utf8');
+  assert.match(script, /Skip to main content/);
+  assert.match(script, /if \(!document\.querySelector\('\.site-footer'\)\)/);
+  assert.doesNotMatch(script, /querySelectorAll\('a\.skip-link'\)\.forEach\(el => \{ el\.remove\(\)/);
+  assert.doesNotMatch(script, /history\.replaceState\(window\.history\.state/);
+  assert.equal((home.match(/class="site-footer"/g) || []).length, 1);
 });
 
 test('Vercel applies security headers to static assets and functions', () => {
