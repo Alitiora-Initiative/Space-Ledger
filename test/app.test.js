@@ -196,6 +196,30 @@ test('Express app serves pages and live API endpoints while rejecting removed fe
     body: JSON.stringify({ networkId: 1, method: 'eth_sendTransaction', params: [] })
   });
   assert.equal(writeRpcResponse.status, 400);
+
+  // The public RPC proxy must have its own limit because each request is
+  // forwarded to an external RPC provider. Invalid network IDs avoid making
+  // real outbound requests while still exercising the middleware.
+  const invalidRpcStatuses = [];
+  for (let i = 0; i < 29; i++) {
+    const response = await fetch(`${baseUrl}/api/rpc`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ networkId: 999999, method: 'eth_blockNumber', params: [] })
+    });
+    invalidRpcStatuses.push(response.status);
+  }
+  assert.deepEqual(invalidRpcStatuses, Array(29).fill(400));
+
+  const rateLimitedRpcResponse = await fetch(`${baseUrl}/api/rpc`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ networkId: 999999, method: 'eth_blockNumber', params: [] })
+  });
+  assert.equal(rateLimitedRpcResponse.status, 429);
+  assert.equal(rateLimitedRpcResponse.headers.get('x-ratelimit-limit'), '30');
+  assert.equal(rateLimitedRpcResponse.headers.get('x-ratelimit-remaining'), '0');
+  assert.match((await rateLimitedRpcResponse.json()).error, /Too many rpc requests/i);
 });
 
 test('pages have image alternatives and do not load remote scripts or iframe embeds', () => {
