@@ -76,7 +76,9 @@ Human-maintained checklist. Deployments require a deliberate Git push (and Verce
 
 ## Grant Proposal Execution Roadmap (Proposed; not yet completed)
 
-**Purpose:** This section records the development and adoption milestones described in the Space Ledger funding application submitted to the Solana Foundation. It is an execution plan, not evidence that funding has been awarded or that the listed work is complete.
+**Application status:** Submitted to the Solana Foundation on **2026-11-03**, as confirmed by the project operator. No award, approval or disbursement has been confirmed.
+
+**Purpose:** This section records the development and adoption milestones described in the submitted Space Ledger funding application. It is an execution plan, not evidence that funding has been awarded or that the listed work is complete.
 
 **Funding requested:** USD $1,000 equivalent.
 
@@ -203,7 +205,7 @@ Update this table only when evidence exists. Add links to commits, test runs, de
 
 | Item | Status | Evidence / date |
 |---|---|---|
-| Funding application submitted | Reported by project operator; award not confirmed | Record submission confirmation privately; do not publish personal application data |
+| Funding application submitted | Submitted 2026-11-03 (operator-confirmed); award not confirmed | Keep private submission confirmation; do not publish personal application data |
 | Milestone 1 | Not started / In progress / Complete | Add test/build results and Devnet proof |
 | Milestone 2 | Not started / In progress / Complete | Add endpoint, chart, tests and sample Devnet records |
 | Milestone 3 | Not started / In progress / Complete | Add deduplicated metrics and feedback report |
