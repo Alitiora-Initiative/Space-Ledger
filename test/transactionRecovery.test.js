@@ -76,6 +76,7 @@ test('simulation errors preserve the RPC failure and useful program logs', () =>
   assert.equal(recovery.formatSimulationFailure({ value: { err: null, logs: [] } }), null);
   assert.match(recovery.formatSimulationFailure(null), /invalid simulation response/);
   assert.match(recovery.formatSimulationFailure({ value: {} }), /invalid simulation response/);
+  assert.match(recovery.formatSimulationFailure({ value: { err: undefined } }), /rejected by the Devnet RPC/);
   const message = recovery.formatSimulationFailure({
     value: {
       err: { InstructionError: [1, 'Custom'] },
