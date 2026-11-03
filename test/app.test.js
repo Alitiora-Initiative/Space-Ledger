@@ -303,3 +303,19 @@ test('pages have image alternatives and do not load remote scripts or iframe emb
     assert.doesNotMatch(html, /<script\b[^>]*\bsrc\s*=\s*["']https?:\/\//i, `${path.relative(root, file)} must not load remote scripts`);
   }
 });
+
+test('indexer status reports not configured without private Supabase credentials', async t => {
+  const port=await findFreePort(),base='http://127.0.0.1:'+port;
+  const child=spawn(process.execPath,[path.join(root,'src','index.js')],{
+    cwd:root,
+    env:{...process.env,PORT:String(port),NODE_ENV:'test',SOLANA_PROGRAM_ID:'',SUPABASE_URL:'',SUPABASE_SECRET_KEY:'',SUPABASE_SERVICE_ROLE_KEY:''},
+    stdio:['ignore','pipe','pipe']
+  });
+  t.after(async()=>{if(child.exitCode===null){child.kill();await new Promise(resolve=>child.once('exit',resolve));}});
+  await waitForServer(base,child);
+  const response=await fetch(base+'/api/indexer/status');
+  assert.equal(response.status,200);
+  const value=await response.json();
+  assert.equal(value.status,'not_configured');
+  assert.equal(value.network,'devnet');
+});
