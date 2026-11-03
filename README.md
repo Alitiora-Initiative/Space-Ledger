@@ -149,6 +149,7 @@ The GitHub Actions workflow [Rust](.github/workflows/rust.yml) runs `cargo build
 ## Project documentation
 
 - [Roadmap and grant milestone execution plan](ROADMAP.md)
+- [Funding and collaboration opportunities](docs/FUNDING-AND-COLLABORATION.md)
 - [Devnet Beta Guide](docs/Space-Ledger-Devnet-Beta-Guide.md)
 - [Beta Verification notes](docs/BETA_VERIFICATION.md)
 - [Mainnet Migration Guide](docs/MAINNET-MIGRATION-GUIDE.md)
