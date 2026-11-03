@@ -51,8 +51,8 @@
     function save(record) {
       if (!storage || typeof storage.setItem !== 'function') return false;
       const normalized = {
-        version: STORAGE_VERSION,
-        network: 'devnet',
+        version: record?.version,
+        network: record?.network,
         signature: record?.signature,
         blockhash: record?.blockhash,
         lastValidBlockHeight: record?.lastValidBlockHeight,
