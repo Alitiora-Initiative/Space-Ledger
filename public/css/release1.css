@@ -13,7 +13,7 @@ button,a,input,select,textarea{scroll-margin-block:90px}
  body[data-device-tier="phone"]>main.container{width:calc(100% - 20px);padding:16px 0 78px}
  body[data-device-tier="phone"] nav ul{gap:10px}
  body[data-device-tier="phone"] .galaxy-canvas{opacity:.48}
- body[data-device-tier="phone"] .sl-desktop-workspace,body[data-device-tier="phone"] .sl-mobile-optional{display:none!important}
+ body[data-device-tier="phone"] .sl-desktop-workspace,body[data-device-tier="phone"] .sl-mobile-optional,body[data-device-tier="phone"] [data-desktop-workspace]{display:none!important}
  body[data-device-tier="phone"] #pixelCanvas{max-height:62vh}
 }
 @media(min-width:768px){
