@@ -201,7 +201,16 @@
   text-shadow: none;
 }
 
-.home-hero h1 span {
+.home-hero-tagline {
+  margin: 8px 0 0;
+  color: #e1e9ff;
+  font-size: clamp(1.25rem, 2.2vw, 1.85rem);
+  font-weight: 680;
+  letter-spacing: -0.045em;
+  line-height: 1.2;
+}
+
+.home-hero-tagline span {
   color: transparent;
   background: linear-gradient(100deg, #8ce9df 4%, #b9bcff 58%, #cba9ff 100%);
   -webkit-background-clip: text;
@@ -619,6 +628,7 @@
   .home-hero { gap: 0; padding: 26px 22px 22px; border-radius: 22px; }
   .eyebrow { margin-bottom: 18px; font-size: 0.58rem; }
   .home-hero h1 { font-size: clamp(2.45rem, 10vw, 3.5rem); letter-spacing: -0.06em; }
+  .home-hero-tagline { font-size: clamp(1.15rem, 5vw, 1.55rem); }
   .hero-intro { margin-top: 17px; font-size: 0.95rem; line-height: 1.68; }
   .hero-actions { gap: 9px; margin-top: 22px; }
   .home-page .home-button-primary, .home-page .home-button-secondary { min-height: 46px; padding: 11px 15px; font-size: 0.79rem; }
