@@ -45,7 +45,7 @@ test('grid reveals the voxel canvas only after its first renderer frame is ready
   assert.match(shellStyles, /#pixelCanvas[^}]*opacity:0/);
   assert.match(shellStyles, /\.grid-world-shell:not\(\.is-ready\)::after/);
   assert.ok(mountStart >= 0 && readyIndex > mountStart, 'renderer must mount before the shell is revealed');
-  assert.match(html, /WORLD SEQUENCE|SEQUENCE \\/ 8 VISUAL PHASES/);
+  assert.ok(html.includes('SEQUENCE / 8 VISUAL PHASES'));
 });
 
 test('grid zoom uses fit and two bounded enlargement levels', () => {
