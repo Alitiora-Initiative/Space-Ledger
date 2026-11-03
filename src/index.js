@@ -62,9 +62,6 @@ app.get('/api/indexer/status', readRateLimit, async (_req, res) => {
 });
 
 app.get('/api/indexer/receipts', readRateLimit, async (req, res) => {
-  if (!indexerStore.configured || !process.env.SOLANA_PROGRAM_ID) {
-    return res.status(503).json({ verified:false, status:'not_configured', network:'devnet', receipts:[], error:'The private Devnet receipt indexer is not configured.' });
-  }
   const rawLimit = req.query.limit === undefined ? '20' : String(req.query.limit);
   const limit = Number(rawLimit);
   if (!/^[0-9]+$/.test(rawLimit) || !Number.isSafeInteger(limit) || limit < 1 || limit > 100) {
@@ -80,6 +77,9 @@ app.get('/api/indexer/receipts', readRateLimit, async (req, res) => {
       || !/^[1-9A-HJ-NP-Za-km-z]{32,128}$/.test(beforeSignature)) {
       return res.status(400).json({ error:'A valid beforeSlot and beforeSignature cursor pair is required.' });
     }
+  }
+  if (!indexerStore.configured || !process.env.SOLANA_PROGRAM_ID) {
+    return res.status(503).json({ verified:false, status:'not_configured', network:'devnet', receipts:[], error:'The private Devnet receipt indexer is not configured.' });
   }
   try {
     const state = await indexerStore.getState(process.env.SOLANA_PROGRAM_ID);
