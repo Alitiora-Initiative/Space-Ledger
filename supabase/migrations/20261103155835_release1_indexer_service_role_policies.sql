@@ -1,0 +1,3 @@
+create policy "indexer service role manages purchase receipts" on public.purchase_receipts for all to service_role using(true) with check(true);
+create policy "indexer service role manages chain events" on public.chain_events for all to service_role using(true) with check(true);
+create policy "indexer service role manages indexer state" on public.indexer_state for all to service_role using(true) with check(true);
