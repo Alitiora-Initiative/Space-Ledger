@@ -47,7 +47,7 @@ Do not treat the separate $SL token's Mainnet presence as a Mainnet deployment o
 
 ## Funding proposal and execution plan
 
-The project operator reports that a **$1,000 USD-equivalent funding application** has been submitted to the Solana Foundation. The application requests milestone-based support for open-source development and public beta testing.
+The project operator confirms that a **$1,000 USD-equivalent funding application was submitted to the Solana Foundation on 2026-11-03**. The application requests milestone-based support for open-source development and public beta testing. The submission date is operator-reported; no funding award or disbursement has been confirmed.
 
 **The application is not evidence of an award. Funding has not been confirmed in this repository.**
 
@@ -62,6 +62,8 @@ The proposal is divided into three planned milestones:
 The proposed delivery window is eight weeks after an agreed project start. These amounts and adoption numbers are **proposal targets**, not funds received or results already achieved.
 
 The detailed scope, tasks, acceptance criteria, evidence log, schedule and AI coding-agent instructions are maintained in [ROADMAP.md](ROADMAP.md), under **Grant Proposal Execution Roadmap**. All milestone statuses must remain accurate and evidence-based.
+
+The project is independently maintained and currently operates with limited capital. Development instructions therefore prioritise existing dependencies, Solana Devnet, public/free-tier tooling and low-cost reproducible workflows. Do not introduce paid APIs, subscriptions, infrastructure commitments or other recurring costs without explicit maintainer approval.
 
 ## How to test the Devnet beta
 
@@ -130,6 +132,10 @@ Configuration notes:
 - A private RPC API key belongs in the server-side environment only.
 - Never commit `.env`, private keys, wallet JSON files, seed phrases or recovery phrases.
 - Do not copy a Mainnet RPC URL into the Devnet configuration.
+
+## Continuous integration
+
+The GitHub Actions workflow [Rust](.github/workflows/rust.yml) runs `cargo build` and `cargo test` for the Anchor program on pushes to `main` and pull requests targeting `main`. The workflow does not run the Node.js test suite; run `npm test` locally and report its actual result.
 
 ## Security and data integrity
 
