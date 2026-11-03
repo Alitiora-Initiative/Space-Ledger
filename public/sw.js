@@ -15,6 +15,7 @@ const SHELL=[
   '/js/site.js',
   '/js/home.js',
   '/js/mobileSupport.js',
+  '/js/deviceTier.js',
   '/js/space-world.js',
   '/js/transactionRecovery.js',
   '/js/wallet.js',
