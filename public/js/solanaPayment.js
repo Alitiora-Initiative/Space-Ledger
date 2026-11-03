@@ -154,7 +154,9 @@
       && ownership.verified
       && ownership.owner === record.buyer
       && String(ownership.startBlock) === record.startBlock
-      && Number(ownership.blockCount) === record.blockCount);
+      && Number(ownership.blockCount) === record.blockCount
+      && Array.isArray(ownership.signatures)
+      && ownership.signatures.some(item => item && item.signature === record.signature));
   }
 
   async function recoverPendingPurchase() {
@@ -522,7 +524,9 @@
         && ownership.verified
         && ownership.owner === wallet.address
         && String(ownership.startBlock) === transactionData.startBlock
-        && Number(ownership.blockCount) === transactionData.blockCount;
+        && Number(ownership.blockCount) === transactionData.blockCount
+        && Array.isArray(ownership.signatures)
+        && ownership.signatures.some(item => item && item.signature === signature);
       if (!receiptVerified) {
         pendingRecovery = true;
         pendingOutcome = 'confirmed';
