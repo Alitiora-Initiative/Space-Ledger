@@ -1,119 +1,161 @@
 # Space Ledger
 
-Shared digital-canvas prototype on **Solana Devnet**: 10 billion blocks × 100 pixels = 1 trillion pixel positions.
+**Space Ledger** is an open-source shared digital-canvas prototype built on **Solana Devnet**. Its design contains 10 billion blocks with 100 pixel positions per block, for a theoretical capacity of 1 trillion pixel positions.
+
+> **Network status:** The Space Ledger canvas application and its Anchor program are Devnet-only. Devnet SOL and Devnet USDC have no real-world value. The separate $SL token is a Solana Mainnet asset; it is not the canvas program, does not represent ownership of canvas blocks, and is not required to test the Devnet application.
 
 | | |
 |---|---|
-| **Live site** | [space-ledger-alitiora.vercel.app](https://space-ledger-alitiora.vercel.app) |
-| **$SL market** | [Live $SL page](https://space-ledger-alitiora.vercel.app/pages/token.html) · mint `42UNqmUTuKuKZ5mwo2r5y3cNoPv38P8fxAisqQLXdT6u` |
-| **Network** | Solana **Devnet only** |
-| **Program** | `EbP7vsnMXPonTfriPUFynco69d69JiXpWbKnwVmz8sgG` |
-| **Operator** | Joseph Mushelle Nyingeh (Alitiora Initiative), Kenya |
+| **Live application** | [space-ledger-alitiora.vercel.app](https://space-ledger-alitiora.vercel.app) |
+| **Source code** | [Alitiora-Initiative/Space-Ledger](https://github.com/Alitiora-Initiative/Space-Ledger) |
+| **$SL information page** | [Space Ledger token page](https://space-ledger-alitiora.vercel.app/pages/token.html) |
+| **Canvas program (Devnet)** | `EbP7vsnMXPonTfriPUFynco69d69JiXpWbKnwVmz8sgG` |
+| **Operator** | Joseph Mushelle Nyingeh · Alitiora Initiative · Kenya |
 | **Contact** | [jaymnyon@gmail.com](mailto:jaymnyon@gmail.com) |
+| **License** | MIT |
 
-Devnet SOL / Devnet USDC have **no real-world value**. This is not an investment product and not a secondary market.
+## Current product status
 
-## What works today
+The repository contains a publicly accessible Devnet beta. The following are implemented in the current codebase:
 
-- **Primary sale** on a linear bonding curve: each confirmed buy advances `current_supply` and raises the next price ($0.001 → $1,000 over 10B blocks).
-- **Wallet Standard** multi-wallet connect (Phantom, Solflare, and others exposed in the browser).
-- Flow: connect → quote (balance-aware) → wallet approve → on-chain **receipt** → Explorer link.
-- **Grid** (whole-block buy deep-link), market of receipts, leaderboard, profile / dashboard (model PnL %).
-- **Rate limits** + short config cache for free-tier hosting.
-- **Treasury page**: Devnet program balances + optional **builder support goal** (progress toward 10 SOL-eq from public chain balances).
-- Legal drafts: Privacy / Terms / Cookies with operator contact.
-- Mobile path: Phantom or Solflare **in-app browser** ([guide](https://space-ledger-alitiora.vercel.app/pages/mobile.html)).
+- **On-chain whole-block purchases:** Anchor program instructions accept Devnet SOL or the configured Devnet USDC mint.
+- **Linear bonding curve:** successful purchases advance the on-chain supply and affect the next block price.
+- **Purchase receipts:** the program records buyer, block range, payment asset, paid units, curve price, fee and settlement time.
+- **Wallet connectivity:** Wallet Standard-compatible Solana wallets, including Phantom and Solflare when exposed by the browser.
+- **Grid and chunk API:** a virtualized canvas/grid experience and `/api/grid/chunk` endpoint for bounded block queries.
+- **Quotes and transaction flow:** balance-aware quotes, wallet approval, transaction confirmation and Explorer links.
+- **Supporting application pages and APIs:** grid, profile/dashboard, leaderboard, treasury, market and token-information interfaces.
+- **Operational protections:** API rate limits, a short-lived config cache, server-side RPC configuration and HTTP security headers.
+- **Developer resources:** automated Node.js tests, Rust/Anchor program source, local setup instructions and Devnet beta documentation.
 
-## What is not included / Next Upgrades
+The repository records an operator-approved Devnet purchase and receipt in its historical beta-verification notes. That is evidence of a working test path, not evidence of broad independent adoption, production readiness or a security audit.
 
-| Topic | Status |
-|--------|--------|
-| Mainnet | Not yet (out of scope until funded & audited) |
-| Pixel & Grid Efficiency | Complete (virtualized 2D canvas viewport + `/api/grid/chunk`) |
-| Two-way Market (Buy & Sell) | In architectural design (two-way bonding curve AMM) |
-| Real Movement Chart | In design (Lightweight-Charts with live on-chain history) |
-| WalletConnect QR | Use in-app browser instead |
-| Paid audit | Future / grant-funded |
+## Current limitations and planned work
 
-## Roadmap & Architecture Upgrades
-
-Per operator scope update (2026-11-01), the team is designing three key system enhancements:
-1. **Grid & Pixel Efficiency**: Virtualized viewport rendering (LOD canvas) and chunked API endpoints to handle scale without client memory lag.
-2. **Buy & Sell Two-Way Orders**: Extending the on-chain bonding curve to support two-way redemption (`sell_blocks`) so users can exit positions directly back to the curve.
-3. **Real Movement Charting**: Time-series price and supply charts backed purely by on-chain transaction history (no simulated prices or fake ticks).
-
-See [ROADMAP.md](ROADMAP.md) for detailed architecture comparisons, trade-offs, and acceptance tests.
-
-
-
-## How to test (2 minutes)
-
-1. Install Phantom or Solflare; switch network to **Devnet**.
-2. Get free Devnet SOL from a faucet.
-3. Open the [live site](https://space-ledger-alitiora.vercel.app) → **Connect Wallet** (top nav, once).
-4. **Pricing** → small budget or “Use available balance” → **Get Devnet quote** → approve in wallet.
-5. Confirm on [Solana Explorer](https://explorer.solana.com/?cluster=devnet) (cluster = Devnet).
-
-If public RPC is busy, wait a minute and retry.
-
-
-## $SL development coin
-
-[Space Ledger ($SL)](https://space-ledger-alitiora.vercel.app/pages/token.html) is a **Solana mainnet** coin on [StonkFun](https://www.stonkfun.xyz/token/42UNqmUTuKuKZ5mwo2r5y3cNoPv38P8fxAisqQLXdT6u), paired with STONK. The operator launched it so trading activity can help fund continued work on this website and protocol (hosting, RPC, interface, and review). It is separate from Devnet block purchases.
-
-| | |
+| Area | Current status |
 |---|---|
-| Mint | `42UNqmUTuKuKZ5mwo2r5y3cNoPv38P8fxAisqQLXdT6u` |
-| Pool | `EPAsaZjCvMZitE8d65KAR7yxpFbt8gAZo8zNzQk4YQsy` |
-| Page | [/pages/token.html](https://space-ledger-alitiora.vercel.app/pages/token.html) |
+| Canvas application network | Solana Devnet |
+| Whole-block purchases | Implemented for Devnet SOL and Devnet USDC |
+| Individual pixel ownership | Not implemented |
+| Transfers / secondary market for canvas blocks | Not implemented |
+| Two-way buy-and-sell / redemption | Planned; not implemented |
+| Historical chart based on confirmed on-chain activity | Planned; not implemented as a complete history visualisation |
+| Independent program security audit | Not completed |
+| Canvas application mainnet migration | Out of scope until separate technical, security and legal review |
 
-The page’s `/api/token/sl` route reads StonkFun, Jupiter, GeckoTerminal, and Raydium on each request (short server cache). It does not simulate price, volume, or trades. $SL is speculative, not equity, and not a claim on canvas blocks.
+Do not treat the separate $SL token's Mainnet presence as a Mainnet deployment of the canvas application.
+
+## Funding proposal and execution plan
+
+The project operator confirms that a **$1,000 USD-equivalent funding application was submitted to the Solana Foundation on 2026-11-03**. The application requests milestone-based support for open-source development and public beta testing. The submission date is operator-reported; no funding award or disbursement has been confirmed.
+
+**The application is not evidence of an award. Funding has not been confirmed in this repository.**
+
+The proposal is divided into three planned milestones:
+
+| Milestone | Proposed amount | Planned outcome |
+|---|---:|---|
+| 1. Devnet reliability, testing and verification | $350 | Expanded program/backend tests, reproducible Devnet checks and updated verification evidence |
+| 2. Verifiable on-chain history and visualisation | $400 | History API and charts derived from confirmed program events/receipts, with honest empty/error states |
+| 3. Independent public beta and ecosystem contribution | $250 | Target 10 independent test wallets, 20 confirmed Devnet purchase receipts and 3 external feedback reports, plus a public adoption report |
+
+The proposed delivery window is eight weeks after an agreed project start. These amounts and adoption numbers are **proposal targets**, not funds received or results already achieved.
+
+The detailed scope, tasks, acceptance criteria, evidence log, schedule and AI coding-agent instructions are maintained in [ROADMAP.md](ROADMAP.md), under **Grant Proposal Execution Roadmap**. All milestone statuses must remain accurate and evidence-based.
+
+The project is independently maintained and currently operates with limited capital. Development instructions therefore prioritise existing dependencies, Solana Devnet, public/free-tier tooling and low-cost reproducible workflows. Do not introduce paid APIs, subscriptions, infrastructure commitments or other recurring costs without explicit maintainer approval.
+
+## How to test the Devnet beta
+
+1. Install Phantom or Solflare, or another supported Solana wallet.
+2. Switch the wallet to **Devnet**. Do not use Mainnet for the canvas purchase flow.
+3. Obtain test SOL from a Solana Devnet faucet. Devnet USDC must also be a Devnet token.
+4. Open the [live application](https://space-ledger-alitiora.vercel.app) and connect the wallet.
+5. Open the purchase flow, request a Devnet quote, review the amount and approve the transaction in the wallet.
+6. After confirmation, inspect the transaction and receipt using [Solana Explorer on Devnet](https://explorer.solana.com/?cluster=devnet).
+
+For mobile testing, open the application in the Phantom or Solflare in-app browser and confirm that the wallet is on Devnet. See the [mobile guide](https://space-ledger-alitiora.vercel.app/pages/mobile.html).
+
+Devnet RPC services can be rate-limited or temporarily unavailable. A failed request should be reported as a failed test, not counted as a successful purchase.
+
+See the [Devnet Beta Guide](docs/Space-Ledger-Devnet-Beta-Guide.md) and [Beta Verification notes](docs/BETA_VERIFICATION.md) for additional procedures.
+
+## The separate $SL token
+
+[Space Ledger ($SL)](https://space-ledger-alitiora.vercel.app/pages/token.html) is a separate Solana Mainnet token. The repository identifies its mint as:
+
+`42UNqmUTuKuKZ5mwo2r5y3cNoPv38P8fxAisqQLXdT6u`
+
+The repository identifies its liquidity pool as:
+
+`EPAsaZjCvMZitE8d65KAR7yxpFbt8gAZo8zNzQk4YQsy`
+
+The token is speculative, is not equity, is not a claim on canvas blocks and is not required to access or test the Devnet canvas. Token-market activity must not be mixed with Devnet canvas purchase receipts, application usage or adoption metrics. Nothing in the grant proposal requests token liquidity or market-making funds.
 
 ## Optional builder support
 
-Separate from Devnet purchases. Progress bar on [Treasury](https://space-ledger-alitiora.vercel.app/pages/treasury.html) reads **live wallet balances** and converts Arbitrum ETH / Bitcoin to SOL-equivalent with public USD prices.
+The application has an optional support section separate from Devnet block purchases. Support is voluntary and is not required to use the application.
 
-| Chain | Address |
-|--------|---------|
+| Chain | Address displayed by the project |
+|---|---|
 | Solana | `ETuGxX6Znxr9q59THJtcYDJKt6RvCfN7wp79tRnbG1xG` |
 | Arbitrum | `0x7CaC4214A4842c30D1E19adab492F62fAE449bed` |
 | Bitcoin | `bc1q9sadwz9aymgj9sw3xhfjxtw9zser6tgqp8xm8t` |
 
-Support is **optional**, not required to use the app, and not an investment.
-
-## Scale (Discord / free tier)
-
-- Default RPC is public Devnet. For heavier load, set Vercel env `SOLANA_RPC_DEVNET` to a free **Helius Devnet** URL (never mainnet; never expose API keys to the browser).
-- Approximate limits per instance: quote ~20/min/IP, purchase build ~8/min/IP, reads ~60/min/IP.
-- Receipt lists are capped; a full indexer is future work.
-
 ## Local development
+
+Requirements include Node.js/npm and the Solana/Anchor tooling needed for program work.
 
 ```bash
 cp .env.example .env
-# Set SOLANA_PROGRAM_ID and optional SOLANA_RPC_DEVNET
 npm install
 npm test
 npm start
 ```
 
+For the Solana program build, use the repository's compile script in an environment with the required Solana program build tools installed:
+
 ```bash
-npm audit   # should report 0 vulnerabilities with package overrides
+npm run compile
 ```
 
-## Security notes (free tooling)
+Additional checks:
 
-- Client config always returns public Devnet RPC — private keys stay server-side.
-- Dependency overrides pin fixed `uuid` / `stream-json` versions.
-- Not a substitute for a professional Solana program audit.
+```bash
+npm audit
+```
 
-## Docs
+Configuration notes:
 
+- Keep `SOLANA_RPC_DEVNET` pointed at Solana Devnet.
+- Keep `SOLANA_PROGRAM_ID` set to the published Devnet program ID.
+- A private RPC API key belongs in the server-side environment only.
+- Never commit `.env`, private keys, wallet JSON files, seed phrases or recovery phrases.
+- Do not copy a Mainnet RPC URL into the Devnet configuration.
+
+## Continuous integration
+
+The GitHub Actions workflow [Rust](.github/workflows/rust.yml) runs `cargo build` and `cargo test` for the Anchor program on pushes to `main` and pull requests targeting `main`. The workflow does not run the Node.js test suite; run `npm test` locally and report its actual result.
+
+## Security and data integrity
+
+- The current canvas program is a Devnet prototype, not an audited production financial system.
+- The repository's tests are not a substitute for an independent smart-contract audit.
+- Do not represent planned features as implemented.
+- Do not fabricate chart points, prices, volume, users, receipts, testimonials or adoption metrics.
+- Show an empty or unavailable state when confirmed on-chain data is not available.
+- Any Mainnet migration requires a separate review of program configuration, account constraints, oracle feeds, treasury controls, legal obligations, monitoring and security.
+
+## Project documentation
+
+- [Roadmap and Solana Foundation application milestones](ROADMAP.md)
+- [Technical collaboration and outreach](docs/COLLABORATION-OUTREACH.md)
 - [Devnet Beta Guide](docs/Space-Ledger-Devnet-Beta-Guide.md)
-- [Beta verification](docs/BETA_VERIFICATION.md)
-- [Roadmap](ROADMAP.md)
+- [Beta Verification notes](docs/BETA_VERIFICATION.md)
+- [Mainnet Migration Guide](docs/MAINNET-MIGRATION-GUIDE.md)
+- [AI agent instructions](AGENTS.md)
+- [GitHub Copilot instructions](.github/copilot-instructions.md)
 
 ## License
 
-MIT — see repository license file if present. Logo: operator-generated (AI-assisted) for this project.
-Operator: Alitiora Initiative. Review `ROADMAP.md` and `docs/MAINNET-MIGRATION-GUIDE.md` before proposing mainnet or marketplace features.
+MIT. See [LICENSE](LICENSE). The project logo is described in the repository roadmap as operator-generated with AI assistance.
