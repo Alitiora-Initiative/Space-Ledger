@@ -8,11 +8,13 @@ const solanaService = require('./solanaService');
 const supportGoal = require('./supportGoal');
 const slToken = require('./slToken');
 const { createRateLimiter } = require('./rateLimit');
+const { createSupabaseStore } = require('./indexer/supabaseStore');
 
 const quoteRateLimit = createRateLimiter({ windowMs: 60_000, max: 20, name: 'quote' });
 const purchaseRateLimit = createRateLimiter({ windowMs: 60_000, max: 8, name: 'purchase' });
 const readRateLimit = createRateLimiter({ windowMs: 60_000, max: 60, name: 'read' });
 const rpcRateLimit = createRateLimiter({ windowMs: 60_000, max: 30, name: 'rpc' });
+const indexerStore = createSupabaseStore(process.env);
 
 const PORT = Number.parseInt(process.env.PORT, 10) || 3000;
 const SOLANA_NETWORK = 'devnet';
@@ -50,6 +52,14 @@ app.use((_req, res, next) => {
 });
 app.use(express.json({ limit: '16kb' }));
 app.use(express.static(path.join(__dirname, '../public')));
+
+app.get('/api/indexer/status', readRateLimit, async (_req, res) => {
+  if (!indexerStore.configured || !process.env.SOLANA_PROGRAM_ID) return res.json({ configured:false, status:'not_configured', network:'devnet', message:'The private indexer requires server-side Supabase credentials and the Devnet program ID.' });
+  try {
+    const state = await indexerStore.getState(process.env.SOLANA_PROGRAM_ID);
+    res.json({ configured:true, status:!state ? 'not_started' : (state.last_error ? 'partial' : 'ready'), network:'devnet', lastIndexedSlot:state?.last_indexed_slot ?? null, lastSuccessAt:state?.last_success_at ?? null, receiptsIndexed:state?.receipts_indexed ?? 0, lastError:state?.last_error ?? null });
+  } catch (_) { res.status(503).json({ configured:true, status:'unavailable', network:'devnet', error:'Private indexer storage is temporarily unavailable.' }); }
+});
 
 app.get('/api/solana/config', readRateLimit, async (_req, res) => {
   try {
