@@ -18,6 +18,24 @@ These instructions apply to AI coding assistants and human contributors working 
 - Do not add token liquidity, market-making, speculative token-promotion or unrelated token-sale work to the grant milestones.
 - Do not claim the program is audited, production-secure or Mainnet-ready. No independent program audit is recorded as completed.
 
+## Resource and budget constraints
+
+- This is an independently maintained project with limited capital. Prefer existing dependencies, free/open-source tools, public Devnet services and low-cost approaches.
+- Do not introduce paid APIs, subscriptions, paid RPC plans, hosted databases, commercial services or recurring infrastructure costs without explicit maintainer approval and a clear cost estimate.
+- Do not assume the submitted Solana Foundation application has been approved or paid. The operator reports submission on 2026-11-03; award and disbursement are unconfirmed.
+
+## AI-assisted / vibe-coding workflow
+
+The project maintainer uses AI coding assistants to help plan and implement the product. Keep the workflow understandable and incremental:
+
+1. Explain the task in plain language and identify the roadmap milestone it supports.
+2. Inspect the current implementation before suggesting a rewrite.
+3. Propose a small plan listing the files to change and the checks to run.
+4. Implement one coherent task at a time; avoid broad speculative refactors.
+5. Explain important changes and any trade-offs without assuming the maintainer already knows the underlying framework internals.
+6. Run relevant tests and report the exact command and result. Clearly state what could not be tested.
+7. Update the roadmap only when the acceptance evidence exists.
+
 ## How to work
 
 - Select one small, reviewable task at a time and identify the roadmap milestone and acceptance criterion it supports.
