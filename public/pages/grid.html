@@ -67,7 +67,7 @@
   </nav>
 
   <main class="container">
-    <h1 style="text-align:center;margin-bottom:30px;">Block Grid Viewer</h1>
+    <h1 style="text-align:center;margin-bottom:30px;">Explore the Voxel World</h1>
 
     <div class="card">
       <h2>Navigate Blocks</h2>
@@ -378,7 +378,7 @@
         '<tr><td>Model block price</td><td>$' + Number(blockPrice).toFixed(6) + '</td></tr>' +
         '</table>' +
         '<p style="color:#c4d0d7;margin-top:12px;line-height:1.55;">The primary-sale quote is for the next sequential block range from global supply; it does not purchase this selected visual coordinate. Settlement still requires wallet approval.</p>' +
-        '<p style="margin-top:14px;"><a class="button" id="buyBlockLink" href="' + buyUrl + '">Continue to buy block ' + blockLabel + '</a></p>';
+        '<p style="margin-top:14px;"><a class="button" id="buyBlockLink" href="' + buyUrl + '">Continue to next-block quote</a></p>';
       panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
     window.showPixelDetails = showPixelDetails;
