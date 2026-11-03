@@ -45,6 +45,46 @@ test('site script preserves skip navigation and does not duplicate the homepage 
   assert.equal((home.match(/class="site-footer"/g) || []).length, 1);
 });
 
+test('purchase preflight fails closed and unresolved transactions can be recovered', () => {
+  const purchaseFlow = fs.readFileSync(path.join(root, 'public', 'js', 'solanaPayment.js'), 'utf8');
+  const deepLink = fs.readFileSync(path.join(root, 'public', 'js', 'purchaseDeepLink.js'), 'utf8');
+  const purchasePage = fs.readFileSync(path.join(root, 'public', 'pages', 'purchase.html'), 'utf8');
+
+  assert.doesNotMatch(deepLink, /softSim|__spaceLedgerSoftSim|simulateTransaction\\s*=/,
+    'grid deep-link helper must not override Solana RPC simulation');
+  assert.match(purchaseFlow, /await connection\.simulateTransaction\(transaction, \[\], false\)/,
+    'purchase path must run the actual RPC preflight');
+  assert.match(purchaseFlow, /if \(simulationFailure\) throw new Error\(simulationFailure\)/,
+    'failed on-chain preflight must stop before wallet approval');
+  assert.match(purchaseFlow, /Devnet transaction preflight could not be completed/,
+    'RPC preflight failures must not be swallowed');
+  assert.match(purchaseFlow, /store\.save\(pendingRecord\)/,
+    'a returned transaction signature must be saved for reload recovery');
+  assert.match(purchaseFlow, /getSignatureStatuses\(\[record\.signature\]/,
+    'recovery checks the signature status on chain');
+  assert.match(purchaseFlow, /Do not submit another purchase/,
+    'uncertain transaction outcomes must block duplicate purchases');
+  assert.ok(purchasePage.indexOf('transactionRecovery.js') < purchasePage.indexOf('solanaPayment.js'),
+    'recovery helper must load before purchase flow');
+  assert.match(purchasePage, /id="checkPendingPurchaseBtn"/);
+  assert.match(purchasePage, /id="dismissExpiredPurchaseBtn"/);
+});
+
+test('confirmed purchase success is not reversed by optional balance or config refresh errors', () => {
+  const purchaseFlow = fs.readFileSync(path.join(root, 'public', 'js', 'solanaPayment.js'), 'utf8');
+  const verifiedIndex = purchaseFlow.indexOf('if (!receiptVerified)');
+  const successIndex = purchaseFlow.indexOf('const confirmedMessage =', verifiedIndex);
+  const balanceRefreshIndex = purchaseFlow.indexOf('const solAfter = await solBalance', successIndex);
+  const configRefreshIndex = purchaseFlow.indexOf('await loadConfig();', successIndex);
+
+  assert.notEqual(verifiedIndex, -1);
+  assert.ok(successIndex > verifiedIndex, 'success must only follow verified receipt validation');
+  assert.ok(balanceRefreshIndex > successIndex, 'balance refresh must follow the success state');
+  assert.ok(configRefreshIndex > successIndex, 'config refresh must follow the success state');
+  assert.match(purchaseFlow, /The purchase receipt is verified\. The latest wallet balance could not be refreshed/);
+  assert.match(purchaseFlow, /Purchase confirmed and receipt verified\. The latest ledger summary could not be refreshed/);
+});
+
 test('receipt-derived APIs do not silently discard older records', () => {
   const source = fs.readFileSync(path.join(root, 'src', 'index.js'), 'utf8');
   assert.match(source, /receipts = await solanaService\.listReceipts\(\);/);
