@@ -62,5 +62,5 @@ test('grid uses one pointer path for hover and touch without duplicating engine 
   assert.match(html, /window\.SpaceLedgerGridEngine\.setHover\(e\)/);
   assert.match(html, /e\.pointerType === 'touch'/);
   assert.doesNotMatch(html, /canvas\.addEventListener\('mousemove'/);
-  assert.doesNotMatch(html, /canvas\.addEventListener\('pointermove',[\\s\\S]*?canvas\.addEventListener\('pointermove'/);
+  assert.equal((html.match(/canvas\.addEventListener\('pointermove'/g) || []).length, 1);
 });
