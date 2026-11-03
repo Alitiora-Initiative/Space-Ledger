@@ -105,7 +105,7 @@
     if (!value || !Object.prototype.hasOwnProperty.call(value, 'err')) {
       return 'Devnet RPC returned an invalid simulation response; no wallet approval was requested.';
     }
-    if (value.err == null) return null;
+    if (value.err === null) return null;
     let errorText;
     try { errorText = JSON.stringify(value.err); } catch (_) { errorText = String(value.err); }
     const logs = Array.isArray(value.logs)
