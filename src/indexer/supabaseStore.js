@@ -6,7 +6,7 @@ function createSupabaseStore(env = process.env, fetchImpl = globalThis.fetch) {
   if (url) {
     let parsed;
     try { parsed = new URL(url); } catch (_) { throw new Error('SUPABASE_URL must be a valid HTTPS project URL.'); }
-    if (parsed.protocol !== 'https:' || !/^[a-z0-9-]+\.supabase\.co$/i.test(parsed.hostname) || parsed.pathname !== '') throw new Error('SUPABASE_URL must be the HTTPS URL for the Space Ledger Supabase project.');
+    if (parsed.protocol !== 'https:' || !/^[a-z0-9-]+\.supabase\.co$/i.test(parsed.hostname) || parsed.pathname !== '/' && parsed.pathname !== '') throw new Error('SUPABASE_URL must be a valid HTTPS project URL on the Supabase domain.');
   }
   if (key && !/^(sb_secret_[A-Za-z0-9_-]{20,}|eyJ[A-Za-z0-9._-]{20,})$/.test(key)) throw new Error('Use a Supabase secret key or legacy service_role key in the server environment only.');
   async function request(table, params, options = {}) {
