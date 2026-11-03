@@ -339,3 +339,11 @@ test('indexed receipt pagination validates a complete cursor pair',async t=>{
  const response=await fetch(base+'/api/indexer/receipts?beforeSlot=123');
  assert.equal(response.status,400);
 });
+
+
+test('shared site bootstrap no longer paints the legacy animated galaxy canvas',()=>{
+ const script=fs.readFileSync(path.join(root,'public','js','site.js'),'utf8');
+ assert.doesNotMatch(script,/createElement\('canvas'\)[\\s\\S]*galaxy-canvas/);
+ assert.equal((script.match(/data-mobile-support/g)||[]).length,1,'mobile support must only be loaded once');
+ assert.equal((script.match(/dataset\.release1Styles/g)||[]).length,1,'Release 1 theme should only be injected once');
+});
