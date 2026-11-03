@@ -12,7 +12,7 @@ test('phone tier is read-only for purchases while tablet remains full workspace'
  const purchase=fs.readFileSync(path.join(root,'public','pages','purchase.html'),'utf8');
  const grid=fs.readFileSync(path.join(root,'public','pages','grid.html'),'utf8');
  assert.match(mobile,/Purchases and creator\/workspace tools are desktop\/tablet-only/);
- assert.match(css,/body\[data-device-tier="phone"\].*\[data-desktop-workspace\]/);
+ assert.match(css,/html\[data-device-tier="phone"\] body.*\[data-desktop-workspace\]/);
  assert.match(purchase,/id="devnetPurchase" data-desktop-workspace/);
  assert.match(grid,/id="buyCurrentBlockBtn" data-desktop-workspace/);
 });
@@ -32,5 +32,16 @@ test('homepage and grid load the final visual theme from parser-discovered style
  for(const html of [home,grid]){
   assert.ok(html.includes('css/universe.css'));
   assert.ok(html.includes('css/release1.css'));
+ }
+});
+
+
+test('grid and purchase pages classify devices synchronously before the visual CSS',()=>{
+ const tier=fs.readFileSync(path.join(root,'public','js','deviceTier.js'),'utf8');
+ assert.match(tier,/document\.documentElement\.dataset\.deviceTier=tier/);
+ for(const pathName of ['grid.html','purchase.html']){
+  const html=fs.readFileSync(path.join(root,'public','pages',pathName),'utf8');
+  assert.ok(html.indexOf('deviceTier.js') < html.indexOf('universe.css'));
+  assert.ok(html.includes('data-desktop-workspace'));
  }
 });
