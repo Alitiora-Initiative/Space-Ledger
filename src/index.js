@@ -12,6 +12,7 @@ const { createRateLimiter } = require('./rateLimit');
 const quoteRateLimit = createRateLimiter({ windowMs: 60_000, max: 20, name: 'quote' });
 const purchaseRateLimit = createRateLimiter({ windowMs: 60_000, max: 8, name: 'purchase' });
 const readRateLimit = createRateLimiter({ windowMs: 60_000, max: 60, name: 'read' });
+const rpcRateLimit = createRateLimiter({ windowMs: 60_000, max: 30, name: 'rpc' });
 
 const PORT = Number.parseInt(process.env.PORT, 10) || 3000;
 const SOLANA_NETWORK = 'devnet';
@@ -142,7 +143,7 @@ app.get('/api/support-goal', readRateLimit, async (_req, res) => {
   }
 });
 
-app.post('/api/rpc', async (req, res) => {
+app.post('/api/rpc', rpcRateLimit, async (req, res) => {
   const { networkId, method, params } = req.body || {};
   try {
     res.json(await rpcRouter.routeRequest(networkId, method, params));
