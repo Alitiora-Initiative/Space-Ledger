@@ -39,7 +39,7 @@ test('accessible grid status is derived from verified whole-block ownership only
 
 test('grid reveals the voxel canvas only after its first renderer frame is ready', () => {
   const html = require('node:fs').readFileSync(gridPath, 'utf8');
-  const shellStyles = html.slice(html.indexOf('.grid-world-shell{'), html.indexOf('#pixelCanvas:focus'));
+  const shellStyles = html.slice(html.indexOf('#pixelCanvas{'), html.indexOf('#pixelCanvas:focus'));
   const mountStart = html.indexOf("window.SpaceLedgerGridEngine = window.SpaceLedgerWorld.mountGrid");
   const readyIndex = html.indexOf("shell.classList.add('is-ready')", mountStart);
   assert.match(shellStyles, /#pixelCanvas[^}]*opacity:0/);
