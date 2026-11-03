@@ -17,11 +17,10 @@ function createRateLimiter({ windowMs, max, name }) {
   }
 
   function clientKey(req) {
-    const forwarded = req.headers['x-forwarded-for'];
-    if (typeof forwarded === 'string' && forwarded.trim()) {
-      return forwarded.split(',')[0].trim();
-    }
-    return req.socket?.remoteAddress || req.ip || 'unknown';
+    // Use Express's resolved client IP. Never trust a caller-supplied
+    // X-Forwarded-For header directly: it can be spoofed to evade limits.
+    if (typeof req.ip === 'string' && req.ip.trim()) return req.ip.trim();
+    return req.socket?.remoteAddress || 'unknown';
   }
 
   return function rateLimitMiddleware(req, res, next) {
