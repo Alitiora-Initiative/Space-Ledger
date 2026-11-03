@@ -74,8 +74,8 @@ test('confirmed purchase success is not reversed by optional balance or config r
   const purchaseFlow = fs.readFileSync(path.join(root, 'public', 'js', 'solanaPayment.js'), 'utf8');
   const verifiedIndex = purchaseFlow.indexOf('if (!receiptVerified)');
   const successIndex = purchaseFlow.indexOf('const confirmedMessage =', verifiedIndex);
-  const balanceRefreshIndex = purchaseFlow.indexOf('try {\\n        const solAfter', successIndex);
-  const configRefreshIndex = purchaseFlow.indexOf('try {\\n        await loadConfig();', successIndex);
+  const balanceRefreshIndex = purchaseFlow.indexOf('const solAfter = await solBalance', successIndex);
+  const configRefreshIndex = purchaseFlow.indexOf('await loadConfig();', successIndex);
 
   assert.notEqual(verifiedIndex, -1);
   assert.ok(successIndex > verifiedIndex, 'success must only follow verified receipt validation');
