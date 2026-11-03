@@ -24,10 +24,11 @@ test('shared footer stays fixed without covering page content', () => {
   assert.match(styles, /\.site-footer\s*\{[^}]*bottom:\s*0/);
   assert.match(styles, /body\s*\{[^}]*padding-bottom:\s*calc\(50px/);
   assert.match(styles, /\.site-footer nav\s*\{\s*position:\s*static !important/);
-  const compactNavStart = styles.lastIndexOf('nav .container {');
+  const chromeStart = styles.indexOf('/* Compact responsive site chrome');
+  const compactNavStart = styles.indexOf('nav .container {', chromeStart);
   const compactNavRule = styles.slice(compactNavStart, styles.indexOf('}', compactNavStart));
   assert.match(compactNavRule, /padding:\s*0/);
-  const compactFooterStart = styles.lastIndexOf('.site-footer-inner {');
+  const compactFooterStart = styles.indexOf('.site-footer-inner {', chromeStart);
   const compactFooterRule = styles.slice(compactFooterStart, styles.indexOf('}', compactFooterStart));
   assert.match(compactFooterRule, /min-height:\s*42px/);
   assert.match(styles, /nav ul\.nav-open\s*\{\s*display:\s*flex/);
