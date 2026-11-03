@@ -1,4 +1,7 @@
 (() => {
+  const globe = document.getElementById('slGlobeCanvas');
+  if (globe && window.SpaceLedgerWorld) window.SpaceLedgerWorld.mountGlobe(globe);
+
   const available = document.getElementById('availableBlocks');
   const status = document.getElementById('saleStatusLabel');
   if (!available || !status) return;

@@ -86,3 +86,30 @@ test('simulation errors preserve the RPC failure and useful program logs', () =>
   assert.match(message, /InstructionError/);
   assert.match(message, /Program failed: custom error/);
 });
+
+
+test('version 2 intent can be saved before wallet returns a signature', () => {
+  const storage = memoryStorage();
+  const store = recovery.createPendingTransactionStore(storage, 'intent');
+  const intent = validRecord({ version:2, stage:'awaiting_wallet', signature:null });
+  assert.equal(store.save(intent), true);
+  assert.deepEqual(store.load(), intent);
+  const submitted = { ...intent, stage:'submitted', signature:'4'.repeat(64) };
+  assert.equal(store.save(submitted), true);
+  assert.equal(store.load().signature, '4'.repeat(64));
+});
+
+test('signature-less intent expires only when the block range remains unsold', () => {
+  const classify = recovery.classifyUnsignedIntent;
+  assert.equal(classify({ currentBlockHeight:101, lastValidBlockHeight:100, currentSupply:'100', startBlock:'100' }), 'expired');
+  assert.equal(classify({ currentBlockHeight:101, lastValidBlockHeight:100, currentSupply:'101', startBlock:'100' }), 'unknown');
+  assert.equal(classify({ currentBlockHeight:99, lastValidBlockHeight:100, currentSupply:'100', startBlock:'100' }), 'pending');
+  assert.equal(classify({ currentBlockHeight:101, lastValidBlockHeight:100, currentSupply:'100', startBlock:'100', receiptVerified:true }), 'confirmed');
+});
+
+test('wallet rejection detection does not mistake RPC failures for user rejection', () => {
+  assert.equal(recovery.isUserRejected({ code:4001, message:'User rejected request' }), true);
+  assert.equal(recovery.isUserRejected({ message:'User declined the request' }), true);
+  assert.equal(recovery.isUserRejected({ message:'RPC timeout' }), false);
+  assert.equal(recovery.isUserRejected(null), false);
+});
