@@ -547,22 +547,35 @@
       pendingOutcome = null;
       if (checkPendingButton) checkPendingButton.hidden = true;
       if (dismissExpiredButton) dismissExpiredButton.hidden = true;
-      const solAfter = await solBalance(connection, wallet.address);
-      const assetAfter = await selectedBalance(connection, activeQuote.asset, wallet.address);
-      balanceStatus.textContent = activeQuote.asset === 'SOL'
-        ? 'Devnet SOL: ' + lamportsText(solBefore) + ' → ' + lamportsText(solAfter) + '.'
-        : 'Devnet USDC: ' + (Number(assetBefore) / 1e6).toFixed(6) + ' → ' + (Number(assetAfter) / 1e6).toFixed(6) + '; SOL: ' + lamportsText(solBefore) + ' → ' + lamportsText(solAfter) + '.';
-      quoteOutput.textContent = 'Purchase confirmed. ' + transactionData.blockCount.toLocaleString() + ' blocks from ' + activeQuote.firstLabel + '. Supply advanced — next blocks cost more.';
+      const confirmedMessage = 'Purchase confirmed. ' + transactionData.blockCount.toLocaleString() + ' blocks from ' + activeQuote.firstLabel + '. Supply advanced — next blocks cost more.';
+      activeQuote = null;
+      quoteOutput.textContent = confirmedMessage;
       explorerLink.href = 'https://explorer.solana.com/tx/' + encodeURIComponent(signature) + '?cluster=devnet';
       explorerLink.hidden = false;
+
+      // The verified on-chain receipt is the success condition. Balance/config refreshes
+      // are informational and must never turn a successful purchase into a failure message.
+      try {
+        const solAfter = await solBalance(connection, wallet.address);
+        const assetAfter = await selectedBalance(connection, pendingRecord.asset, wallet.address);
+        balanceStatus.textContent = pendingRecord.asset === 'SOL'
+          ? 'Devnet SOL: ' + lamportsText(solBefore) + ' → ' + lamportsText(solAfter) + '.'
+          : 'Devnet USDC: ' + (Number(assetBefore) / 1e6).toFixed(6) + ' → ' + (Number(assetAfter) / 1e6).toFixed(6) + '; SOL: ' + lamportsText(solBefore) + ' → ' + lamportsText(solAfter) + '.';
+      } catch (_) {
+        balanceStatus.textContent = 'The purchase receipt is verified. The latest wallet balance could not be refreshed from the Devnet RPC.';
+      }
+
       if (window.SpaceLedgerToast) {
         window.SpaceLedgerToast.show(
           '<strong>Purchase confirmed on Devnet.</strong><br>Supply advanced — the next block is priced higher.<br><a href="' + explorerLink.href + '" target="_blank" rel="noopener noreferrer">Open Explorer</a>',
           { ok: true, duration: 12000 }
         );
       }
-      activeQuote = null;
-      await loadConfig();
+      try {
+        await loadConfig();
+      } catch (_) {
+        setStatus('Purchase confirmed and receipt verified. The latest ledger summary could not be refreshed from Devnet RPC.');
+      }
     } catch (error) {
       setQuoteText(error.message || 'The Devnet purchase did not complete.');
       if (window.SpaceLedgerToast) window.SpaceLedgerToast.show(String(error.message || 'Purchase did not complete'), { error: true, duration: 9000 });
