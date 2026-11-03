@@ -8,7 +8,8 @@
     "dev": "node src/index.js",
     "test": "node --test",
     "compile": "cargo build-sbf --manifest-path programs/space-ledger/Cargo.toml",
-    "audit": "npm audit --registry https://registry.npmjs.org/"
+    "audit": "npm audit --registry https://registry.npmjs.org/",
+    "indexer:once": "node scripts/index-devnet-once.js"
   },
   "keywords": [],
   "author": "Joseph Mushelle Nyingeh",
