@@ -2,148 +2,221 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Space Ledger — Home</title>
-  <link rel="stylesheet" href="css/styles.css">
-  <link rel="stylesheet" href="css/polish.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#050914">
+  <meta name="description" content="Explore Space Ledger, an open-source shared digital canvas prototype built on Solana Devnet. Inspect the grid, understand whole-block purchases and verify on-chain receipts.">
+  <title>Space Ledger — A shared canvas on Solana</title>
+  <link rel="icon" type="image/jpeg" href="/img/logo.jpg">
+  <link rel="apple-touch-icon" href="/img/logo.jpg">
+  <link rel="stylesheet" href="/css/styles.css">
+  <link rel="stylesheet" href="/css/polish.css">
+  <link rel="stylesheet" href="/css/home.css">
   <script src="/js/site.js" defer></script>
+  <script src="/js/home.js" defer></script>
 </head>
-<body>
+<body class="home-page">
   <nav aria-label="Main navigation">
     <div class="container">
-      <a href="/index.html" style="display:flex;align-items:center;gap:8px;text-decoration:none;">
-        <img src="/img/logo.jpg" alt="Space Ledger logo" width="32" height="32" style="border-radius:7px;object-fit:cover;">
+      <a class="home-brand" href="/index.html" aria-label="Space Ledger home">
+        <img src="/img/logo.jpg" alt="" width="34" height="34">
         <span class="logo">Space Ledger</span>
       </a>
       <ul>
-        <li><a href="index.html">Home</a></li>
-        <li><a href="pages/purchase.html">Pricing</a></li>
-        <li><a href="pages/grid.html">Grid View</a></li>
-        <li><a href="pages/treasury.html">Treasury</a></li>
-        <li><a href="pages/dashboard.html">Dashboard</a></li>
-        <li><a href="pages/profile.html">Profile</a></li>
-        <li><a href="pages/mobile.html">Mobile</a></li>
+        <li><a href="/pages/grid.html">Explore</a></li>
+        <li><a href="/pages/purchase.html">Pricing</a></li>
+        <li><a href="/pages/market.html">Activity</a></li>
+        <li><a href="/pages/dashboard.html">Dashboard</a></li>
         <li><a href="/pages/token.html">$SL</a></li>
-        <li><button class="wallet-button" id="navWalletBtn" type="button">Connect Wallet</button></li>
+        <li><button class="wallet-button" id="navWalletBtn" type="button">Connect wallet</button></li>
       </ul>
     </div>
   </nav>
 
-  <main id="main-content" class="container">
-    <div class="hero">
-      <p><span class="devnet-pill">Solana Devnet · Beta · Free tier</span></p>
-      <h1>Space Ledger</h1>
-      <p>10 billion blocks · 1 trillion pixel positions · Shared canvas on Solana Devnet</p>
-      <p>Primary-sale blocks with verifiable on-chain purchase receipts — test tokens only</p>
-      <p>Built with a linear pricing model and an open-source Solana Anchor program.</p>
-      <br>
-      <a href="pages/purchase.html" class="button">Buy on Devnet</a>
-      <a href="pages/grid.html" class="button" style="margin-left:10px;">Open Grid</a>
-      <a href="/pages/token.html" class="button" style="margin-left:10px;">$SL market</a>
-    </div>
-
-    <div class="card" id="how-to-buy">
-      <h2>How to buy a block</h2>
-      <ol>
-        <li><strong>Connect once</strong> (Phantom or Solflare on <strong>Devnet</strong>).</li>
-        <li>Open <a href="pages/grid.html">Grid</a> or <a href="pages/purchase.html">Pricing</a>.</li>
-        <li>Purchases settle as a <strong>whole block</strong> (100 pixels).</li>
-        <li>Get a quote → <strong>Review and buy in wallet</strong> → approve.</li>
-        <li>Check Explorer and <a href="pages/profile.html">Profile</a>.</li>
-      </ol>
-      <p class="estimate-note">Devnet SOL/USDC have no real-world value.</p>
-    </div>
-
-    <div class="card" id="how-to-test">
-      <h2>How to test (Discord / free tier)</h2>
-      <ol style="color:#c4d0d7;line-height:1.8;padding-left:1.25rem;">
-        <li>Wallet on <strong>Devnet</strong> + free faucet SOL.</li>
-        <li><strong>Connect Wallet</strong> in the top nav.</li>
-        <li><a href="pages/purchase.html">Pricing</a> → budget → quote → approve.</li>
-        <li>If the network is busy, wait a minute and retry (public free RPC).</li>
-      </ol>
-      <p class="estimate-note">Mobile: use Phantom/Solflare <a href="pages/mobile.html">in-app browser</a>. Operator: Joseph Mushelle Nyingeh · <a href="mailto:jaymnyon@gmail.com">jaymnyon@gmail.com</a></p>
-    </div>
-
-    <div class="stats-grid">
-      <div class="stat-card"><h3>Total Pixels</h3><div class="value">1 Trillion</div></div>
-      <div class="stat-card"><h3>Total Blocks</h3><div class="value">10 Billion</div></div>
-      <div class="stat-card"><h3>Starting Price</h3><div class="value">$0.001</div></div>
-      <div class="stat-card"><h3>Target Price</h3><div class="value">$1,000</div></div>
-      <div class="stat-card"><h3>Sale status</h3><div class="value" id="availableBlocks">Checking…</div><div class="label" id="saleStatusLabel">Devnet</div></div>
-    </div>
-
-    <div class="card" id="sl-fund">
-      <h2>$SL development coin</h2>
-      <p style="color:#c4d0d7;line-height:1.7;">Space Ledger ($SL) is a Solana mainnet coin on StonkFun, paired with STONK. It exists to help pay for continued work on this website: hosting, RPC, design, and engineering. It is not a Devnet block, not equity, and not a promise of profit.</p>
-      <p class="estimate-note">The market page reads live price, volume, curve progress, and trades. Nothing on it is simulated.</p>
-      <p style="margin-top:14px;"><a href="/pages/token.html" class="button">Open live $SL market</a></p>
-    </div>
-
-    <div class="card" id="about">
-      <h2>About Space Ledger</h2>
-      <p style="color: #c4d0d7; line-height: 1.7;">
-        Space Ledger is a shared canvas of 10 billion blocks and 1 trillion pixels, inspired by the Million Dollar Homepage format. Each block represents a unique 10×10 pixel grid that can be owned and displayed on-chain.
-      </p>
-      <p style="color: #c4d0d7; line-height: 1.7; margin-top: 12px;">
-        Built on Solana's high-performance blockchain, Space Ledger uses a transparent bonding-curve pricing model starting at $0.001 per block and scaling to $1,000 as supply advances. All purchases are recorded on-chain with immutable receipts, ensuring verifiable ownership without centralized intermediaries.
-      </p>
-      <p style="color: #c4d0d7; line-height: 1.7; margin-top: 12px;">
-        Currently in beta on Solana Devnet, the platform demonstrates a scalable model for digital asset ownership and community-driven canvas curation. Test purchases use Devnet SOL and USDC—test tokens with no real-world value.
-      </p>
-    </div>
-
-    <div class="card">
-      <h2>Key Features</h2>
-      <ul style="color:#c4d0d7;line-height:1.8;list-style-position:inside;gap:10px;">
-        <li style="margin-bottom:10px;"><strong>Transparent Pricing:</strong> Linear bonding curve from $0.001 to $1,000 per block, mathematically predictable and fully on-chain</li>
-        <li style="margin-bottom:10px;"><strong>On-Chain Ownership:</strong> Every purchase recorded as an immutable Solana transaction receipt, verifiable by anyone</li>
-        <li style="margin-bottom:10px;"><strong>Real-Time Supply:</strong> Live Devnet data shows exact blocks sold, available inventory, and holder rankings</li>
-        <li style="margin-bottom:10px;"><strong>Portfolio Tracking:</strong> View your holdings, purchase history, and estimated model PnL in your profile</li>
-        <li style="margin-bottom:10px;"><strong>Grid Exploration:</strong> Interactive 10×10 pixel grid view for browsing and discovering available blocks</li>
-      </ul>
-    </div>
-
-    <div class="card">
-      <h2>What is live</h2>
-      <p style="color:#c4d0d7;line-height:1.7;">Primary Devnet purchases, receipts, grid, leaderboard, profile. No transfers, no secondary market, no mainnet.</p>
-    </div>
-
-    <div class="card">
-      <h2>Quick Actions</h2>
-      <div style="display:flex;gap:15px;flex-wrap:wrap;">
-        <a href="pages/purchase.html" class="button">Buy on Devnet</a>
-        <a href="pages/grid.html" class="button">Grid</a>
-        <a href="pages/profile.html" class="button">Profile</a>
-        <a href="pages/market.html" class="button">Sale activity</a>
-        <a href="pages/mobile.html" class="button">Mobile guide</a>
-        <a href="/pages/token.html" class="button">$SL</a>
+  <main id="main-content" class="home-main">
+    <section class="home-hero" aria-labelledby="hero-title">
+      <div class="hero-copy">
+        <p class="eyebrow"><span class="status-dot" aria-hidden="true"></span> Solana Devnet <span class="eyebrow-separator">/</span> Public beta</p>
+        <h1 id="hero-title">Space Ledger</h1>
+        <p class="home-hero-tagline">A shared canvas. <span>Built to be explored.</span></p>
+        <p class="hero-intro">Space Ledger is an open-source digital canvas where people can explore a vast grid, acquire whole blocks on Devnet and verify the resulting receipts on-chain.</p>
+        <div class="hero-actions">
+          <a class="button home-button-primary" href="/pages/grid.html">Explore the canvas <span aria-hidden="true">↗</span></a>
+          <a class="button home-button-secondary" href="#how-it-works">How it works</a>
+        </div>
+        <p class="hero-note"><span aria-hidden="true">ⓘ</span> Test application only. Devnet SOL and Devnet USDC have no real-world value.</p>
       </div>
-    </div>
+      <div class="hero-visual">
+        <img src="/img/space-ledger-orbit.svg" alt="A luminous, tilted pixel grid floating inside orbital rings in a deep-space scene">
+        <div class="visual-caption">
+          <span class="visual-caption-mark" aria-hidden="true"></span>
+          <span><strong>One block</strong><small>10 × 10 logical positions</small></span>
+          <span class="visual-caption-index">SL / 001</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="scale-strip" aria-label="Canvas scale">
+      <div class="scale-item"><strong>10 billion</strong><span>total blocks in the model</span></div>
+      <div class="scale-divider" aria-hidden="true"></div>
+      <div class="scale-item"><strong>1 trillion</strong><span>theoretical pixel positions</span></div>
+      <div class="scale-divider" aria-hidden="true"></div>
+      <div class="scale-item"><strong>100</strong><span>positions represented per block</span></div>
+    </section>
+
+    <section class="home-section" id="explore" aria-labelledby="explore-title">
+      <div class="section-heading">
+        <p class="section-kicker">FIND YOUR WAY IN</p>
+        <h2 id="explore-title">Start with the canvas.</h2>
+        <p>Explore first, then inspect the mechanics and the activity behind the prototype.</p>
+      </div>
+      <div class="entry-grid">
+        <article class="entry-card entry-card-featured">
+          <div class="entry-icon entry-icon-grid" aria-hidden="true">
+            <svg viewBox="0 0 32 32"><rect x="4" y="4" width="9" height="9" rx="2"/><rect x="19" y="4" width="9" height="9" rx="2"/><rect x="4" y="19" width="9" height="9" rx="2"/><rect x="19" y="19" width="9" height="9" rx="2"/></svg>
+          </div>
+          <p class="entry-label">01 / DISCOVER</p>
+          <h3>Explore the grid</h3>
+          <p>Move through the canvas and inspect the whole-block layout. Ownership is currently recorded at block level.</p>
+          <a href="/pages/grid.html" class="text-link">Open grid <span aria-hidden="true">→</span></a>
+        </article>
+        <article class="entry-card">
+          <div class="entry-icon entry-icon-price" aria-hidden="true">
+            <svg viewBox="0 0 32 32"><path d="M5 23.5 12 16l5 4 10-11"/><path d="M19 9h8v8"/></svg>
+          </div>
+          <p class="entry-label">02 / UNDERSTAND</p>
+          <h3>See the pricing model</h3>
+          <p>Review the linear curve, request a Devnet quote and see the amount before your wallet is asked to approve.</p>
+          <a href="/pages/purchase.html" class="text-link">View pricing <span aria-hidden="true">→</span></a>
+        </article>
+        <article class="entry-card">
+          <div class="entry-icon entry-icon-proof" aria-hidden="true">
+            <svg viewBox="0 0 32 32"><path d="M16 3.5 26 7v8c0 6.3-4.1 10.7-10 13.5C10.1 25.7 6 21.3 6 15V7l10-3.5Z"/><path d="m11.5 15.5 3 3 6.5-7"/></svg>
+          </div>
+          <p class="entry-label">03 / VERIFY</p>
+          <h3>Follow the activity</h3>
+          <p>Inspect confirmed Devnet activity, leaderboard entries and wallet history where source data is available.</p>
+          <a href="/pages/market.html" class="text-link">View activity <span aria-hidden="true">→</span></a>
+        </article>
+      </div>
+    </section>
+
+    <section class="how-section" id="how-it-works" aria-labelledby="how-title">
+      <div class="section-heading">
+        <p class="section-kicker">A SIMPLE TEST FLOW</p>
+        <h2 id="how-title">From wallet to receipt.</h2>
+        <p>The canvas uses whole-block primary purchases on Solana Devnet—not individual pixel sales.</p>
+      </div>
+      <ol class="steps-grid">
+        <li class="step-card">
+          <span class="step-number">01</span>
+          <h3>Connect on Devnet</h3>
+          <p>Use a compatible Solana wallet and switch its network to Devnet before starting.</p>
+        </li>
+        <li class="step-card">
+          <span class="step-number">02</span>
+          <h3>Explore and get a quote</h3>
+          <p>Choose a whole block, review the quote and check that the test-token balance is sufficient.</p>
+        </li>
+        <li class="step-card">
+          <span class="step-number">03</span>
+          <h3>Approve and verify</h3>
+          <p>Approve in your wallet, then use the transaction and receipt details to verify the result.</p>
+        </li>
+      </ol>
+      <p class="devnet-callout"><strong>Keep the network straight.</strong> The canvas and its Anchor program run on Devnet. Never send Mainnet assets through the canvas purchase flow. <a href="/pages/mobile.html">Read the mobile wallet guide</a>.</p>
+    </section>
+
+    <section class="live-section" aria-labelledby="live-title">
+      <div class="supply-panel">
+        <p class="section-kicker">NETWORK SNAPSHOT / DEVNET</p>
+        <h2 id="live-title">The canvas, as the chain reports it.</h2>
+        <p class="supply-description">Available supply is calculated from the Devnet program state when that state can be verified. No synthetic activity or estimated live numbers are shown.</p>
+        <div class="supply-reading">
+          <div><strong id="availableBlocks">Checking…</strong><span>blocks available</span></div>
+          <span class="supply-pulse" aria-hidden="true"></span>
+        </div>
+        <p class="supply-status" id="saleStatusLabel" role="status" aria-live="polite">Checking verified Devnet supply…</p>
+        <a href="/pages/grid.html" class="text-link">Explore the grid <span aria-hidden="true">→</span></a>
+      </div>
+      <div class="live-details">
+        <p class="section-kicker">WHAT THE BETA INCLUDES</p>
+        <div class="live-detail">
+          <span class="detail-check" aria-hidden="true">✓</span>
+          <div><h3>Receipt-backed purchases</h3><p>Whole-block purchase records are written by the Devnet Anchor program.</p></div>
+        </div>
+        <div class="live-detail">
+          <span class="detail-check" aria-hidden="true">✓</span>
+          <div><h3>Wallet and portfolio tools</h3><p>Connect a compatible wallet, inspect activity and review your recorded block history.</p></div>
+        </div>
+        <div class="live-detail">
+          <span class="detail-check" aria-hidden="true">✓</span>
+          <div><h3>Open-source implementation</h3><p>The website, API and Anchor program source are available for public inspection.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="status-section" aria-labelledby="status-title">
+      <div class="section-heading">
+        <p class="section-kicker">CLEAR SCOPE. NO GUESSWORK.</p>
+        <h2 id="status-title">What is live—and what is not.</h2>
+        <p>A prototype should be clear about its current limits. These boundaries are part of the product, not fine print.</p>
+      </div>
+      <div class="status-grid">
+        <article class="status-card">
+          <span class="status-label status-live">Available in beta</span>
+          <h3>Whole-block purchases</h3>
+          <p>Primary purchases, Devnet receipts, grid exploration, profile and activity views.</p>
+        </article>
+        <article class="status-card">
+          <span class="status-label status-planned">Not implemented</span>
+          <h3>Pixel-level ownership and resale</h3>
+          <p>Individual pixel ownership, transfers, a secondary market and redemption are not live features.</p>
+        </article>
+        <article class="status-card">
+          <span class="status-label status-caution">Security status</span>
+          <h3>Independent audit pending</h3>
+          <p>The Anchor program has not completed an independent security audit. Treat this as a Devnet prototype, not a production financial system.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="token-section" id="sl-fund" aria-labelledby="token-title">
+      <div class="token-orbit" aria-hidden="true"><span>$SL</span></div>
+      <div class="token-copy">
+        <p class="section-kicker">A SEPARATE ASSET / SOLANA MAINNET</p>
+        <h2 id="token-title">Space Ledger <span>($SL)</span></h2>
+        <p>$SL is a separate Solana Mainnet token. It is not the Devnet canvas program, does not represent ownership of canvas blocks and is not required to use or test this application.</p>
+        <p class="token-disclaimer">The token is speculative and may lose value. It is not equity and no profit or return is promised. Keep its market activity separate from Devnet canvas supply and receipts.</p>
+        <a href="/pages/token.html" class="button token-button">Read the $SL information <span aria-hidden="true">↗</span></a>
+      </div>
+    </section>
+
+    <section class="open-section" id="about" aria-labelledby="open-title">
+      <div>
+        <p class="section-kicker">ABOUT / OPEN SOURCE / MIT LICENSE</p>
+        <h2 id="open-title">About Space Ledger</h2>
+        <p>Read the code, follow the roadmap or use the beta guide to reproduce the Devnet test flow. Contributions and careful technical feedback are welcome.</p>
+      </div>
+      <div class="open-actions">
+        <a class="button home-button-primary" href="https://github.com/Alitiora-Initiative/Space-Ledger" target="_blank" rel="noopener noreferrer">View source on GitHub <span aria-hidden="true">↗</span></a>
+        <a class="text-link" href="https://github.com/Alitiora-Initiative/Space-Ledger/blob/main/docs/Space-Ledger-Devnet-Beta-Guide.md" target="_blank" rel="noopener noreferrer">Read the Devnet guide <span aria-hidden="true">→</span></a>
+      </div>
+    </section>
   </main>
 
   <footer class="site-footer">
     <div class="site-footer-inner">
-      <span>Space Ledger · Solana Devnet beta</span>
+      <span>Space Ledger <span aria-hidden="true">·</span> Open-source Solana Devnet beta</span>
       <nav aria-label="Footer navigation">
-        <a href="pages/privacy.html">Privacy</a>
-        <a href="pages/terms.html">Terms</a>
-        <a href="pages/cookies.html">Cookies</a>
+        <a href="https://github.com/Alitiora-Initiative/Space-Ledger" target="_blank" rel="noopener noreferrer">GitHub</a>
+        <a href="/pages/privacy.html">Privacy</a>
+        <a href="/pages/terms.html">Terms</a>
+        <a href="/pages/cookies.html">Cookies</a>
       </nav>
     </div>
   </footer>
 
-  <script>
-    fetch('/api/supply').then(r => r.json()).then(data => {
-      const sold = data.status === 'devnet_verified' ? BigInt(data.currentSupply) : null;
-      document.getElementById('availableBlocks').textContent = sold === null ? 'Initializing' : (BigInt(data.totalSupply) - sold).toLocaleString();
-      document.getElementById('saleStatusLabel').textContent = sold === null ? 'Awaiting first purchase' : sold.toLocaleString() + ' blocks sold';
-    }).catch(() => {
-      document.getElementById('availableBlocks').textContent = 'Unavailable';
-      document.getElementById('saleStatusLabel').textContent = 'Could not reach Devnet';
-    });
-  </script>
-  <script src="js/wallet.js"></script>
-  <script src="js/walletModal.js"></script>
+  <script src="/js/wallet.js"></script>
+  <script src="/js/walletModal.js"></script>
 </body>
 </html>

@@ -202,7 +202,7 @@ test('Express app serves pages and live API endpoints while rejecting removed fe
   }
 
   assert.match(responses.get('/'), /About Space Ledger/);
-  assert.match(responses.get('/'), /<h1>Space Ledger<\/h1>/);
+  assert.match(responses.get('/'), /<h1(?:\s+[^>]*)?>Space Ledger<\/h1>/);
   assert.doesNotMatch(responses.get('/'), /Spatial Ledger Protocol/);
   assert.match(responses.get('/pages/privacy.html'), /Devnet test prototype — no real-world value/);
   assert.match(responses.get('/pages/terms.html'), /Terms of use \(Devnet prototype\)/);
