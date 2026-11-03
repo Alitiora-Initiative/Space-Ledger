@@ -23,8 +23,12 @@ test('shared footer stays fixed without covering page content', () => {
   assert.match(styles, /\.site-footer\s*\{[^}]*bottom:\s*0/);
   assert.match(styles, /body\s*\{[^}]*padding-bottom:\s*calc\(50px/);
   assert.match(styles, /\.site-footer nav\s*\{\s*position:\s*static !important/);
-  assert.match(styles, /nav \.container\s*\{[^}]*padding:\s*0/);
-  assert.match(styles, /site-footer-inner\s*\{[^}]*min-height:\s*42px/);
+  const compactNavStart = styles.lastIndexOf('nav .container {');
+  const compactNavRule = styles.slice(compactNavStart, styles.indexOf('}', compactNavStart));
+  assert.match(compactNavRule, /padding:\s*0/);
+  const compactFooterStart = styles.lastIndexOf('.site-footer-inner {');
+  const compactFooterRule = styles.slice(compactFooterStart, styles.indexOf('}', compactFooterStart));
+  assert.match(compactFooterRule, /min-height:\s*42px/);
   assert.match(styles, /nav ul\.nav-open\s*\{\s*display:\s*flex/);
   assert.match(styles, /\.skip-link:focus\s*\{\s*transform:\s*translateY\(0\)/);
 });
