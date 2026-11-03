@@ -1,0 +1,25 @@
+/* Unified Space Ledger visual system. */
+:root{--sl-night:#030814;--sl-line:rgba(122,174,226,.2);--sl-cyan:#6edff0;--sl-violet:#a999ff;--sl-muted:#9db0c9}
+html{color-scheme:dark;scroll-behavior:smooth}
+body{background-color:var(--sl-night);background-image:radial-gradient(ellipse at 12% 6%,rgba(22,69,135,.16),transparent 34%),radial-gradient(ellipse at 88% 35%,rgba(85,46,145,.11),transparent 38%)}
+.galaxy-canvas{opacity:.78}
+body>nav{position:sticky;top:0;z-index:30;border-bottom:1px solid rgba(130,176,226,.16);background:rgba(3,8,20,.86);box-shadow:0 10px 34px rgba(0,0,0,.22);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px)}
+body>nav .container{min-height:62px;width:min(1240px,calc(100% - 32px));padding:8px 0}
+body>nav .logo{color:#eef6ff;letter-spacing:-.035em}body>nav ul{gap:clamp(10px,1.5vw,20px)}body>nav a{color:#b9c9dd;text-underline-offset:5px}
+body>nav a.active,body>nav a[aria-current=page]{color:var(--sl-cyan)}
+body>nav .wallet-button{border:1px solid rgba(110,223,240,.48);border-radius:999px;background:linear-gradient(120deg,rgba(39,149,174,.22),rgba(104,91,193,.2));box-shadow:0 0 22px rgba(63,170,203,.08)}
+body>main.container{width:min(1160px,calc(100% - 36px));padding-top:clamp(22px,4vw,42px);padding-bottom:clamp(52px,7vw,84px)}
+body>main.container>.hero{position:relative;overflow:hidden;border:1px solid var(--sl-line);border-radius:22px;background:radial-gradient(ellipse at 92% 4%,rgba(74,111,208,.17),transparent 44%),linear-gradient(135deg,rgba(13,27,52,.9),rgba(6,14,29,.91));box-shadow:0 20px 60px rgba(0,0,0,.2),inset 0 1px 0 rgba(255,255,255,.035)}
+body>main.container>.hero h1,body>main.container>h1{color:#f0f6ff;letter-spacing:-.055em}body>main.container>.hero p{color:#aebfd5}
+.card{border:1px solid var(--sl-line);border-radius:18px;background:linear-gradient(145deg,rgba(13,27,49,.86),rgba(6,14,29,.84));box-shadow:0 14px 36px rgba(0,0,0,.18),inset 0 1px 0 rgba(255,255,255,.025)}
+.card h2,.card h3{color:#edf5ff;letter-spacing:-.025em}.card p,.card li,.card label{color:#b9c7da}
+.button,button.button,a.button{border:1px solid rgba(117,210,229,.38);border-radius:11px;background:linear-gradient(115deg,rgba(20,112,143,.75),rgba(73,75,157,.82));color:#f2fbff;box-shadow:0 8px 24px rgba(10,86,129,.13);text-decoration:none}
+.button:hover,a.button:hover{border-color:rgba(141,231,239,.72);filter:brightness(1.1);box-shadow:0 10px 28px rgba(39,157,190,.18)}
+input,select,textarea{border-color:rgba(130,172,220,.28);border-radius:10px;background:rgba(3,10,23,.88);color:#eaf3ff}
+table{border-collapse:collapse}th{color:#a8dbe7;font-weight:700}td,th{border-bottom:1px solid rgba(133,171,216,.12)}
+a{text-underline-offset:3px}a:not(.button):hover{color:#a6f2f4}
+.site-footer{border-top:1px solid rgba(130,176,226,.15);background:rgba(3,7,17,.94)}.site-footer-inner{color:#93a7c1}.site-footer a{color:#aabbd1}
+.nav-toggle{border:1px solid rgba(128,174,220,.3);background:rgba(13,26,48,.9);color:#e9f5ff}.skip-link{z-index:1000}
+@media(max-width:900px){body>nav .container{flex-wrap:wrap}body>nav ul{display:none}body>nav ul.nav-open{display:flex;flex-direction:column;align-items:stretch;gap:4px;position:absolute;top:calc(100% + 1px);left:0;right:0;width:100%;padding:14px 18px 18px;border:1px solid rgba(130,176,226,.19);border-top:0;border-radius:0 0 18px 18px;background:rgba(4,10,23,.97);box-shadow:0 18px 38px rgba(0,0,0,.4)}body>nav ul.nav-open li{width:100%}body>nav ul.nav-open a,body>nav ul.nav-open button{display:flex;width:100%;min-height:42px;align-items:center}}
+@media(max-width:640px){body>main.container{width:min(100% - 24px,560px);padding-top:18px}body>main.container>.hero{border-radius:17px}.card{padding:17px;border-radius:15px}.button,button,input,select{min-height:44px}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
