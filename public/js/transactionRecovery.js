@@ -22,6 +22,7 @@
     if (record.version === 1) return signatureValid;
     if (record.version !== STORAGE_VERSION) return false;
     if (record.stage === 'awaiting_wallet') return record.signature === null;
+    if (record.stage === 'unknown' && record.signature === null) return true;
     return ['submitted', 'unknown'].includes(record.stage) && signatureValid;
   }
 

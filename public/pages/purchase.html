@@ -3,10 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="/js/deviceTier.js"></script>
   <meta name="description" content="Space Ledger Devnet pricing: linear curve quotes sized to your wallet balance.">
   <title>Pricing — Space Ledger</title>
   <link rel="stylesheet" href="../css/styles.css">
   <script src="/js/site.js" defer></script>
+  <link rel="stylesheet" href="../css/universe.css" data-universe-styles>
+  <link rel="stylesheet" href="../css/release1.css" data-release1-styles>
 </head>
 <body>
   <nav>
@@ -34,7 +37,7 @@
       <p>Budget is your max spend in Devnet SOL or USDC. The quote sizes how many blocks fit under that budget on the linear curve. Quotes check your wallet balance.</p>
     </div>
 
-    <div class="card" id="devnetPurchase" hidden>
+    <div class="card" id="devnetPurchase" data-desktop-workspace hidden>
       <h2>Buy on Solana Devnet</h2>
       <p class="feature-status" id="purchaseStatus">Checking whether the Devnet ownership program is available.</p>
       <p class="estimate-note" id="curvePriceNote">Primary sale uses a <strong>linear bonding curve</strong>: each confirmed purchase advances supply, so the <strong>next</strong> blocks cost more. Model range: $0.001 → $1,000 per block.</p>

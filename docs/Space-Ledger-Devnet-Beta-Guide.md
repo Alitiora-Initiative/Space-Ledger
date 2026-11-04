@@ -93,3 +93,10 @@ The proposed delivery period is eight weeks after an agreed project start. See [
 
 Read the repository's [AGENTS.md](../AGENTS.md), [README.md](../README.md) and [ROADMAP.md](../ROADMAP.md) before making changes. Work on one small task at a time, inspect existing implementation before rewriting it, add tests and report the exact checks run. Keep the application on Devnet. Never fabricate data or mark planned work complete without evidence.
 
+
+
+## Release 1 receipt indexer
+
+A private, one-shot Devnet indexer has been added. It writes verified purchase receipts, signature-linked purchase events and a replay state to separate Supabase tables. It is deliberately not scheduled or always-on in this release. Configure `SOLANA_PROGRAM_ID`, `SUPABASE_URL` and `SUPABASE_SECRET_KEY` on a trusted worker, then run `npm run indexer:once`. Never put the key in browser code. A status endpoint reports whether storage is configured and when the index was last updated.
+
+Phone users can open the site in the official Phantom or Solflare in-app browser. Desktop/laptop and tablet users receive the full browser interface, with optional PWA installation. The PWA caches static shell files only; API data and transactions remain online-only.

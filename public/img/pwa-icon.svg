@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title">
+<title id="title">Space Ledger</title>
+<defs>
+ <radialGradient id="bg" cx="50%" cy="38%" r="70%"><stop offset="0" stop-color="#102e5b"/><stop offset="1" stop-color="#030814"/></radialGradient>
+ <linearGradient id="cube" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#9af7ff"/><stop offset=".5" stop-color="#6477ed"/><stop offset="1" stop-color="#a45dff"/></linearGradient>
+ <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#ffe2a8"/><stop offset="1" stop-color="#d18c35"/></linearGradient>
+</defs>
+<rect width="512" height="512" rx="112" fill="url(#bg)"/>
+<circle cx="256" cy="256" r="190" fill="none" stroke="#6edff0" stroke-opacity=".3" stroke-width="3"/>
+<ellipse cx="256" cy="256" rx="218" ry="78" transform="rotate(-24 256 256)" fill="none" stroke="url(#gold)" stroke-opacity=".8" stroke-width="8"/>
+<path d="M256 92 390 169v154L256 400l-134-77V169z" fill="#0c1d3b" stroke="url(#cube)" stroke-width="10" stroke-linejoin="round"/>
+<path d="m256 92 134 77-134 78-134-78z" fill="url(#cube)" fill-opacity=".88"/>
+<path d="M122 169v154l134 77V247z" fill="#22547c" fill-opacity=".9"/>
+<path d="M390 169v154l-134 77V247z" fill="#6854b7" fill-opacity=".82"/>
+<path d="m256 92 134 77-134 78-134-78z" fill="none" stroke="#d2ffff" stroke-opacity=".9" stroke-width="5"/>
+<path d="M256 247v153M122 169l134 78 134-78M122 323l134-76 134 76" stroke="#dcfaff" stroke-opacity=".55" stroke-width="4"/>
+<circle cx="256" cy="247" r="15" fill="#fff" opacity=".95"/>
+<path d="m65 183 15-25m347 189 17 17M114 399l10 16m266-314 10-19" stroke="#fff" stroke-width="7" stroke-linecap="round" opacity=".82"/>
+</svg>
