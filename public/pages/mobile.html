@@ -1,49 +1,20 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mobile testing — Space Ledger</title>
-  <link rel="stylesheet" href="../css/styles.css">
-  <script src="/js/site.js" defer></script>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#030814">
+<title>Device support — Space Ledger</title><link rel="manifest" href="/manifest.webmanifest"><link rel="stylesheet" href="../css/styles.css"><link rel="stylesheet" href="../css/release1.css"><script src="/js/site.js" defer></script>
+  <link rel="stylesheet" href="../css/universe.css" data-universe-styles>
+  <link rel="stylesheet" href="../css/release1.css" data-release1-styles>
 </head>
 <body>
-  <nav>
-    <div class="container">
-      <a href="/index.html" style="display:flex;align-items:center;gap:8px;text-decoration:none;">
-        <img src="/img/logo.jpg" alt="Space Ledger logo" width="32" height="32" style="border-radius:7px;object-fit:cover;">
-        <span class="logo">Space Ledger</span>
-      </a>
-      <ul>
-        <li><a href="../index.html">Home</a></li>
-        <li><a href="purchase.html">Pricing</a></li>
-        <li><a href="mobile.html" aria-current="page">Mobile</a></li>
-        <li><button class="wallet-button" id="navWalletBtn" type="button">Connect Wallet</button></li>
-      </ul>
-    </div>
-  </nav>
-  <main class="container">
-    <header class="hero">
-      <h1>Mobile Devnet testing</h1>
-      <p>Wallet Standard only detects wallets injected in the current browser. On phones, use an in-app browser.</p>
-    </header>
-    <div class="card">
-      <h2>Recommended path (works today)</h2>
-      <ol style="color:#c4d0d7;line-height:1.8;">
-        <li>Install Phantom or Solflare from the official store.</li>
-        <li>Inside the wallet app, open the <strong>in-app browser / explore</strong>.</li>
-        <li>Go to <code>https://space-ledger-alitiora.vercel.app</code></li>
-        <li>Switch the wallet network to <strong>Devnet</strong>.</li>
-        <li>Connect → Pricing → quote → approve.</li>
-      </ol>
-      <p class="estimate-note">Full WalletConnect QR for Solana is not shipped in this beta (tracked as issue #8). Do not paste seed phrases anywhere.</p>
-    </div>
-    <div class="card">
-      <h2>Contact</h2>
-      <p style="color:#c4d0d7;">Joseph Mushelle Nyingeh · <a href="mailto:jaymnyon@gmail.com">jaymnyon@gmail.com</a></p>
-    </div>
-  </main>
-  <script src="../js/wallet.js"></script>
-  <script src="../js/walletModal.js"></script>
-</body>
-</html>
+<nav aria-label="Main navigation"><div class="container"><a href="/" style="display:flex;align-items:center;gap:8px;text-decoration:none;"><img src="/img/logo.jpg" alt="" width="32" height="32"><span class="logo">Space Ledger</span></a><ul><li><a href="/">Home</a></li><li><a href="/pages/grid.html">Explore</a></li><li><a href="/pages/purchase.html">Pricing</a></li><li><a href="/pages/mobile.html" aria-current="page">Devices</a></li><li><button class="wallet-button" id="navWalletBtn" type="button">Connect Wallet</button></li></ul></div></nav>
+<main class="container">
+<header class="hero"><h1>Choose your Space Ledger workspace</h1><p>Full workspace on Windows, macOS and tablets. A lighter explorer is available on phones.</p></header>
+<section class="card"><h2>Full workspace — recommended</h2><p>Use a Windows or macOS laptop/desktop, or a tablet such as an iPad. These devices receive the full browser interface, including the larger world view and workspace layouts.</p><p>Space Ledger can be installed as a Progressive Web App (PWA) where supported. This is one cross-platform web app, not a Windows-only executable. A Windows executable does not run natively on macOS.</p><div style="display:flex;gap:10px;flex-wrap:wrap"><button class="button" type="button" data-install-space-ledger hidden>Install Space Ledger</button><a class="button" href="/">Open desktop workspace</a></div></section>
+<section class="card" id="desktop-app"><h2>Install on Windows</h2><ol><li>Open Space Ledger in Microsoft Edge or Google Chrome.</li><li>Use the browser's Install app / Install page as app option.</li><li>Confirm installation. It opens in its own window and can be pinned to Start or the taskbar.</li></ol><h2>Install on macOS</h2><ol><li>Open Space Ledger in Safari on macOS Sonoma 14 or later.</li><li>Choose File → Add to Dock, or Share → Add to Dock.</li><li>Open the web app from the Dock or Applications folder.</li></ol><p class="estimate-note">Chrome and Edge also offer install-as-app options where available. Installation is optional; the full website works in a normal browser.</p></section>
+<section class="card"><h2>iPad and Android tablets</h2><p>Tablets use the full workspace tier. On iPad, open the page in Safari, tap Share → Add to Home Screen and turn on Open as Web App. On Android tablets, use the browser's Install app option when offered.</p></section>
+<section class="card"><h2>Mobile Lite</h2><p>Phones are optimised for browsing the world, inspecting blocks, reading confirmed activity and reviewing holdings. Desktop-heavy workspace layouts are reduced to preserve screen space and device resources.</p><p>For Devnet signing, open the website in a wallet's own in-app browser. The buttons below use official wallet browse links; they do not include a transaction, private key or seed phrase.</p><div class="sl-mobile-wallet-actions"><a class="button" id="openPhantom" href="https://phantom.app/" rel="noopener noreferrer">Open in Phantom</a><a class="button" id="openSolflare" href="https://solflare.com/" rel="noopener noreferrer">Open in Solflare</a></div><p class="estimate-note">After opening inside the wallet, connect normally and check that it is set to Solana Devnet. Never enter a seed phrase into Space Ledger.</p></section>
+<section class="card"><h2>Network safety</h2><p>The canvas app and its purchases remain Solana Devnet-only. The separate $SL token is on Mainnet and is not used to buy canvas blocks.</p></section>
+</main>
+<script>document.addEventListener('DOMContentLoaded',()=>{try{const target=encodeURIComponent(location.href),ref=encodeURIComponent(location.origin);document.getElementById('openPhantom').href='https://phantom.app/ul/browse/'+target+'?ref='+ref;document.getElementById('openSolflare').href='https://solflare.com/ul/v1/browse/'+target+'?ref='+ref;}catch(_){}});</script>
+</body></html>

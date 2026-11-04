@@ -669,10 +669,14 @@
     recoverPendingPurchase().finally(function () { checkPendingButton.disabled = false; });
   });
   if (dismissExpiredButton) dismissExpiredButton.addEventListener('click', function () {
-    if (pendingOutcome !== 'expired' || !window.confirm('Only continue after you independently checked this exact signature in Solana Explorer and are satisfied that it did not land. Clear the local recovery warning?')) return;
+    if (pendingOutcome !== 'expired') return;
     const store = getPendingStore();
     const record = (store && store.load()) || pendingRecordInMemory;
-    if (!record || !clearPendingRecord(record.signature)) return;
+    const confirmation = record && record.signature
+      ? 'Only clear this expired transaction after checking this exact signature in Solana Explorer. Continue?'
+      : 'The purchase intent expired and Devnet supply is unchanged at its start block. Clear the saved intent so you can request a fresh quote?';
+    if (!record || !window.confirm(confirmation)) return;
+    if (!clearPendingRecord(record.signature)) return;
     pendingRecovery = false;
     pendingOutcome = null;
     dismissExpiredButton.hidden = true;

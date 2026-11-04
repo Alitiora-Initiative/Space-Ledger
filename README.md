@@ -27,6 +27,7 @@ The repository contains a publicly accessible Devnet beta. The following are imp
 - **Supporting application pages and APIs:** grid, profile/dashboard, leaderboard, treasury, market and token-information interfaces.
 - **Operational protections:** API rate limits, a short-lived config cache, server-side RPC configuration and HTTP security headers.
 - **Developer resources:** automated Node.js tests, Rust/Anchor program source, local setup instructions and Devnet beta documentation.
+- **Release 1 foundations:** pre-wallet purchase-intent recovery, private Devnet receipt-indexer tables and a replay-safe one-shot worker, installable PWA shell and device-tier guidance. Indexing remains inactive until server-side credentials and a worker are configured.
 
 The repository records an operator-approved Devnet purchase and receipt in its historical beta-verification notes. That is evidence of a working test path, not evidence of broad independent adoption, production readiness or a security audit.
 
