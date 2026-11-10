@@ -239,6 +239,8 @@ test('Express app serves pages and live API endpoints while rejecting removed fe
   assert.ok(paymentScript.indexOf('simulateTransaction(transaction') < paymentScript.indexOf('signAndSendTransaction(transaction'));
   assert.match(paymentScript, /budget: activeQuote\.paymentUnits/);
   assert.match(paymentScript, /transactionData\.startBlock !== activeQuote\.startBlock/);
+  assert.match(paymentScript, /getBigUint64\(64, true\)/, 'browser USDC decoding must support Uint8Array account data');
+  assert.doesNotMatch(paymentScript, /readBigUInt64LE/, 'browser payment code must not depend on Node Buffer APIs');
   const leaderboardResponse = await fetch(`${baseUrl}/api/leaderboard`);
   assert.equal(leaderboardResponse.status, 503);
   assert.equal((await leaderboardResponse.json()).verified, false);
