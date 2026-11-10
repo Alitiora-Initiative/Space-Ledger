@@ -88,5 +88,5 @@ A useful Space Ledger Build should include:
 - Do not describe any project as a Space Ledger partner until there is written agreement and a real collaboration.
 - Do not claim that exploratory integrations are implemented.
 - Do not invent independent users, transactions, test results, testimonials or adoption metrics.
-- Keep canvas development and testing on Devnet. The separate $SL Mainnet token is not part of the Devnet canvas application.
+- Keep canvas development and testing on Devnet. The separate external token Mainnet token is not part of the Devnet canvas application.
 - Never share seed phrases, private keys, wallet JSON files or provider API keys.

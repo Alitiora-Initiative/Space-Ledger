@@ -60,7 +60,7 @@ Design, threat model, legal review and acceptance tests: [issue #11](https://git
 
 ### 4. Verifiable time-series charts
 
-Charts must be constructed from confirmed on-chain events/receipts for the Devnet canvas, or explicitly separate market-data APIs for the unrelated Mainnet $SL token. Keep those datasets and labels separate. Display an empty, delayed or unavailable state when there are no verified points. Do not fabricate ticks, prices, volume or holder counts.
+Charts must be constructed from confirmed on-chain events/receipts for the Devnet canvas, or explicitly separate market-data APIs for the unrelated Mainnet external token token. Keep those datasets and labels separate. Display an empty, delayed or unavailable state when there are no verified points. Do not fabricate ticks, prices, volume or holder counts.
 
 ### 5. Delivery order
 
@@ -144,7 +144,7 @@ The work below extends this baseline; it must not be presented as if no tests or
 - Do not create random candles, synthetic trades, fabricated volume, guessed timestamps or simulated price ticks.
 - Do not label a bonding-curve quote or purchase total as an exchange market price.
 - If there is insufficient confirmed history, show an honest empty/awaiting-history state.
-- Keep the Devnet application history separate from the external $SL token and its mainnet liquidity pool. Do not combine their transactions, prices, supply or users into one chart.
+- Keep the Devnet application history separate from the external external token token and its mainnet liquidity pool. Do not combine their transactions, prices, supply or users into one chart.
 - Preserve the Devnet-only status of the application program unless a separate, reviewed mainnet migration is explicitly approved.
 
 **Acceptance evidence:**
@@ -229,7 +229,7 @@ Any AI coding assistant working on this repository must:
 4. Preserve the current Devnet-only application configuration. Do not switch RPC endpoints, program IDs, treasury addresses, token mints or wallet destinations to mainnet.
 5. Never request, print, commit or expose seed phrases, private keys, wallet JSON files, API secrets or other credentials. Use environment variables for server-side secrets.
 6. Never fabricate transaction signatures, receipts, active users, adoption numbers, testimonials, market prices, volume, chart points or test results.
-7. Keep the $SL mainnet token and its liquidity pool separate from the Space Ledger Devnet application's blocks, receipts, supply and usage metrics.
+7. Keep the external token mainnet token and its liquidity pool separate from the Space Ledger Devnet application's blocks, receipts, supply and usage metrics.
 8. Do not implement mainnet migration, token liquidity changes, a new token sale, or real-value financial features as part of these milestones. Those require a separate explicit scope, legal review and security review.
 9. Add or update automated tests for every material behaviour change. Run the relevant checks, report the exact commands and outcomes, and disclose checks that could not be run.
 10. Update this roadmap and relevant documentation only after the corresponding implementation and evidence exist. Never change an unchecked item to complete merely because code was generated.
@@ -238,5 +238,5 @@ Any AI coding assistant working on this repository must:
 
 **Recommended instruction to give an AI coding assistant:**
 
-> Read the repository's README.md and ROADMAP.md first. Treat the "Grant Proposal Execution Roadmap" as the scope for planned work, and the existing code/tests as the source of truth for what already exists. Identify the next incomplete task with the clearest acceptance criteria. Inspect the relevant implementation before changing anything. Propose a small implementation plan, make only the necessary changes, add tests, run the relevant checks, and report exact results. Keep the application on Devnet, preserve the separation between the Devnet app and the $SL mainnet token, and never invent usage or transaction data. Do not mark roadmap work complete until its acceptance evidence exists. Ask for maintainer approval before deployments, real-fund transactions or production configuration changes.
+> Read the repository's README.md and ROADMAP.md first. Treat the "Grant Proposal Execution Roadmap" as the scope for planned work, and the existing code/tests as the source of truth for what already exists. Identify the next incomplete task with the clearest acceptance criteria. Inspect the relevant implementation before changing anything. Propose a small implementation plan, make only the necessary changes, add tests, run the relevant checks, and report exact results. Keep the application on Devnet, preserve the separation between the Devnet app and the external token mainnet token, and never invent usage or transaction data. Do not mark roadmap work complete until its acceptance evidence exists. Ask for maintainer approval before deployments, real-fund transactions or production configuration changes.
 

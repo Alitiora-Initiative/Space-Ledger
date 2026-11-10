@@ -14,7 +14,7 @@ These instructions apply to AI coding assistants and human contributors working 
 - The Space Ledger canvas application and Anchor program are currently **Solana Devnet-only**.
 - Keep `SOLANA_RPC_DEVNET`, program IDs, treasury configuration, oracle feed and token mint configuration on their documented Devnet values.
 - Do not migrate the canvas application to Mainnet, switch its RPC, change treasury destinations, deploy a new program or make real-fund transactions without explicit approval from the project maintainer.
-- The separate $SL token is a Solana Mainnet asset. Keep its market data and transactions separate from Devnet canvas purchases, receipts, supply, users and adoption metrics.
+- The separate external token token is a Solana Mainnet asset. Keep its market data and transactions separate from Devnet canvas purchases, receipts, supply, users and adoption metrics.
 - Do not add token liquidity, market-making, speculative token-promotion or unrelated token-sale work to the grant milestones.
 - Do not claim the program is audited, production-secure or Mainnet-ready. No independent program audit is recorded as completed.
 
@@ -51,7 +51,7 @@ The project maintainer uses AI coding assistants to help plan and implement the 
 - Never fabricate users, wallets, transactions, receipts, signatures, testimonials, feedback, prices, chart points, trading volume or adoption metrics.
 - Do not count quotes, page views, simulated tests or operator-only activity as independent adoption.
 - Build charts only from source data that can be explained and independently checked. Clearly label estimates; show empty/error states when confirmed data is unavailable.
-- Do not mix model curve estimates, confirmed Devnet purchase receipts and $SL Mainnet market data.
+- Do not mix model curve estimates, confirmed Devnet purchase receipts and external token Mainnet market data.
 - Never ask for or expose seed phrases, recovery phrases, private keys, wallet JSON files, API secrets or other credentials. Do not commit `.env`.
 - Obtain permission before publishing identifiable tester feedback. Prefer aggregated or anonymised reporting.
 - Do not make legal, financial or security assurances that are not backed by qualified review.
