@@ -1,6 +1,6 @@
 # Space Ledger Mainnet Migration Guide
 
-> **Current status:** The Space Ledger canvas application and its Anchor program operate on Solana Devnet. This document is a future migration checklist, not a declaration that the canvas application is on Mainnet or ready for real-value use. The separate $SL token has a Solana Mainnet mint and liquidity pool, but that token is not the canvas program and does not migrate the Devnet application. The grant milestones in [ROADMAP.md](../ROADMAP.md) do not authorise a Mainnet deployment.
+> **Current status:** The Space Ledger canvas application and its Anchor program operate on Solana Devnet. This document is a future migration checklist, not a declaration that the canvas application is on Mainnet or ready for real-value use. The separate external token token has a Solana Mainnet mint and liquidity pool, but that token is not the canvas program and does not migrate the Devnet application. The grant milestones in [ROADMAP.md](../ROADMAP.md) do not authorise a Mainnet deployment.
 
 
 ## Overview

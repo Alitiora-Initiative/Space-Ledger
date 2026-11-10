@@ -18,7 +18,7 @@ The reviewed source snapshot is the repository `main` tree at commit `488e59e4b9
 | Program source | `programs/space-ledger/src/lib.rs` |
 | Program package | Anchor Lang / SPL 1.2.1, Pyth receiver SDK 2.0.0 |
 
-The separate $SL Mainnet token is not part of this program's asset, payment, or ownership model.
+The separate external token Mainnet token is not part of this program's asset, payment, or ownership model.
 
 ## Program behaviour visible in source
 

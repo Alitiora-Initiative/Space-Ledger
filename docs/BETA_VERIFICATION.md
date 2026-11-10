@@ -7,7 +7,7 @@ This document contains a historical verification record and a repeatable checkli
 **Repository branch:** `main`  
 **Canvas network:** Solana Devnet
 
-> The Space Ledger canvas application remains Devnet-only. The separate $SL token is on Solana Mainnet and must not be confused with the canvas program or its Devnet usage metrics. Devnet SOL and Devnet USDC have no real-world value.
+> The Space Ledger canvas application remains Devnet-only. The separate external token token is on Solana Mainnet and must not be confused with the canvas program or its Devnet usage metrics. Devnet SOL and Devnet USDC have no real-world value.
 
 ## Funding application status
 

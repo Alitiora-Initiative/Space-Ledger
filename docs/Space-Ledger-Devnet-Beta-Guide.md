@@ -5,7 +5,7 @@
 **Application:** https://space-ledger-alitiora.vercel.app/  
 **Source:** https://github.com/Alitiora-Initiative/Space-Ledger
 
-> **Network and value warning:** The Space Ledger canvas application and its Anchor program run on Solana Devnet. Devnet SOL and Devnet USDC are test assets with no real-world value. The separate $SL token is a Solana Mainnet asset; it is not the canvas program, does not represent ownership of canvas blocks, and is not required to use this beta.
+> **Network and value warning:** The Space Ledger canvas application and its Anchor program run on Solana Devnet. Devnet SOL and Devnet USDC are test assets with no real-world value. The separate external token token is a Solana Mainnet asset; it is not the canvas program, does not represent ownership of canvas blocks, and is not required to use this beta.
 
 ## What the beta currently does
 
@@ -69,9 +69,9 @@ Never submit a seed phrase, recovery phrase, private key, wallet JSON file or AP
 - Public Devnet RPC providers can rate-limit or temporarily fail. A failed request must not be counted as a successful purchase.
 - The program has not been represented as independently audited or mainnet-ready.
 
-## Separate $SL token
+## Separate external token token
 
-The $SL token has a separate Solana Mainnet mint and liquidity pool. It is not the Devnet canvas program or a claim on canvas blocks. Do not combine token-market activity with Devnet canvas purchases, receipts, supply or adoption metrics. The grant-funded canvas milestones do not request token liquidity or market-making funds.
+The external token token has a separate Solana Mainnet mint and liquidity pool. It is not the Devnet canvas program or a claim on canvas blocks. Do not combine token-market activity with Devnet canvas purchases, receipts, supply or adoption metrics. The grant-funded canvas milestones do not request token liquidity or market-making funds.
 
 ## Grant proposal milestones and beta targets
 

@@ -2,13 +2,13 @@
 
 **Space Ledger** is an open-source shared digital-canvas prototype built on **Solana Devnet**. Its design contains 10 billion blocks with 100 pixel positions per block, for a theoretical capacity of 1 trillion pixel positions.
 
-> **Network status:** The Space Ledger canvas application and its Anchor program are Devnet-only. Devnet SOL and Devnet USDC have no real-world value. The separate $SL token is a Solana Mainnet asset; it is not the canvas program, does not represent ownership of canvas blocks, and is not required to test the Devnet application.
+> **Network status:** The Space Ledger canvas application and its Anchor program are Devnet-only. Devnet SOL and Devnet USDC have no real-world value. The separate external token token is a Solana Mainnet asset; it is not the canvas program, does not represent ownership of canvas blocks, and is not required to test the Devnet application.
 
 | | |
 |---|---|
 | **Live application** | [space-ledger-alitiora.vercel.app](https://space-ledger-alitiora.vercel.app) |
 | **Source code** | [Alitiora-Initiative/Space-Ledger](https://github.com/Alitiora-Initiative/Space-Ledger) |
-| **$SL information page** | [Space Ledger token page](https://space-ledger-alitiora.vercel.app/pages/token.html) |
+| **external token information page** | Token details are no longer part of this project. |
 | **Canvas program (Devnet)** | `EbP7vsnMXPonTfriPUFynco69d69JiXpWbKnwVmz8sgG` |
 | **Operator** | Joseph Mushelle Nyingeh · Alitiora Initiative · Kenya |
 | **Contact** | [jaymnyon@gmail.com](mailto:jaymnyon@gmail.com) |
@@ -44,7 +44,7 @@ The repository records an operator-approved Devnet purchase and receipt in its h
 | Independent program security audit | Not completed |
 | Canvas application mainnet migration | Out of scope until separate technical, security and legal review |
 
-Do not treat the separate $SL token's Mainnet presence as a Mainnet deployment of the canvas application.
+Do not treat the separate external token token's Mainnet presence as a Mainnet deployment of the canvas application.
 
 ## Funding proposal and execution plan
 
@@ -81,9 +81,9 @@ Devnet RPC services can be rate-limited or temporarily unavailable. A failed req
 
 See the [Devnet Beta Guide](docs/Space-Ledger-Devnet-Beta-Guide.md) and [Beta Verification notes](docs/BETA_VERIFICATION.md) for additional procedures.
 
-## The separate $SL token
+## The separate external token token
 
-[Space Ledger ($SL)](https://space-ledger-alitiora.vercel.app/pages/token.html) is a separate Solana Mainnet token. The repository identifies its mint as:
+[Space Ledger (external token)](https://space-ledger-alitiora.vercel.app/pages/token.html) is a separate Solana Mainnet token. The repository identifies its mint as:
 
 `42UNqmUTuKuKZ5mwo2r5y3cNoPv38P8fxAisqQLXdT6u`
 

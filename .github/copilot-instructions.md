@@ -8,7 +8,7 @@ For every task:
 - Identify the specific incomplete roadmap item and acceptance criterion.
 - Inspect existing code before making a change; make the smallest safe change.
 - Keep the canvas application and Anchor program on Solana Devnet.
-- Keep the separate $SL Mainnet token data distinct from Devnet canvas data.
+- Keep the separate external token Mainnet token data distinct from Devnet canvas data.
 - Never invent transaction data, chart points, users, adoption, feedback or test results.
 - Add tests, run applicable checks, and report exact results.
 - Do not mark roadmap items complete without the evidence required by the roadmap.
