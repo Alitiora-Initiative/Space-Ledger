@@ -15,13 +15,11 @@ test('homepage has one clear primary canvas action and a concise route into the 
   assert.doesNotMatch(html, /Quick Actions|How to test \(Discord \/ free tier\)/);
 });
 
-test('homepage keeps Devnet canvas and Mainnet token disclosures separate', () => {
-  assert.match(html, /Solana Devnet/);
-  assert.match(html, /separate Solana Mainnet token/i);
-  assert.match(html, /not the Devnet canvas program/i);
-  assert.match(html, /not required to use or test this application/i);
-  assert.match(html, /Devnet SOL and Devnet USDC have no real-world value/i);
-});
+ test('homepage keeps the Devnet canvas disclosure', () => {
+   const html = read('index.html');
+   assert.match(html, /Devnet/);
+   assert.doesNotMatch(html, /\$SL|token\.html/i);
+ });
 
 test('homepage clearly marks features that are not implemented and audit status', () => {
   assert.match(html, /Not implemented/);

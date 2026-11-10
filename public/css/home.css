@@ -235,20 +235,7 @@
 
 .home-page .home-button-primary,
 .home-page .home-button-secondary,
-.home-page .token-button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  min-height: 48px;
-  padding: 12px 19px;
-  border-radius: 999px;
-  font-size: 0.87rem;
-  font-weight: 700;
-  line-height: 1.2;
-  text-decoration: none;
-  box-shadow: none;
-}
+
 
 .home-page .home-button-primary {
   border: 1px solid rgba(132, 244, 230, 0.8);
@@ -525,51 +512,6 @@
 .status-card h3 { margin: 15px 0 7px; color: #eaf2fe; font-size: 0.94rem; }
 .status-card p { margin: 0; color: #a6b4ca; font-size: 0.8rem; line-height: 1.68; }
 
-.token-section {
-  position: relative;
-  display: grid;
-  grid-template-columns: 150px minmax(0, 1fr);
-  align-items: center;
-  gap: 30px;
-  margin: 0 0 80px;
-  padding: clamp(24px, 4.5vw, 44px);
-  overflow: hidden;
-  border: 1px solid rgba(165, 147, 255, 0.22);
-  border-radius: 22px;
-  background:
-    radial-gradient(ellipse at 10% 50%, rgba(132, 105, 232, 0.17), transparent 36%),
-    linear-gradient(115deg, rgba(28, 22, 54, 0.86), rgba(12, 16, 35, 0.94) 60%);
-}
-.token-orbit {
-  position: relative;
-  display: grid;
-  place-items: center;
-  width: 126px;
-  height: 126px;
-  border: 1px solid rgba(173, 162, 255, 0.35);
-  border-radius: 50%;
-  background: radial-gradient(circle at 35% 30%, rgba(189, 182, 255, 0.25), rgba(117, 92, 218, 0.05) 58%, transparent 60%);
-  box-shadow: inset 0 0 38px rgba(145, 122, 255, 0.12), 0 0 40px rgba(145, 122, 255, 0.08);
-}
-.token-orbit::before,
-.token-orbit::after {
-  content: "";
-  position: absolute;
-  inset: 17px -12px;
-  border: 1px solid rgba(173, 162, 255, 0.33);
-  border-radius: 50%;
-  transform: rotate(-34deg);
-}
-.token-orbit::after { inset: -6px 20px; transform: rotate(58deg); border-color: rgba(112, 230, 223, 0.24); }
-.token-orbit span { color: #ded9ff; font-size: 1.55rem; font-weight: 800; letter-spacing: -0.06em; }
-.token-copy .section-kicker { color: #afa6f3; }
-.token-copy h2 { font-size: clamp(1.65rem, 2.8vw, 2.25rem); }
-.token-copy h2 span { color: #b9aaff; }
-.token-copy > p:not(.section-kicker) { max-width: 780px; margin: 13px 0 0; color: #c1c7dc; font-size: 0.88rem; line-height: 1.7; }
-.token-copy .token-disclaimer { color: #9da8c2 !important; font-size: 0.78rem !important; }
-.home-page .token-button { margin-top: 20px; border: 1px solid rgba(191, 177, 255, 0.48); background: rgba(133, 111, 233, 0.16); color: #e5dfff; }
-.home-page .token-button:hover { background: rgba(133, 111, 233, 0.25); transform: translateY(-2px); }
-
 .open-section {
   display: flex;
   align-items: center;
@@ -643,7 +585,7 @@
   .scale-item strong { font-size: 1.15rem; white-space: nowrap; }
   .scale-item span { margin-top: 0; text-align: right; font-size: 0.7rem; }
   .home-section, .how-section, .status-section { margin-bottom: 68px; }
-  .section-heading h2, .supply-panel h2, .token-copy h2, .open-section h2 { font-size: 1.85rem; }
+  .section-heading h2, .supply-panel h2, .open-section h2 { font-size: 1.85rem; }
   .section-heading > p:last-child { font-size: 0.86rem; }
   .entry-grid, .steps-grid, .status-grid { grid-template-columns: 1fr; gap: 11px; }
   .entry-card { min-height: 0; padding: 21px; }
@@ -655,11 +597,6 @@
   .live-section { gap: 16px; margin-bottom: 68px; padding: 23px 20px; border-radius: 18px; }
   .supply-reading strong { font-size: 2.4rem; }
   .status-card { padding: 18px 19px; }
-  .token-section { grid-template-columns: 1fr; gap: 20px; margin-bottom: 64px; padding: 23px 20px; }
-  .token-orbit { width: 86px; height: 86px; }
-  .token-orbit span { font-size: 1.18rem; }
-  .token-orbit::before { inset: 12px -8px; }
-  .token-orbit::after { inset: -5px 16px; }
   .open-section { display: grid; gap: 20px; }
   .open-actions { justify-items: start; }
   .home-page > .site-footer .site-footer-inner { align-items: flex-start; flex-direction: column; gap: 6px; padding: 8px 16px; }
@@ -675,13 +612,3 @@
     transition-duration: 0.01ms !important;
   }
 }
-
-
-/* Live $SL globe follows the orbital phase sequence. */
-.home-page .token-orbit{width:148px;height:148px;border-color:rgba(148,169,255,.26);background:radial-gradient(circle,rgba(44,73,152,.12),rgba(10,18,43,.02) 68%,transparent 70%);box-shadow:0 0 36px rgba(70,116,240,.13),inset 0 0 30px rgba(107,120,255,.12);isolation:isolate}
-.home-page .sl-globe-canvas{position:absolute;inset:-8%;display:block;width:116%;height:116%;pointer-events:none;filter:saturate(1.16) drop-shadow(0 0 12px rgba(76,153,255,.35))}
-.home-page .token-orbit>span{position:relative;z-index:2;padding:8px 10px;border:1px solid rgba(195,215,255,.19);border-radius:999px;background:rgba(4,12,29,.54);color:#eff2ff;text-shadow:0 0 12px rgba(111,183,255,.8);backdrop-filter:blur(4px)}
-.home-page .token-orbit::before{animation:sl-orbit-turn 18s linear infinite}.home-page .token-orbit::after{animation:sl-orbit-turn-reverse 23s linear infinite}
-@keyframes sl-orbit-turn{to{transform:rotate(326deg)}}@keyframes sl-orbit-turn-reverse{to{transform:rotate(-302deg)}}
-@media(max-width:680px){.home-page .token-orbit{width:102px;height:102px}.home-page .sl-globe-canvas{inset:-10%;width:120%;height:120%}}
-@media(prefers-reduced-motion:reduce){.home-page .token-orbit::before,.home-page .token-orbit::after{animation:none!important}}
