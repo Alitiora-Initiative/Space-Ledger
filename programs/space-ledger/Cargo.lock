@@ -2642,6 +2642,7 @@ dependencies = [
  "anchor-lang",
  "anchor-spl",
  "pyth-solana-receiver-sdk",
+ "solana-sha256-hasher",
 ]
 
 [[package]]

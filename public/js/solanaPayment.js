@@ -63,7 +63,9 @@
     const account = await connection.getAccountInfo(addressAta, 'confirmed');
     if (!account) return 0n;
     if (!account.owner.equals(tokenProgram) || account.data.length < 72) throw new Error('The connected Devnet USDC account is invalid.');
-    return account.data.readBigUInt64LE(64);
+    const data = account.data instanceof Uint8Array ? account.data : new Uint8Array(account.data);
+    const view = new DataView(data.buffer, data.byteOffset, data.byteLength);
+    return view.getBigUint64(64, true);
   }
 
   async function selectedBalance(connection, asset, address) {

@@ -1,4 +1,5 @@
 use anchor_lang::prelude::*;
+use solana_sha256_hasher::hash;
 use anchor_lang::system_program::{self, Transfer};
 use anchor_spl::token::{self, Mint, Token, TokenAccount, TransferChecked};
 use pyth_solana_receiver_sdk::price_update::{get_feed_id_from_hex, PriceUpdateV2};
@@ -13,6 +14,10 @@ const START_PRICE_MICRO_USD: u128 = 1_000;
 const TARGET_PRICE_MICRO_USD: u128 = 1_000_000_000;
 const PURCHASE_FEE_MICRO_USD: u64 = 100_000;
 const MAX_PRICE_AGE_SECONDS: u64 = 90;
+// Bitcoin-inspired issuance: a valid double-SHA256 proof unlocks one epoch.
+const BLOCKS_PER_EPOCH: u64 = 210_000;
+const POW_DIFFICULTY_BITS: u32 = 12;
+const POW_DOMAIN: &[u8] = b"SPACE_LEDGER_EPOCH_POW_V1";
 
 #[program]
 pub mod space_ledger_program {
@@ -24,6 +29,28 @@ pub mod space_ledger_program {
         let config = &mut ctx.accounts.config;
         config.treasury = TREASURY;
         config.current_supply = 0;
+        config.released_supply = 0;
+        config.last_pow_hash = [0; 32];
+        config.last_pow_nonce = 0;
+        Ok(())
+    }
+
+    pub fn mine_epoch(ctx: Context<MineEpoch>, epoch: u64, nonce: u64) -> Result<()> {
+        let config = &mut ctx.accounts.config;
+        require!(config.released_supply < TOTAL_BLOCKS, SpaceLedgerError::SoldOut);
+        let expected_epoch = config.released_supply / BLOCKS_PER_EPOCH;
+        require!(epoch == expected_epoch, SpaceLedgerError::UnexpectedEpoch);
+        let digest = epoch_pow_hash(epoch, nonce, config.last_pow_hash);
+        require!(pow_meets_target(digest), SpaceLedgerError::InsufficientProofOfWork);
+
+        let remaining = TOTAL_BLOCKS.saturating_sub(config.released_supply);
+        config.released_supply = config
+            .released_supply
+            .checked_add(remaining.min(BLOCKS_PER_EPOCH))
+            .ok_or(SpaceLedgerError::ArithmeticOverflow)?;
+        config.last_pow_hash = digest;
+        config.last_pow_nonce = nonce;
+        emit!(EpochReleased { epoch, blocks_released: remaining.min(BLOCKS_PER_EPOCH), nonce, pow_hash: digest });
         Ok(())
     }
 
@@ -128,6 +155,7 @@ fn settle_receipt(
     require_keys_eq!(config.treasury, TREASURY, SpaceLedgerError::WrongTreasury);
     let end = start.checked_add(block_count as u64).ok_or(SpaceLedgerError::ArithmeticOverflow)?;
     require!(block_count > 0 && end <= TOTAL_BLOCKS, SpaceLedgerError::InvalidBlockCount);
+    require!(end <= config.released_supply, SpaceLedgerError::BlocksNotReleased);
     receipt.start_block = start;
     receipt.block_count = block_count;
     receipt.buyer = buyer;
@@ -169,6 +197,21 @@ fn total_price_micro_usd(start: u64, block_count: u32) -> Result<u64> {
     u64::try_from(total).map_err(|_| error!(SpaceLedgerError::ArithmeticOverflow))
 }
 
+fn epoch_pow_hash(epoch: u64, nonce: u64, previous_hash: [u8; 32]) -> [u8; 32] {
+    let mut payload = Vec::with_capacity(POW_DOMAIN.len() + 8 + 8 + 32);
+    payload.extend_from_slice(POW_DOMAIN);
+    payload.extend_from_slice(&epoch.to_le_bytes());
+    payload.extend_from_slice(&nonce.to_le_bytes());
+    payload.extend_from_slice(&previous_hash);
+    let first = hash(&payload).to_bytes();
+    hash(&first).to_bytes()
+}
+
+fn pow_meets_target(digest: [u8; 32]) -> bool {
+    let leading = u64::from_be_bytes(digest[..8].try_into().expect("digest is 32 bytes"));
+    leading <= u64::MAX >> POW_DIFFICULTY_BITS
+}
+
 fn usd_micro_to_lamports(usd_micro: u64, price: i64, exponent: i32) -> Result<u64> {
     require!((-12..=6).contains(&exponent), SpaceLedgerError::InvalidOraclePrice);
     let mut numerator = (usd_micro as u128).checked_mul(1_000)
@@ -193,6 +236,12 @@ pub struct Initialize<'info> {
     #[account(init, payer = payer, space = Config::SPACE, seeds = [b"config"], bump)]
     pub config: Account<'info, Config>,
     pub system_program: Program<'info, System>,
+}
+
+#[derive(Accounts)]
+pub struct MineEpoch<'info> {
+    #[account(mut, seeds = [b"config"], bump)]
+    pub config: Account<'info, Config>,
 }
 
 #[derive(Accounts)]
@@ -231,8 +280,11 @@ pub struct PurchaseUsdc<'info> {
 pub struct Config {
     pub treasury: Pubkey,
     pub current_supply: u64,
+    pub released_supply: u64,
+    pub last_pow_hash: [u8; 32],
+    pub last_pow_nonce: u64,
 }
-impl Config { pub const SPACE: usize = 8 + 32 + 8; }
+impl Config { pub const SPACE: usize = 8 + 32 + 8 + 8 + 32 + 8; }
 
 #[account]
 pub struct PurchaseReceipt {
@@ -252,6 +304,14 @@ impl PurchaseReceipt { pub const SPACE: usize = 8 + 8 + 4 + 32 + 1 + 8 + 8 + 8 +
 pub enum Asset { Sol = 0, Usdc = 1 }
 
 #[event]
+pub struct EpochReleased {
+    pub epoch: u64,
+    pub blocks_released: u64,
+    pub nonce: u64,
+    pub pow_hash: [u8; 32],
+}
+
+#[event]
 pub struct PurchaseSettled {
     pub buyer: Pubkey,
     pub start_block: u64,
@@ -265,6 +325,9 @@ pub struct PurchaseSettled {
 #[error_code]
 pub enum SpaceLedgerError {
     #[msg("The block count is invalid.")] InvalidBlockCount,
+    #[msg("The requested epoch is not the next epoch.")] UnexpectedEpoch,
+    #[msg("The proof of work does not meet the epoch target.")] InsufficientProofOfWork,
+    #[msg("The requested blocks have not been released by proof of work yet.")] BlocksNotReleased,
     #[msg("All blocks have been sold.")] SoldOut,
     #[msg("The required payment exceeds the buyer's maximum.")] SlippageExceeded,
     #[msg("The supplied oracle price is invalid.")] InvalidOraclePrice,
@@ -290,5 +353,13 @@ mod tests {
         assert!(total_price_micro_usd(TOTAL_BLOCKS, 1).is_err());
         // $1 at $100/SOL is 0.01 SOL.
         assert_eq!(usd_micro_to_lamports(1_000_000, 10_000_000_000, -8).unwrap(), 10_000_000);
+    }
+
+    #[test]
+    fn proof_of_work_target_is_deterministic() {
+        let digest = epoch_pow_hash(0, 0, [0; 32]);
+        assert_eq!(digest, epoch_pow_hash(0, 0, [0; 32]));
+        assert_ne!(digest, epoch_pow_hash(0, 1, [0; 32]));
+        assert_eq!(pow_meets_target([0; 32]), true);
     }
 }

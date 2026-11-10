@@ -24,7 +24,7 @@ The repository contains a publicly accessible Devnet beta. The following are imp
 - **Wallet connectivity:** Wallet Standard-compatible Solana wallets, including Phantom and Solflare when exposed by the browser.
 - **Grid and chunk API:** a virtualized canvas/grid experience and `/api/grid/chunk` endpoint for bounded block queries.
 - **Quotes and transaction flow:** balance-aware quotes, wallet approval, transaction confirmation and Explorer links.
-- **Supporting application pages and APIs:** grid, profile/dashboard, leaderboard, treasury, market and token-information interfaces.
+- **Supporting application pages and APIs:** grid, profile/dashboard, leaderboard, treasury and market interfaces.
 - **Operational protections:** API rate limits, a short-lived config cache, server-side RPC configuration and HTTP security headers.
 - **Developer resources:** automated Node.js tests, Rust/Anchor program source, local setup instructions and Devnet beta documentation.
 - **Release 1 foundations:** pre-wallet purchase-intent recovery, private Devnet receipt-indexer tables and a replay-safe one-shot worker, installable PWA shell and device-tier guidance. Indexing remains inactive until server-side credentials and a worker are configured.
