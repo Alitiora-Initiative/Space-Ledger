@@ -8,6 +8,7 @@ const solanaService = require('./solanaService');
 const supportGoal = require('./supportGoal');
 const { createRateLimiter } = require('./rateLimit');
 const { createSupabaseStore } = require('./indexer/supabaseStore');
+const { getNetwork } = require('./networkConfig');
 
 const quoteRateLimit = createRateLimiter({ windowMs: 60_000, max: 20, name: 'quote' });
 const purchaseRateLimit = createRateLimiter({ windowMs: 60_000, max: 8, name: 'purchase' });
@@ -16,8 +17,8 @@ const rpcRateLimit = createRateLimiter({ windowMs: 60_000, max: 30, name: 'rpc' 
 const indexerStore = createSupabaseStore(process.env);
 
 const PORT = Number.parseInt(process.env.PORT, 10) || 3000;
-const SOLANA_NETWORK = 'devnet';
-const NOT_DEPLOYED = 'The Solana Devnet program is not configured.';
+const SOLANA_NETWORK = getNetwork();
+const NOT_DEPLOYED = `The Solana ${SOLANA_NETWORK} program is not configured.`;
 
 const _cache = new Map();
 function withCache(key, ttlMs, fn) {

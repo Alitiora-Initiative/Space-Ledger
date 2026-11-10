@@ -1,5 +1,9 @@
 'use strict';
+
+const { getNetwork } = require('../networkConfig');
+
 function createSupabaseStore(env = process.env, fetchImpl = globalThis.fetch) {
+  const network = getNetwork(env);
   const url = String(env.SUPABASE_URL || '').replace(/\/+$/, '');
   const key = env.SUPABASE_SECRET_KEY || env.SUPABASE_SERVICE_ROLE_KEY;
   const configured = Boolean(url && key && typeof fetchImpl === 'function');
@@ -28,12 +32,12 @@ function createSupabaseStore(env = process.env, fetchImpl = globalThis.fetch) {
   return Object.freeze({
     configured,
     async getState(programId) {
-      const q=new URLSearchParams({select:'*',network:'eq.devnet',program_id:'eq.'+programId,limit:'1'});
+      const q=new URLSearchParams({select:'*',network:'eq.'+network,program_id:'eq.'+programId,limit:'1'});
       const rows=await request('indexer_state',q.toString());return rows[0]||null;
     },
     async listReceipts({programId,limit=20,beforeSlot,beforeSignature}={}) {
       const count=Math.max(1,Math.min(100,Number(limit)||20));
-      const filters={select:'*',network:'eq.devnet',order:'slot.desc,signature.desc',limit:String(count+1)};
+      const filters={select:'*',network:'eq.'+network,order:'slot.desc,signature.desc',limit:String(count+1)};
       if(programId) filters.program_id='eq.'+programId;
       if(beforeSlot!==undefined&&beforeSlot!==null) {
         if(!Number.isSafeInteger(Number(beforeSlot))||Number(beforeSlot)<0||!beforeSignature) throw new Error('Both a valid slot and signature are required for the receipt cursor.');
@@ -43,7 +47,7 @@ function createSupabaseStore(env = process.env, fetchImpl = globalThis.fetch) {
     },
     async getExistingReceiptAddresses(addresses) {
       if (!addresses.length) return [];
-      const q=new URLSearchParams({select:'receipt_address',network:'eq.devnet',receipt_address:'in.('+addresses.join(',')+')'});
+      const q=new URLSearchParams({select:'receipt_address',network:'eq.'+network,receipt_address:'in.('+addresses.join(',')+')'});
       const rows=await request('purchase_receipts',q.toString());return rows.map(row=>row.receipt_address);
     },
     async upsertReceipts(rows) {

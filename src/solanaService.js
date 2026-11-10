@@ -1,17 +1,19 @@
 'use strict';
 
 const { createHash } = require('node:crypto');
+const { getConfig } = require('./networkConfig');
 
-const DEVNET_RPC = process.env.SOLANA_RPC_DEVNET || 'https://api.devnet.solana.com';
-const TREASURY = 'EDZjEbRAtqyC8z6ta6PYHX161Xynt13tWpd7orKERkbz';
-const USDC_MINT = '4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU';
-const PYTH_PROGRAM = 'rec5EKMGg6MxZYaMdyBfgwp4d5rB9T1VQH5pJv5LtFJ';
-const SOL_USD_FEED = '7UVimffxr9ow1uXYxsr4LHAcV58mLzhmwaeKvJ1pjLiE';
-const SOL_USD_FEED_ID = Buffer.from('ef0d8b6fda2ceba41da15d4095d1da392a0d2f8ed0c6c7bc0f4cfac8c280b56d', 'hex');
+const networkConfig = getConfig();
+const SOLANA_RPC = networkConfig.rpcUrl;
+const TREASURY = networkConfig.treasury;
+const USDC_MINT = networkConfig.usdcMint;
+const PYTH_PROGRAM = networkConfig.pythProgram;
+const SOL_USD_FEED = networkConfig.solUsdFeed;
+const SOL_USD_FEED_ID = Buffer.from(networkConfig.solUsdFeedId, 'hex');
 const TOKEN_PROGRAM = 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA';
 const ASSOCIATED_TOKEN_PROGRAM = 'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL';
 const SYSTEM_PROGRAM = '11111111111111111111111111111111';
-let devnetConnection;
+let solanaConnection;
 const TOTAL_BLOCKS = 10_000_000_000n;
 const START_PRICE_MICRO_USD = 1_000n;
 const TARGET_PRICE_MICRO_USD = 1_000_000_000n;
@@ -32,8 +34,8 @@ function configuredProgramId() {
 }
 
 function connection() {
-  if (!devnetConnection) devnetConnection = new (web3().Connection)(DEVNET_RPC, 'confirmed');
-  return devnetConnection;
+  if (!solanaConnection) solanaConnection = new (web3().Connection)(SOLANA_RPC, 'confirmed');
+  return solanaConnection;
 }
 
 function discriminator(name) {
@@ -191,7 +193,7 @@ async function quote({ asset, amount }) {
     ? priceMicro + PURCHASE_FEE_MICRO_USD
     : usdMicroToLamports(priceMicro + PURCHASE_FEE_MICRO_USD, oracle.price, oracle.exponent);
   return {
-    network: 'devnet',
+    network: networkConfig.network,
     asset: normalizedAsset,
     startBlock: state.currentSupply.toString(),
     blockCount: Number(low),
@@ -348,9 +350,9 @@ async function listReceipts({ buyer, blockId, limit } = {}) {
 function detectRpcProvider(rpcUrl) {
   try {
     const parsed = new URL(rpcUrl);
-    if (parsed.hostname.toLowerCase().endsWith('helius-rpc.com')) return 'helius-devnet';
+    if (parsed.hostname.toLowerCase().endsWith('helius-rpc.com')) return networkConfig.network === 'mainnet-beta' ? 'helius-mainnet' : 'helius-devnet';
   } catch {}
-  return 'public-devnet';
+  return networkConfig.network === 'mainnet-beta' ? 'public-mainnet' : 'public-devnet';
 }
 
 async function publicConfig() {
@@ -365,9 +367,9 @@ async function publicConfig() {
     ? (await state.connection.getTokenAccountBalance(treasuryUsdcAta, 'confirmed')).value.uiAmountString
     : '0';
   return {
-    network: 'devnet',
-    rpc: 'https://api.devnet.solana.com',
-    rpcProvider: detectRpcProvider(DEVNET_RPC),
+    network: networkConfig.network,
+    rpc: SOLANA_RPC,
+    rpcProvider: detectRpcProvider(SOLANA_RPC),
     programId: programId.toBase58(),
     treasury: TREASURY,
     usdcMint: USDC_MINT,
@@ -390,7 +392,7 @@ async function signaturesForAccount(address, limit = 5) {
     slot: row.slot,
     err: row.err || null,
     blockTime: row.blockTime || null,
-    explorerUrl: `https://explorer.solana.com/tx/${row.signature}?cluster=devnet`,
+    explorerUrl: `https://explorer.solana.com/tx/${row.signature}?cluster=${networkConfig.network}`,
   }));
 }
 

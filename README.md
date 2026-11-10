@@ -66,6 +66,14 @@ The detailed scope, tasks, acceptance criteria, evidence log, schedule and AI co
 
 The project is independently maintained and currently operates with limited capital. Development instructions therefore prioritise existing dependencies, Solana Devnet, public/free-tier tooling and low-cost reproducible workflows. Do not introduce paid APIs, subscriptions, infrastructure commitments or other recurring costs without explicit maintainer approval.
 
+## Mainnet cutover checklist
+
+The application is network-configurable but remains fail-closed for production until every Mainnet identity is explicitly supplied. Do not reuse Devnet addresses or the Devnet program ID.
+
+Set these production variables together: `SOLANA_NETWORK=mainnet-beta`, `SOLANA_RPC_URL`, `SOLANA_PROGRAM_ID`, `FEE_WALLET_ADDRESS`, `SOLANA_USDC_MINT`, `SOLANA_PYTH_PROGRAM`, `SOLANA_SOL_USD_FEED`, and `SOLANA_SOL_USD_FEED_ID`. Verify each address on Solana Mainnet, deploy the reviewed program with a controlled upgrade authority, run the migration/indexer verification, and only then switch the wallet network and public RPC configuration. Missing or incomplete Mainnet configuration intentionally prevents production startup.
+
+The repository does not claim a Mainnet deployment until the program ID, upgrade authority, treasury, token mint, oracle feed, and deployment transaction have been independently recorded.
+
 ## How to test the Devnet beta
 
 1. Install Phantom or Solflare, or another supported Solana wallet.
