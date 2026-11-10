@@ -98,6 +98,74 @@ pub mod space_ledger_program {
         )
     }
 
+    pub fn fund_vault(ctx: Context<FundVault>, lamports: u64) -> Result<()> {
+        require!(lamports > 0, SpaceLedgerError::InvalidBlockCount);
+        system_program::transfer(
+            CpiContext::new(
+                ctx.accounts.system_program.key(),
+                Transfer {
+                    from: ctx.accounts.funder.to_account_info(),
+                    to: ctx.accounts.vault.to_account_info(),
+                },
+            ),
+            lamports,
+        )
+    }
+
+    pub fn transfer_receipt(ctx: Context<TransferReceipt>, new_owner: Pubkey) -> Result<()> {
+        require!(ctx.accounts.receipt.buyer != Pubkey::default(), SpaceLedgerError::ReceiptInactive);
+        require_keys_eq!(ctx.accounts.receipt.buyer, ctx.accounts.owner.key(), SpaceLedgerError::ReceiptNotOwned);
+        require!(new_owner != Pubkey::default(), SpaceLedgerError::ReceiptNotOwned);
+        ctx.accounts.receipt.buyer = new_owner;
+        emit!(ReceiptTransferred {
+            start_block: ctx.accounts.receipt.start_block,
+            block_count: ctx.accounts.receipt.block_count,
+            from: ctx.accounts.owner.key(),
+            to: new_owner,
+        });
+        Ok(())
+    }
+
+    pub fn buyback_sol(ctx: Context<BuybackSol>) -> Result<()> {
+        require!(ctx.accounts.receipt.buyer != Pubkey::default(), SpaceLedgerError::ReceiptInactive);
+        require_keys_eq!(ctx.accounts.receipt.buyer, ctx.accounts.seller.key(), SpaceLedgerError::ReceiptNotOwned);
+        require!(ctx.accounts.receipt.asset == Asset::Sol as u8, SpaceLedgerError::UnsupportedBuybackAsset);
+
+        let price_micro_usd = total_price_micro_usd(ctx.accounts.receipt.start_block, ctx.accounts.receipt.block_count)?;
+        let feed_id = get_feed_id_from_hex(SOL_USD_FEED_ID)
+            .map_err(|_| error!(SpaceLedgerError::InvalidPriceFeed))?;
+        let clock = Clock::get()?;
+        let sol_usd = ctx.accounts.sol_usd_feed
+            .get_price_no_older_than(&clock, MAX_PRICE_AGE_SECONDS, &feed_id)
+            .map_err(|_| error!(SpaceLedgerError::StalePriceFeed))?;
+        require!(sol_usd.price > 0, SpaceLedgerError::InvalidOraclePrice);
+        require!(sol_usd.conf <= (sol_usd.price as u64) / 10, SpaceLedgerError::OracleConfidenceTooWide);
+        let lamports = usd_micro_to_lamports(price_micro_usd, sol_usd.price, sol_usd.exponent)?;
+        require!(ctx.accounts.vault.to_account_info().lamports() >= lamports, SpaceLedgerError::InsufficientVaultLiquidity);
+
+        let signer_seeds: &[&[u8]] = &[b"vault", &[ctx.bumps.vault]];
+        system_program::transfer(
+            CpiContext::new_with_signer(
+                ctx.accounts.system_program.key(),
+                Transfer {
+                    from: ctx.accounts.vault.to_account_info(),
+                    to: ctx.accounts.seller.to_account_info(),
+                },
+                &[signer_seeds],
+            ),
+            lamports,
+        )?;
+        ctx.accounts.receipt.buyer = Pubkey::default();
+        ctx.accounts.receipt.paid_units = 0;
+        emit!(BuybackSettled {
+            seller: ctx.accounts.seller.key(),
+            start_block: ctx.accounts.receipt.start_block,
+            block_count: ctx.accounts.receipt.block_count,
+            lamports,
+        });
+        Ok(())
+    }
+
     pub fn purchase_usdc(ctx: Context<PurchaseUsdc>, block_count: u32, max_usdc_units: u64) -> Result<()> {
         let start = ctx.accounts.config.current_supply;
         let price_micro_usd = total_price_micro_usd(start, block_count)?;
@@ -245,6 +313,38 @@ pub struct MineEpoch<'info> {
 }
 
 #[derive(Accounts)]
+pub struct FundVault<'info> {
+    #[account(mut)]
+    pub funder: Signer<'info>,
+    /// CHECK: The PDA is the program-owned buyback vault.
+    #[account(mut, seeds = [b"vault"], bump)]
+    pub vault: UncheckedAccount<'info>,
+    pub system_program: Program<'info, System>,
+}
+
+#[derive(Accounts)]
+pub struct TransferReceipt<'info> {
+    #[account(mut)]
+    pub owner: Signer<'info>,
+    #[account(mut, seeds = [b"receipt".as_ref(), receipt.start_block.to_le_bytes().as_ref()], bump)]
+    pub receipt: Account<'info, PurchaseReceipt>,
+}
+
+#[derive(Accounts)]
+pub struct BuybackSol<'info> {
+    #[account(mut)]
+    pub seller: Signer<'info>,
+    #[account(mut, seeds = [b"config"], bump)]
+    pub config: Account<'info, Config>,
+    #[account(mut, seeds = [b"vault"], bump)]
+    pub vault: UncheckedAccount<'info>,
+    #[account(mut, seeds = [b"receipt".as_ref(), receipt.start_block.to_le_bytes().as_ref()], bump)]
+    pub receipt: Account<'info, PurchaseReceipt>,
+    pub sol_usd_feed: Account<'info, PriceUpdateV2>,
+    pub system_program: Program<'info, System>,
+}
+
+#[derive(Accounts)]
 pub struct PurchaseSol<'info> {
     #[account(mut)]
     pub buyer: Signer<'info>,
@@ -322,6 +422,22 @@ pub struct PurchaseSettled {
     pub fee_micro_usd: u64,
 }
 
+#[event]
+pub struct ReceiptTransferred {
+    pub start_block: u64,
+    pub block_count: u32,
+    pub from: Pubkey,
+    pub to: Pubkey,
+}
+
+#[event]
+pub struct BuybackSettled {
+    pub seller: Pubkey,
+    pub start_block: u64,
+    pub block_count: u32,
+    pub lamports: u64,
+}
+
 #[error_code]
 pub enum SpaceLedgerError {
     #[msg("The block count is invalid.")] InvalidBlockCount,
@@ -338,6 +454,10 @@ pub enum SpaceLedgerError {
     #[msg("The token mint is not the Devnet USDC mint.")] WrongTokenMint,
     #[msg("The token account owner is incorrect.")] WrongTokenOwner,
     #[msg("The token mint must use six decimals.")] WrongTokenDecimals,
+    #[msg("The receipt is not owned by the signer.")] ReceiptNotOwned,
+    #[msg("The receipt has already been bought back.")] ReceiptInactive,
+    #[msg("This asset cannot be bought back through the SOL vault.")] UnsupportedBuybackAsset,
+    #[msg("The buyback vault does not have enough liquidity.")] InsufficientVaultLiquidity,
     #[msg("Arithmetic overflow.")] ArithmeticOverflow,
 }
 
