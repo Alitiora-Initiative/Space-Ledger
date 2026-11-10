@@ -65,12 +65,19 @@ Charts must be constructed from confirmed on-chain events/receipts for the Devne
 ### 5. Delivery order
 
 1. **Transaction reliability:** remove preflight error suppression and add signature recovery — [issue #22](https://github.com/Alitiora-Initiative/Space-Ledger/issues/22).
+2. **Epoch release verification:** add SVM tests, client nonce-search benchmarks and account migration before enabling proof-of-work releases on a deployed program.
 2. **Receipt indexing:** build a durable, replayable Devnet receipt indexer — [issue #20](https://github.com/Alitiora-Initiative/Space-Ledger/issues/20).
 3. **Program assurance:** expand SVM instruction tests, prepare evidence and commission a real independent audit — [issue #21](https://github.com/Alitiora-Initiative/Space-Ledger/issues/21).
 4. **Usability:** complete the WCAG 2.2 AA/device audit and add standards-based mobile wallet support — [issues #23](https://github.com/Alitiora-Initiative/Space-Ledger/issues/23) and [#24](https://github.com/Alitiora-Initiative/Space-Ledger/issues/24).
 5. **New asset features:** decide and build pixel ownership, then transfers/market settlement — [issues #10](https://github.com/Alitiora-Initiative/Space-Ledger/issues/10) and [#11](https://github.com/Alitiora-Initiative/Space-Ledger/issues/11).
 
-### 6. Programme tracker
+### 6. Epoch proof-of-work release
+
+The on-chain program now gates primary-sale blocks behind an epoch release instruction. Each epoch releases up to 210,000 blocks after a permissionless Bitcoin-style double-SHA256 proof meets the configured target. The proof domain, epoch number, nonce, previous proof hash and difficulty are deterministic; purchases cannot consume unreleased blocks. This is an issuance gate, not Bitcoin consensus or a claim that the application is mainnet-ready.
+
+The client helper in `src/epochPow.js` finds a valid nonce and the Anchor instruction is `mine_epoch`. The current target is intentionally testnet-friendly (12 leading difficulty bits); difficulty, epoch size and account migration must be reviewed before any production deployment. Existing config accounts require an explicit migration because the PoW fields extend account storage.
+
+### 7. Programme tracker
 
 The complete dependency order and project-wide definition of reliable are in [issue #25](https://github.com/Alitiora-Initiative/Space-Ledger/issues/25).
 
