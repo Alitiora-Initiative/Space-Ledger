@@ -1,5 +1,5 @@
 use anchor_lang::prelude::*;
-use anchor_lang::solana_program::hash::{hash, hashv};
+use solana_sha256_hasher::hash;
 use anchor_lang::system_program::{self, Transfer};
 use anchor_spl::token::{self, Mint, Token, TokenAccount, TransferChecked};
 use pyth_solana_receiver_sdk::price_update::{get_feed_id_from_hex, PriceUpdateV2};
@@ -198,8 +198,13 @@ fn total_price_micro_usd(start: u64, block_count: u32) -> Result<u64> {
 }
 
 fn epoch_pow_hash(epoch: u64, nonce: u64, previous_hash: [u8; 32]) -> [u8; 32] {
-    let first = hashv(&[POW_DOMAIN, &epoch.to_le_bytes(), &nonce.to_le_bytes(), &previous_hash]);
-    hash(first.as_ref()).to_bytes()
+    let mut payload = Vec::with_capacity(POW_DOMAIN.len() + 8 + 8 + 32);
+    payload.extend_from_slice(POW_DOMAIN);
+    payload.extend_from_slice(&epoch.to_le_bytes());
+    payload.extend_from_slice(&nonce.to_le_bytes());
+    payload.extend_from_slice(&previous_hash);
+    let first = hash(&payload).to_bytes();
+    hash(&first).to_bytes()
 }
 
 fn pow_meets_target(digest: [u8; 32]) -> bool {

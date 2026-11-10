@@ -20,3 +20,4 @@ no-log-ix-name = []
 anchor-lang = "1.2.1"
 anchor-spl = { version = "1.2.1", features = ["token"] }
 pyth-solana-receiver-sdk = "2.0.0"
+solana-sha256-hasher = "3.1.0"
